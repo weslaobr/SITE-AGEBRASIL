@@ -120,14 +120,15 @@ class AoE4WorldAPI {
     }));
   }
 
-  private mapStatus(status: string): 'active' | 'upcoming' | 'completed' {
-    const statusMap = {
-      'ongoing': 'active',
-      'upcoming': 'upcoming', 
-      'completed': 'completed'
-    };
-    return statusMap[status as keyof typeof statusMap] || 'upcoming';
-  }
+private mapStatus(status: AoE4WorldTournament['status']): 'active' | 'upcoming' | 'completed' {
+  const statusMap: Record<AoE4WorldTournament['status'], 'active' | 'upcoming' | 'completed'> = {
+    ongoing: 'active',
+    upcoming: 'upcoming',
+    completed: 'completed'
+  };
+
+  return statusMap[status] ?? 'upcoming';
+}
 
   private mapTournamentType(type: string): string {
     const typeMap: { [key: string]: string } = {

@@ -1361,7 +1361,7 @@ background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
 
         .rank-2 {
           bottom: 20%;
-          left: 30%;
+          left: 40%;
           animation-delay: 2s;
           background: linear-gradient(135deg, rgba(192, 192, 192, 0.2), rgba(192, 192, 192, 0.1));
           border-color: rgba(192, 192, 192, 0.3);

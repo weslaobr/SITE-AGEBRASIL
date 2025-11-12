@@ -4,16 +4,22 @@ import { database } from '../../../lib/database';
 
 export async function GET() {
   try {
-    // CHAMADA SEM PARÂMETROS
     const players = await database.getLeaderboardData();
+    
+    // Remover avatar_url dos dados se existir
+    const cleanedPlayers = players.map(player => {
+      const { avatar_url, ...cleanPlayer } = player;
+      return cleanPlayer;
+    });
     
     return NextResponse.json({
       success: true,
-      data: players,
+      data: cleanedPlayers, // Usar dados limpos
       count: players.length,
       timestamp: new Date().toISOString()
     });
   } catch (error: any) {
+    
     console.error('Erro na API players:', error);
     return NextResponse.json(
       { 

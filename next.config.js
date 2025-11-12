@@ -1,4 +1,10 @@
 // next.config.js - VERSÃO ES MODULE COM STREAMS
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   experimental: {
@@ -8,17 +14,24 @@ const nextConfig = {
     ignoreBuildErrors: false,
   },
   
-  // 🔥 NOVAS CONFIGURAÇÕES PARA STREAMS
-  images: {
-    domains: [
-      'i.ytimg.com',           // Thumbnails do YouTube
-      'static-cdn.jtvnw.net',  // Thumbnails do Twitch
-      'aoe4world.com',         // Imagens do AOE4 World
-    ],
-    formats: ['image/webp', 'image/avif'], // Otimização
+  // 🔥 ADICIONE A CONFIGURAÇÃO DO WEBPACK
+  webpack: (config) => {
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      '@': __dirname,
+    };
+    return config;
   },
   
-  // 🔥 HEADERS PARA EMBEDS
+  images: {
+    domains: [
+      'i.ytimg.com',
+      'static-cdn.jtvnw.net',
+      'aoe4world.com',
+    ],
+    formats: ['image/webp', 'image/avif'],
+  },
+  
   async headers() {
     return [
       {
@@ -41,21 +54,19 @@ const nextConfig = {
           },
           {
             key: 'X-Frame-Options',
-            value: 'ALLOWALL' // Permite embeds do YouTube e Twitch
+            value: 'ALLOWALL'
           }
         ],
       }
     ];
   },
   
-  // 🔥 OTIMIZAÇÕES DE PERFORMANCE
   compress: true,
   poweredByHeader: false,
   
-  // 🔥 COMPILER OPTIONS (Opcional - remove consoles em produção)
   compiler: {
     removeConsole: process.env.NODE_ENV === 'production',
   },
 }
 
-export default nextConfig
+export default nextConfig;

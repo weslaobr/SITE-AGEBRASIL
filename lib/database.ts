@@ -51,7 +51,7 @@ class Database {
   constructor() {
     console.log('🔌 Iniciando conexão com PostgreSQL...');
     
-    const connectionString = process.env.DATABASE_URL || 'postgresql://localhost:5432/agebrasil';
+    const connectionString = process.env.DATABASE_URL || 'postgresql://postgres:ljPQHCOBFkYKHSAnZshLkQDmSWDZqBqW@mainline.proxy.rlwy.net:27194/railway';
     
     this.pool = new Pool({
       connectionString: connectionString,

@@ -1,5 +1,5 @@
 // app/api/stats/route.ts (se existir)
-import { database } from '@/lib/database';
+import { database } from '../../../lib/database';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);

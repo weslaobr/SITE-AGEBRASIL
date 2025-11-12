@@ -1,4 +1,4 @@
-// lib/railway-database.ts - VERSÃO PARA RAILWAY (PostgreSQL)
+// lib/railway-database.ts - VERSÃO COMPLETA E REVISADA PARA RAILWAY (PostgreSQL)
 import { Pool } from 'pg';
 
 export interface Player {
@@ -49,13 +49,12 @@ class RailwayDatabase {
 
   constructor() {
     console.log('🔌 Conectando ao Railway PostgreSQL...');
-    
+
     this.pool = new Pool({
       connectionString: process.env.DATABASE_URL,
       ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
     });
 
-    // Testar conexão
     this.testConnection();
   }
 
@@ -69,63 +68,42 @@ class RailwayDatabase {
     }
   }
 
-  // ==================== PLAYERS METHODS ====================
+  // =======================================================
+  // ==================== PLAYERS METHODS ===================
+  // =======================================================
 
   async getPlayers(season?: string, mode?: string): Promise<Player[]> {
     try {
       console.log(`\n🎯 RAILWAY - Buscando players: season=${season}, mode=${mode}`);
-      
+
       const query = `
-        SELECT 
-          id,
-          discord_user_id,
-          aoe4_world_id,
-          last_game_checkup_at
+        SELECT id, discord_user_id, aoe4_world_id
         FROM users 
-        WHERE aoe4_world_id IS NOT NULL 
-        AND aoe4_world_id != ''
+        WHERE aoe4_world_id IS NOT NULL AND aoe4_world_id != ''
         ORDER BY id
       `;
 
-      const result = await this.pool.query(query);
-      const rows = result.rows;
-
+      const { rows } = await this.pool.query(query);
       console.log(`✅ ${rows.length} usuários encontrados no Railway`);
-      
-      if (rows.length === 0) {
-        console.log('ℹ️  Nenhum usuário com AOE4 World ID encontrado');
-        return [];
-      }
 
-      // O RESTANTE DO CÓDIGO É IGUAL - só muda a parte do banco
       const players: Player[] = [];
       const modoRequisitado = mode || 'solo';
-      let processados = 0;
-      let comDados = 0;
-      let semDados = 0;
-
-      console.log(`   ℹ️  Usando dados atuais (limitação da API para dados históricos)`);
-      
       const batchSize = 3;
-      
+
       for (let i = 0; i < rows.length; i += batchSize) {
         const batch = rows.slice(i, i + batchSize);
-        
+
         const batchPromises = batch.map(async (user) => {
           try {
-            processados++;
-            console.log(`\n👤 [${processados}/${rows.length}] Processando: ${user.discord_user_id}`);
-            
             const aoe4Data = await this.getAOE4WorldData(user.aoe4_world_id, modoRequisitado);
-            
             if (aoe4Data) {
-              const player: Player = {
+              players.push({
                 rank: 0,
                 name: aoe4Data.name,
                 profile_url: aoe4Data.profile_url,
                 global_rank: aoe4Data.season_rank_global || 0,
                 season_rank_global: aoe4Data.season_rank_global || 0,
-                rank_level: aoe4Data.points > 0 ? this.getRankLevel(aoe4Data.points) : 'Sem rank',
+                rank_level: this.getRankLevel(aoe4Data.points),
                 points: aoe4Data.points,
                 elo: aoe4Data.elo,
                 win_rate: aoe4Data.win_rate,
@@ -139,275 +117,203 @@ class RailwayDatabase {
                 aoe4_world_id: user.aoe4_world_id,
                 mode: modoRequisitado as 'solo' | 'team',
                 season: season ? parseInt(season) : undefined
-              };
-              
-              players.push(player);
-              
-              if (aoe4Data.points > 0) {
-                comDados++;
-                console.log(`   ✅ ${aoe4Data.name} | ${aoe4Data.points} pts | ${aoe4Data.wins}W/${aoe4Data.losses}L`);
-              } else {
-                semDados++;
-                console.log(`   ⚪ ${aoe4Data.name} | Sem dados`);
-              }
+              });
             }
-            
-          } catch (error) {
-            console.log(`   ❌ Erro no usuário ${user.discord_user_id}:`, error);
-            semDados++;
+          } catch (err) {
+            console.error(`❌ Erro no usuário ${user.discord_user_id}:`, err);
           }
         });
 
         await Promise.allSettled(batchPromises);
-        
-        if (i + batchSize < rows.length) {
-          await new Promise(resolve => setTimeout(resolve, 500));
-        }
+        if (i + batchSize < rows.length) await new Promise(r => setTimeout(r, 500));
       }
 
-      const playersComPontos = players.filter(p => p.points > 0);
-      const playersSemPontos = players.filter(p => p.points === 0);
-      
-      playersComPontos.sort((a, b) => b.points - a.points);
-      playersComPontos.forEach((player, index) => {
-        player.rank = index + 1;
-      });
-      
-      playersSemPontos.forEach(player => {
-        player.rank = 0;
-      });
+      players.sort((a, b) => b.points - a.points);
+      players.forEach((p, i) => (p.rank = i + 1));
 
-      const finalPlayers = [...playersComPontos, ...playersSemPontos];
-
-      console.log(`\n📊 RESUMO FINAL RAILWAY:`);
-      console.log(`   ✅ Processados: ${processados}/${rows.length}`);
-      console.log(`   🎯 Com dados: ${comDados}`);
-      console.log(`   ⚪ Sem dados: ${semDados}`);
-      console.log(`   🏆 Ranking: ${playersComPontos.length} jogadores`);
-      console.log(`   🎮 Modo: ${modoRequisitado}`);
-
-      return finalPlayers;
-    } catch (error) {
-      console.error('❌ Erro no Railway getPlayers:', error);
+      return players;
+    } catch (err) {
+      console.error('❌ Erro no Railway getPlayers:', err);
       return [];
     }
   }
 
-  // ==================== CLANS METHODS ====================
+  // =======================================================
+  // ==================== CLANS METHODS =====================
+  // =======================================================
 
-  async getClans(season?: string): Promise<Clan[]> {
+  async getClans(): Promise<Clan[]> {
     try {
-      console.log(`\n🏴 RAILWAY - Buscando clans: Season=${season || 'current'}`);
-      
       const query = `
         SELECT 
-          c.id,
-          c.name,
-          c.tag,
-          c.owner_id as leader_id,
-          c.description,
-          c.discord_guild_id,
-          COUNT(cm.discord_user_id) as total_members
+          c.id, c.name, c.tag, c.owner_id as leader_id,
+          c.description, COUNT(cm.discord_user_id) as total_members
         FROM clans c
         LEFT JOIN clan_members cm ON c.id = cm.clan_id
-        GROUP BY c.id, c.name, c.tag, c.owner_id
-        ORDER BY total_members DESC, c.name ASC
+        GROUP BY c.id
+        ORDER BY total_members DESC;
       `;
 
-      const result = await this.pool.query(query);
-      const rows = result.rows;
-
-      console.log(`✅ ${rows.length} clans encontrados no Railway`);
-      
-      const clansWithStats = await this.enrichClansWithPlayerData(rows);
-      return clansWithStats;
-    } catch (error) {
-      console.error('❌ Erro ao buscar clans no Railway:', error);
+      const { rows } = await this.pool.query(query);
+      return this.enrichClansWithPlayerData(rows);
+    } catch (err) {
+      console.error('❌ Erro ao buscar clans:', err);
       return [];
     }
   }
 
   private async enrichClansWithPlayerData(clans: any[]): Promise<Clan[]> {
-    console.log(`🎯 Enriquecendo ${clans.length} clans com dados dos jogadores...`);
-    
-    const enrichedClans: Clan[] = [];
-    
+    const enriched: Clan[] = [];
     for (const clan of clans) {
-      try {
-        console.log(`\n🔍 Processando clan: ${clan.name} (ID: ${clan.id})`);
-        
-        const clanStats = await this.getClanStats(clan.id);
-        
-        const enrichedClan: Clan = {
-          id: clan.id,
-          name: clan.name,
-          tag: clan.tag,
-          leader_id: clan.leader_id,
-          description: clan.description || 'Sem descrição',
-          total_members: clan.total_members || 0,
-          average_elo: clanStats.average_elo,
-          total_points: clanStats.total_points,
-          active_players: clanStats.active_players,
-          rank: 0
-        };
-        
-        enrichedClans.push(enrichedClan);
-        
-        console.log(`   ✅ Clan ${clan.name}:`, {
-          membros: clan.total_members,
-          jogadores_ativos: clanStats.active_players,
-          elo_medio: clanStats.average_elo,
-          total_points: clanStats.total_points
-        });
-        
-      } catch (error) {
-        console.error(`❌ Erro ao enriquecer clan ${clan.name}:`, error);
-        
-        enrichedClans.push({
-          id: clan.id,
-          name: clan.name,
-          tag: clan.tag,
-          leader_id: clan.leader_id,
-          description: clan.description || 'Sem descrição',
-          total_members: clan.total_members || 0,
-          average_elo: 1200,
-          total_points: 10000,
-          active_players: 0,
-          rank: 0
-        });
-      }
+      const stats = await this.getClanStats(clan.id);
+      enriched.push({
+        id: clan.id,
+        name: clan.name,
+        tag: clan.tag,
+        leader_id: clan.leader_id,
+        description: clan.description || 'Sem descrição',
+        total_members: clan.total_members || 0,
+        average_elo: stats.average_elo,
+        total_points: stats.total_points,
+        active_players: stats.active_players,
+        rank: 0,
+      });
     }
-    
-    enrichedClans.sort((a, b) => b.total_points - a.total_points);
-    enrichedClans.forEach((clan, index) => {
-      clan.rank = index + 1;
-    });
-    
-    console.log(`\n📊 RESUMO CLANS RAILWAY:`, {
-      total: enrichedClans.length,
-      com_dados: enrichedClans.filter(c => c.active_players > 0).length,
-      ranking_aplicado: true
-    });
-    
-    return enrichedClans;
+    enriched.sort((a, b) => b.total_points - a.total_points);
+    enriched.forEach((c, i) => (c.rank = i + 1));
+    return enriched;
   }
 
-  private async getClanStats(clanId: number): Promise<{average_elo: number, total_points: number, active_players: number}> {
+  private async getClanStats(clanId: number): Promise<{ average_elo: number; total_points: number; active_players: number }> {
     try {
-      console.log(`   📊 Buscando estatísticas do clan ${clanId}...`);
-      
-      // Buscar membros do clan
-      const membersQuery = `
-        SELECT discord_user_id 
-        FROM clan_members 
-        WHERE clan_id = $1
-      `;
-      const membersResult = await this.pool.query(membersQuery, [clanId]);
-      const memberRows = membersResult.rows;
+      const members = await this.pool.query(`SELECT discord_user_id FROM clan_members WHERE clan_id = $1`, [clanId]);
+      const ids = members.rows.map(m => m.discord_user_id);
+      if (!ids.length) return { average_elo: 0, total_points: 0, active_players: 0 };
 
-      console.log(`   👥 ${memberRows.length} membros encontrados no clan`);
-      
-      if (memberRows.length === 0) {
-        return { average_elo: 0, total_points: 0, active_players: 0 };
-      }
-      
-      const memberIds = memberRows.map(m => m.discord_user_id);
-      const placeholders = memberIds.map((_, i) => `$${i + 1}`).join(',');
-      
-      // Buscar usuários com AOE4 ID
-      const usersQuery = `
-        SELECT 
-          u.discord_user_id,
-          u.aoe4_world_id
-        FROM users u
-        WHERE u.discord_user_id IN (${placeholders})
-        AND u.aoe4_world_id IS NOT NULL
-        AND u.aoe4_world_id != ''
-      `;
-      const usersResult = await this.pool.query(usersQuery, memberIds);
-      const userRows = usersResult.rows;
-      
-      console.log(`   🎯 ${userRows.length} usuários com AOE4 ID encontrados`);
-      
-      let totalElo = 0;
-      let totalPoints = 0;
-      let activePlayers = 0;
-      let playersProcessed = 0;
-      
-      const batchSize = 5;
-      
-      for (let i = 0; i < userRows.length; i += batchSize) {
-        const batch = userRows.slice(i, i + batchSize);
-        
-        const batchPromises = batch.map(async (user) => {
-          try {
-            const playerData = await this.getAOE4WorldData(user.aoe4_world_id, 'solo');
-            if (playerData && playerData.elo > 0 && playerData.points > 0) {
-              totalElo += playerData.elo;
-              totalPoints += playerData.points;
-              activePlayers++;
-              console.log(`   ✅ ${user.discord_user_id}: ${playerData.elo} ELO, ${playerData.points} pts`);
-            } else {
-              console.log(`   ⚠️  ${user.discord_user_id}: dados insuficientes`);
-            }
-          } catch (error) {
-            console.log(`   ❌ ${user.discord_user_id}: erro na API`);
-          }
-          playersProcessed++;
-        });
-        
-        await Promise.allSettled(batchPromises);
-        
-        if (i + batchSize < userRows.length) {
-          await new Promise(resolve => setTimeout(resolve, 100));
+      const users = await this.pool.query(
+        `SELECT aoe4_world_id FROM users WHERE discord_user_id = ANY($1::text[]) AND aoe4_world_id IS NOT NULL`,
+        [ids]
+      );
+
+      let totalElo = 0, totalPoints = 0, active = 0;
+      for (const u of users.rows) {
+        const data = await this.getAOE4WorldData(u.aoe4_world_id, 'solo');
+        if (data && data.elo > 0) {
+          totalElo += data.elo;
+          totalPoints += data.points;
+          active++;
         }
       }
-      
-      const averageElo = activePlayers > 0 ? Math.round(totalElo / activePlayers) : 0;
-      
-      console.log(`   📈 Estatísticas finais do clan:`, {
-        jogadores_processados: playersProcessed,
-        jogadores_ativos: activePlayers,
-        elo_medio: averageElo,
-        total_points: Math.round(totalPoints)
-      });
-      
+
       return {
-        average_elo: averageElo,
-        total_points: Math.round(totalPoints),
-        active_players: activePlayers
+        average_elo: active ? Math.round(totalElo / active) : 0,
+        total_points: totalPoints,
+        active_players: active,
       };
-    } catch (error) {
-      console.error(`   ❌ Erro ao buscar stats do clan ${clanId}:`, error);
+    } catch {
       return { average_elo: 0, total_points: 0, active_players: 0 };
     }
   }
 
-  // ==================== AOE4 WORLD API METHODS ====================
-  // (ESTES MÉTODOS SÃO IDÊNTICOS - só copie do arquivo original)
+  // =======================================================
+  // ==================== AOE4 WORLD API ====================
+  // =======================================================
 
   private async getAOE4WorldData(aoe4WorldId: string, mode?: string): Promise<any> {
-    // COLE AQUI O MÉTODO getAOE4WorldData COMPLETO DO ARQUIVO ORIGINAL
-    // É exatamente igual, então não preciso duplicar aqui
+    try {
+      const res = await fetch(`https://aoe4world.com/api/v0/players/${aoe4WorldId}`);
+      const data = await res.json();
+      const modeData = this.findAnyGameModeData(data, mode || 'rm_1v1');
+
+      if (!modeData) return this.createFallbackData(aoe4WorldId, data.name, mode, true);
+
+      const lastGameAt = modeData.last_game_at ? new Date(modeData.last_game_at) : null;
+
+      return {
+        name: data.name || `Player_${aoe4WorldId}`,
+        profile_url: `https://aoe4world.com/players/${aoe4WorldId}`,
+        season_rank_global: modeData.rank || 0,
+        points: modeData.rating || 0,
+        elo: modeData.max_rating || modeData.rating,
+        wins: modeData.wins_count || 0,
+        losses: modeData.losses_count || 0,
+        win_rate: modeData.win_rate || 0,
+        total_matches: modeData.games_count || 0,
+        last_game: lastGameAt ? this.formatLastGame(lastGameAt) : 'Nunca',
+        last_game_timestamp: lastGameAt?.getTime() || 0,
+      };
+    } catch (err) {
+      console.error(`❌ Erro na API AOE4World (${aoe4WorldId}):`, err);
+      return this.createFallbackData(aoe4WorldId, undefined, mode, true);
+    }
   }
 
-  private findAnyGameModeData(playerData: any, requestedMode: string) {
-    // COLE AQUI O MÉTODO findAnyGameModeData COMPLETO  
+  private findAnyGameModeData(data: any, requestedMode: string) {
+    return (
+      data.modes?.[requestedMode] ||
+      data.leaderboards?.[requestedMode] ||
+      data.modes?.['rm_1v1'] ||
+      data.modes?.['rm_team'] ||
+      null
+    );
   }
 
-  private createFallbackData(aoe4WorldId: string, playerName?: string, mode?: string, noData: boolean = false) {
-    // COLE AQUI O MÉTODO createFallbackData COMPLETO
+  private createFallbackData(aoe4WorldId: string, playerName?: string, mode?: string, noData = false) {
+    if (noData) {
+      return {
+        name: playerName || `Player_${aoe4WorldId}`,
+        profile_url: `https://aoe4world.com/players/${aoe4WorldId}`,
+        season_rank_global: 0,
+        points: 0,
+        elo: 0,
+        wins: 0,
+        losses: 0,
+        win_rate: 0,
+        total_matches: 0,
+        last_game: 'Sem dados',
+        last_game_timestamp: 0,
+      };
+    }
   }
 
   private formatLastGame(date: Date): string {
-    // COLE AQUI O MÉTODO formatLastGame COMPLETO
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffMinutes = Math.floor(diffMs / (1000 * 60));
+
+    if (diffDays > 30) return date.toLocaleDateString('pt-BR');
+    if (diffDays > 0) return `há ${diffDays} dia${diffDays > 1 ? 's' : ''}`;
+    if (diffHours > 0) return `há ${diffHours} hora${diffHours > 1 ? 's' : ''}`;
+    if (diffMinutes > 0) return `há ${diffMinutes} minuto${diffMinutes > 1 ? 's' : ''}`;
+    return 'agora mesmo';
   }
 
-  private getRankLevel(pointsOrElo: number): string {
-    // COLE AQUI O MÉTODO getRankLevel COMPLETO
+  private getRankLevel(points: number): string {
+    if (points >= 1600) return 'Conquer 3';
+    if (points >= 1500) return 'Conquer 2';
+    if (points >= 1400) return 'Conquer 1';
+    if (points >= 1350) return 'Diamante 3';
+    if (points >= 1300) return 'Diamante 2';
+    if (points >= 1200) return 'Diamante 1';
+    if (points >= 1150) return 'Platina 3';
+    if (points >= 1100) return 'Platina 2';
+    if (points >= 1000) return 'Platina 1';
+    if (points >= 900) return 'Ouro 3';
+    if (points >= 800) return 'Ouro 2';
+    if (points >= 700) return 'Ouro 1';
+    if (points >= 600) return 'Prata 3';
+    if (points >= 550) return 'Prata 2';
+    if (points >= 500) return 'Prata 1';
+    if (points >= 450) return 'Bronze 3';
+    if (points >= 400) return 'Bronze 2';
+    return 'Bronze 1';
   }
 
-  // ==================== UTILITY METHODS ====================
+  // =======================================================
+  // ==================== UTILITIES =========================
+  // =======================================================
 
   async close() {
     await this.pool.end();

@@ -1,10 +1,4 @@
-// next.config.js - VERSÃO ES MODULE COM STREAMS
-import path from 'path';
-import { fileURLToPath } from 'url';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
+// next.config.js - VERSÃO SIMPLIFICADA
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   experimental: {
@@ -14,11 +8,11 @@ const nextConfig = {
     ignoreBuildErrors: false,
   },
   
-  // 🔥 ADICIONE A CONFIGURAÇÃO DO WEBPACK
+  // Configuração simplificada do webpack para aliases
   webpack: (config) => {
     config.resolve.alias = {
       ...config.resolve.alias,
-      '@': __dirname,
+      '@': new URL('./', import.meta.url).pathname,
     };
     return config;
   },
@@ -26,7 +20,7 @@ const nextConfig = {
   images: {
     domains: [
       'i.ytimg.com',
-      'static-cdn.jtvnw.net',
+      'static-cdn.jtvnw.net', 
       'aoe4world.com',
     ],
     formats: ['image/webp', 'image/avif'],
@@ -63,10 +57,6 @@ const nextConfig = {
   
   compress: true,
   poweredByHeader: false,
-  
-  compiler: {
-    removeConsole: process.env.NODE_ENV === 'production',
-  },
 }
 
 export default nextConfig;

@@ -10,8 +10,9 @@ export async function GET(request: NextRequest) {
     let dbTest = '✅ OK';
     try {
       const testResult = await new Promise((resolve, reject) => {
-database.get('SELECT 1 as test', [], (err, row) => {
-          if (err) reject(err);
+const db = await database.connect(); // ou database.open() se for esse o método
+db.get('SELECT 1 as test', [], (err, row) => {
+            if (err) reject(err);
           else resolve(row);
         });
       });

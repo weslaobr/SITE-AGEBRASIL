@@ -27,12 +27,12 @@ export async function GET(request: NextRequest) {
 
     console.log(`\n👥 API CLAN MEMBERS - Buscando membros do clan ${clanId}`);
 
-    // 🔥 AGORA O getClanMembers JÁ RETORNA DADOS COMPLETOS
+    // 🔥 Busca os membros do banco de dados
     const members = await database.getClanMembers(clanId);
-    
-    // Ordenar por pontos (maior primeiro) e adicionar role
+
+    // 🔄 Ordenar por pontos e definir papel (Líder / Membro)
     const sortedMembers = members
-      .map(member => ({
+      .map((member: any) => ({
         ...member,
         role: member.is_owner ? 'Líder' : 'Membro'
       }))
@@ -40,16 +40,24 @@ export async function GET(request: NextRequest) {
 
     console.log(`✅ ${sortedMembers.length} membros retornados para clan ${clanId}`);
 
+    // 📊 Estatísticas agregadas
+    const validMembers = sortedMembers.filter(m => m.hasValidData);
+    const totalValid = validMembers.length;
+
+    const stats = {
+      total: sortedMembers.length,
+      with_data: totalValid,
+      average_elo: totalValid > 0
+        ? Math.round(validMembers.reduce((sum, m) => sum + m.elo, 0) / totalValid)
+        : 0,
+      total_points: validMembers.reduce((sum, m) => sum + m.points, 0)
+    };
+
+    // ✅ Retorno final
     return NextResponse.json({
       success: true,
       members: sortedMembers,
-      stats: {
-        total: sortedMembers.length,
-        with_data: sortedMembers.filter(m => m.hasValidData).length,
-        average_elo: sortedMembers.filter(m => m.hasValidData).length > 0 ? 
-          Math.round(sortedMembers.filter(m => m.hasValidData).reduce((sum, m) => sum + m.elo, 0) / sortedMembers.filter(m => m.hasValidData).length) : 0,
-        total_points: sortedMembers.filter(m => m.hasValidData).reduce((sum, m) => sum + m.points, 0)
-      },
+      stats,
       metadata: {
         clanId,
         timestamp: new Date().toISOString(),
@@ -59,7 +67,7 @@ export async function GET(request: NextRequest) {
 
   } catch (error: any) {
     console.error('❌ ERRO NA API CLAN MEMBERS:', error.message);
-    
+
     return NextResponse.json(
       { 
         success: false, 

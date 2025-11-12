@@ -1,6 +1,8 @@
 // app/api/leaderboard/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { database } from '../../../lib/database';
+export const dynamic = 'force-dynamic';  // 👈 força execução em runtime
+export const revalidate = 1000;    
 
 export async function GET(request: NextRequest) {
   try {

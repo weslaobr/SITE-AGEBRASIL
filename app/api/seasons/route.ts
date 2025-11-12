@@ -1,33 +1,23 @@
 // app/api/seasons/route.ts
-import { NextRequest, NextResponse } from 'next/server';
-import { database } from '../../../lib/database';
+import { NextResponse } from "next/server";
 
-export async function GET(request: NextRequest) {
+// cache por 1h
+export const revalidate = 3600;
+
+export async function GET() {
   try {
-    console.log('📅 API SEASONS - Buscando temporadas...');
-    
-    const seasons = await database.getSeasons();
-    
-    console.log(`✅ ${seasons.length} temporadas retornadas`);
-    
-    return NextResponse.json({
-      success: true,
-      seasons: seasons,
-      count: seasons.length,
-      metadata: {
-        source: "aoe4world_api",
-        timestamp: new Date().toISOString()
-      }
-    });
+    const seasons = [
+      { id: 12, name: "Season 12", start_date: "2024-08-01", end_date: "2024-11-01", is_current: true },
+      { id: 11, name: "Season 11", start_date: "2024-05-01", end_date: "2024-08-01", is_current: false },
+      { id: 10, name: "Season 10", start_date: "2024-02-01", end_date: "2024-05-01", is_current: false },
+    ];
 
-  } catch (error: any) {
-    console.error('❌ ERRO NA API SEASONS:', error);
-    
-    return NextResponse.json({
-      success: false,
-      error: 'Erro ao buscar temporadas',
-      seasons: [],
-      count: 0
-    }, { status: 500 });
+    return NextResponse.json({ success: true, data: seasons });
+  } catch (err: any) {
+    console.error("❌ Erro ao carregar seasons:", err);
+    return NextResponse.json(
+      { success: false, error: "Erro ao carregar temporadas" },
+      { status: 500 }
+    );
   }
 }

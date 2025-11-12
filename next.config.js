@@ -1,14 +1,13 @@
-// next.config.js - VERSÃO SIMPLIFICADA
+// next.config.js
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   experimental: {
-    serverComponentsExternalPackages: ['sqlite3'],
+    serverComponentsExternalPackages: ['pg'],
   },
   typescript: {
     ignoreBuildErrors: false,
   },
-  
-  // Configuração simplificada do webpack para aliases
+
   webpack: (config) => {
     config.resolve.alias = {
       ...config.resolve.alias,
@@ -16,16 +15,12 @@ const nextConfig = {
     };
     return config;
   },
-  
+
   images: {
-    domains: [
-      'i.ytimg.com',
-      'static-cdn.jtvnw.net', 
-      'aoe4world.com',
-    ],
+    domains: ['i.ytimg.com', 'static-cdn.jtvnw.net', 'aoe4world.com'],
     formats: ['image/webp', 'image/avif'],
   },
-  
+
   async headers() {
     return [
       {
@@ -38,25 +33,22 @@ const nextConfig = {
               "script-src 'self' 'unsafe-eval' 'unsafe-inline'",
               "style-src 'self' 'unsafe-inline'",
               "img-src 'self' data: https:",
-              "connect-src 'self'",
+              "connect-src 'self' https://aoe4world.com",
               "font-src 'self'",
               "object-src 'none'",
               "media-src 'self'",
               "frame-src https://www.youtube.com https://player.twitch.tv",
               "frame-ancestors 'self' https://www.youtube.com https://player.twitch.tv"
-            ].join('; ')
+            ].join('; '),
           },
-          {
-            key: 'X-Frame-Options',
-            value: 'ALLOWALL'
-          }
+          { key: 'X-Frame-Options', value: 'ALLOWALL' },
         ],
-      }
+      },
     ];
   },
-  
+
   compress: true,
   poweredByHeader: false,
-}
+};
 
 export default nextConfig;

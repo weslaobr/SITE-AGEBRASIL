@@ -21,6 +21,14 @@ export interface AoE4WorldTournament {
   ruleset: string;
 }
 
+export async function getLeaderboardData() {
+  const res = await fetch("https://aoe4world.com/api/leaderboard/rm_1v1?count=100");
+  if (!res.ok) throw new Error("Erro ao buscar leaderboard AOE4World");
+  
+  const data = await res.json();
+  return data.leaderboard || [];
+}
+
 export interface AoE4WorldApiResponse {
   tournaments: AoE4WorldTournament[];
   total: number;

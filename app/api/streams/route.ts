@@ -24,7 +24,7 @@ const YOUTUBE_CHANNELS = [
   },
 
   { 
-    id: 'UCyQr4wo6jq5w1dHcJvqyM8g',  // Vicentin (vamos tentar encontrar um melhor)
+    id: 'UCrAbkIFpoh8EZWof6y6DfmA',  // Vicentin (vamos tentar encontrar um melhor)
     name: 'Vicentin',
     handle: '@vitorvicentin'
   }

@@ -286,7 +286,7 @@ export default function Home() {
       <>
         <Head>
           <title>AOE4 Brasil - Leaderboard</title>
-          <link rel="icon" href="/favicon.ico" />
+          <link rel="icon" href="https://i.imgur.com/gLHqsWk.png" />
         </Head>
         <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 flex items-center justify-center">
           <div className="text-center">
@@ -303,7 +303,7 @@ export default function Home() {
       <>
         <Head>
           <title>AOE4 Brasil - Leaderboard</title>
-          <link rel="icon" href="/favicon.ico" />
+          <link rel="icon" href="https://i.imgur.com/gLHqsWk.png" />
         </Head>
         <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 flex items-center justify-center">
           <div className="text-center">
@@ -326,7 +326,7 @@ export default function Home() {
       <Head>
         <title>AOE4 Brasil - Leaderboard Competitivo</title>
         <meta name="description" content="Comunidade Brasileira de Age of Empires IV - Ranking e Estatísticas" />
-        <link rel="icon" href="/favicon.ico" />
+        <link rel="icon" href="https://i.imgur.com/gLHqsWk.png" />
       </Head>
 
       {/* Header Moderno */}
@@ -1105,9 +1105,9 @@ export default function Home() {
             <div className="copyright-modern">
               <div className="footer-logo-modern">
                 <div className="logo-icon-small">⚔️</div>
-                <span>AOE4 Brasil</span>
+                <span>WESLÃO DEV. - AGE OF EMPIRES IV BRASIL</span>
               </div>
-              <p>&copy; 2024 Comunidade Brasileira. Todos os direitos reservados.</p>
+              <p>&copy; 2025 Comunidade Brasileira. Todos os direitos reservados.</p>
             </div>
             <div className="social-links-modern">
               <a href="#" className="social-link-modern">

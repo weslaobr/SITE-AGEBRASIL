@@ -1,31 +1,27 @@
-// app/api/players/route.ts - VERSÃO 100% CORRIGIDA
-import { NextResponse } from 'next/server';
-import { database } from '../../../lib/database';
+// app/api/players/route.ts
+import { NextResponse } from "next/server";
+import { getLeaderboardData } from "@/lib/aoe4world-api"; // ✅ importa do arquivo certo
 
 export async function GET() {
   try {
-    const players = await database.getLeaderboardData();
-    
-    // Remover avatar_url dos dados se existir
-    const cleanedPlayers = players.map(player => {
+    const players = await getLeaderboardData(); // ✅ função vinda do aoe4world-api
+
+    // Remover avatar_url se existir
+    const cleanedPlayers = players.map((player) => {
       const { avatar_url, ...cleanPlayer } = player;
       return cleanPlayer;
     });
-    
+
     return NextResponse.json({
       success: true,
-      data: cleanedPlayers, // Usar dados limpos
+      data: cleanedPlayers,
       count: players.length,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
-  } catch (error: any) {
-    
-    console.error('Erro na API players:', error);
+  } catch (error) {
+    console.error("Erro na API players:", error);
     return NextResponse.json(
-      { 
-        success: false, 
-        error: 'Erro interno do servidor'
-      },
+      { success: false, error: "Erro interno do servidor" },
       { status: 500 }
     );
   }

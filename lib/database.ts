@@ -377,6 +377,13 @@ class Database {
     }
   }
 
+
+async getLeaderboardData() {
+  const query = "SELECT * FROM leaderboard ORDER BY rank ASC LIMIT 100;";
+  const result = await this.pool.query(query);
+  return result.rows;
+}
+
   private async getClanStats(clanId: number): Promise<{average_elo: number, total_points: number, active_players: number}> {
     try {
       const membersResult = await this.pool.query(
@@ -439,6 +446,8 @@ class Database {
   }
 
   // ==================== MOCK DATA ====================
+
+
 
   private getMockPlayers(): Player[] {
     console.log('🎭 Usando dados mockados para desenvolvimento');

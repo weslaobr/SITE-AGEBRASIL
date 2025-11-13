@@ -13,21 +13,23 @@ console.log('🔧 Variáveis de ambiente:', {
 // Canais configurados
 const YOUTUBE_CHANNELS = [
   { 
-    id: 'UCrVkeqe_e4dKZ8v-eX1P_2A',  // CaioFora
+    id: 'UCd54zjiewBgbTQHV_jbmM-Q',  // CaioFora
     name: 'CaioFora',
     handle: '@caiofora'
-  },
+  },  
   { 
     id: 'UCXAmHA4lVgVY7ndp6lqaS7A',  // Gks AOE
     name: 'Gks',
     handle: '@gks_aoe' 
   },
-
   { 
-    id: 'UCrAbkIFpoh8EZWof6y6DfmA',  // Vicentin (vamos tentar encontrar um melhor)
-    name: 'Vicentin',
-    handle: '@vitorvicentin'
-  }
+    id: 'UCrAbkIFpoh8EZWof6y6DfmA',  // Vicentin
+    name: 'VicentiN',
+    handle: '@vitorvicentin' 
+  },
+ 
+
+
 ];
 
 const TWITCH_CHANNELS = ['gks_aoe', 'vicentin', 'cai0fora'];
@@ -200,7 +202,7 @@ function getChannelFallback(channelName: string) {
       id: 'manual-vicentin', 
       title: "Vicentin - Gameplay AOE4",
       channel: "Vicentin",
-      url: "https://www.youtube.com/embed/dQw4w9WgXcQ",
+      url: "https://www.youtube.com/watch?v=4jAx3nE9Qcs",
       type: "video" as const,
       thumbnail: "https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg",
       live: false,

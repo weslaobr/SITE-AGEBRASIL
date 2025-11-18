@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Sincronização de Avatares</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #1a202c;
+            color: white;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .card {
+            background: #2d3748;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        button {
+            background: #e53e3e;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #c53030;
+        }
+        button:disabled {
+            background: #4a5568;
+            cursor: not-allowed;
+        }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .stat-item {
+            background: #4a5568;
+            padding: 15px;
+            border-radius: 4px;
+            text-align: center;
+        }
+        .stat-number {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #e53e3e;
+        }
+        .results {
+            max-height: 300px;
+            overflow-y: auto;
+            margin-top: 20px;
+        }
+        .result-item {
+            padding: 8px;
+            border-bottom: 1px solid #4a5568;
+            display: flex;
+            justify-content: space-between;
+        }
+        .success { color: #48bb78; }
+        .error { color: #e53e3e; }
+        .not-found { color: #ed8936; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔄 Sincronização de Avatares</h1>
+        
+        <div class="card">
+            <h2>📊 Estatísticas</h2>
+            <div class="stats" id="stats">
+                <!-- Estatísticas serão carregadas aqui -->
+            </div>
+            <button onclick="loadStats()">🔄 Atualizar Estatísticas</button>
+        </div>
+
+        <div class="card">
+            <h2>⚡ Ações</h2>
+            <button onclick="updateLastGames()" id="updateLastGamesBtn">
+                🕐 Atualizar Últimas Partidas
+            </button>
+            
+            <div style="margin-top: 15px; border-top: 1px solid #4a5568; padding-top: 15px;">
+                <h3>⚡ Controle de Cache</h3>
+                <button onclick="refreshCacheBackground()" id="refreshCacheBtn">
+                    🔄 Atualizar Cache em Background
+                </button>
+                <button onclick="checkCacheStatus()" id="cacheStatusBtn">
+                    📊 Ver Status do Cache
+                </button>
+                <div id="cacheStatus" style="margin-top: 10px;"></div>
+            </div>
+            
+            <button onclick="syncAllAvatars()" id="syncAllBtn">
+                🔄 Sincronizar Todos os Avatares
+            </button>
+            <button onclick="syncMissingAvatars()" id="syncMissingBtn">
+                🖼️ Sincronizar Avatares Faltantes
+            </button>
+            
+            <div style="margin-top: 15px;">
+                <input type="text" id="playerId" placeholder="ID do Player ou AOE4 World ID" style="padding: 8px; width: 300px;">
+                <button onclick="syncSingleAvatar()">👤 Sincronizar Player Específico</button>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>🔄 Controle de Atualização Automática</h2>
+            
+            <div id="autoUpdateStatus" style="margin-bottom: 15px;">
+                <!-- Status será carregado aqui -->
+            </div>
+            
+            <button onclick="triggerAutoUpdate()" id="triggerUpdateBtn">
+                ⚡ Forçar Atualização Agora
+            </button>
+            <button onclick="toggleAutoUpdate()" id="toggleAutoUpdateBtn">
+                ⏸️ Desativar Auto-Update
+            </button>
+            <button onclick="loadAutoUpdateStatus()">
+                🔄 Atualizar Status
+            </button>
+            
+            <div style="margin-top: 15px;">
+                <h4>Configuração:</h4>
+                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                    <input type="number" id="updateInterval" placeholder="Intervalo (min)" style="width: 120px;">
+                    <input type="number" id="playersPerBatch" placeholder="Jogadores/lote" style="width: 120px;">
+                    <button onclick="updateAutoConfig()">💾 Salvar Config</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>📋 Resultados</h2>
+            <div class="results" id="results">
+                <!-- Resultados serão exibidos aqui -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:3001/api';
+
+        // ========== FUNÇÕES PRINCIPAIS ==========
+        
+        async function updateLastGames() {
+            const btn = document.getElementById('updateLastGamesBtn');
+            btn.disabled = true;
+            btn.textContent = '🕐 Atualizando...';
+            
+            try {
+                const response = await fetch(`${API_BASE}/players/update-last-games`, {
+                    method: 'POST'
+                });
+                const data = await response.json();
+                showResults(data);
+            } catch (error) {
+                alert('Erro na atualização: ' + error.message);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '🕐 Atualizar Últimas Partidas';
+                loadStats();
+            }
+        }
+
+        async function loadStats() {
+            try {
+                const response = await fetch(`${API_BASE}/players/avatar-stats`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    const stats = data.stats;
+                    document.getElementById('stats').innerHTML = `
+                        <div class="stat-item">
+                            <div class="stat-number">${stats.total_players}</div>
+                            <div>Total Players</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number">${stats.with_avatar}</div>
+                            <div>Com Avatar</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number">${stats.without_avatar}</div>
+                            <div>Sem Avatar</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number">${stats.sync_coverage}%</div>
+                            <div>Cobertura</div>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                alert('Erro ao carregar estatísticas: ' + error.message);
+            }
+        }
+
+        async function refreshCacheBackground() {
+            const btn = document.getElementById('refreshCacheBtn');
+            btn.disabled = true;
+            btn.textContent = '🔄 Atualizando...';
+            
+            try {
+                const response = await fetch(`${API_BASE}/cache/refresh-background`, {
+                    method: 'POST'
+                });
+                const data = await response.json();
+                
+                document.getElementById('cacheStatus').innerHTML = `
+                    <div class="success">✅ ${data.message} (${data.players_to_update} players)</div>
+                `;
+                
+            } catch (error) {
+                alert('Erro ao atualizar cache: ' + error.message);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '🔄 Atualizar Cache em Background';
+            }
+        }
+
+        async function checkCacheStatus() {
+            const btn = document.getElementById('cacheStatusBtn');
+            btn.disabled = true;
+            
+            try {
+                const response = await fetch(`${API_BASE}/cache/status`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    const status = data.status;
+                    document.getElementById('cacheStatus').innerHTML = `
+                        <div class="stat-item">
+                            <div>Total Players: <strong>${status.total_players}</strong></div>
+                            <div>Fresh Data: <strong>${status.fresh_players}</strong></div>
+                            <div>Need Refresh: <strong>${status.needs_refresh}</strong></div>
+                            <div>Avg Age: <strong>${Math.round(status.avg_cache_age_seconds / 60)}min</strong></div>
+                            <div>Health: <strong>${status.cache_health}</strong></div>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                alert('Erro ao verificar status: ' + error.message);
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
+        async function syncAllAvatars() {
+            const btn = document.getElementById('syncAllBtn');
+            btn.disabled = true;
+            btn.textContent = '🔄 Sincronizando...';
+            
+            try {
+                const response = await fetch(`${API_BASE}/players/sync-avatars`, {
+                    method: 'POST'
+                });
+                const data = await response.json();
+                showResults(data);
+            } catch (error) {
+                alert('Erro na sincronização: ' + error.message);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '🔄 Sincronizar Todos os Avatares';
+                loadStats();
+            }
+        }
+
+        async function syncMissingAvatars() {
+            const btn = document.getElementById('syncMissingBtn');
+            btn.disabled = true;
+            btn.textContent = '🔄 Sincronizando...';
+            
+            try {
+                const response = await fetch(`${API_BASE}/players/sync-avatars`, {
+                    method: 'POST'
+                });
+                const data = await response.json();
+                showResults(data);
+            } catch (error) {
+                alert('Erro na sincronização: ' + error.message);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '🖼️ Sincronizar Avatares Faltantes';
+                loadStats();
+            }
+        }
+
+        async function syncSingleAvatar() {
+            const playerId = document.getElementById('playerId').value.trim();
+            if (!playerId) {
+                alert('Digite um ID do player');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/players/${playerId}/sync-avatar`, {
+                    method: 'POST'
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    showResults({
+                        results: [{
+                            name: data.player.name,
+                            aoe4world_id: data.player.aoe4world_id,
+                            avatar_url: data.player.avatar_url,
+                            status: 'success'
+                        }],
+                        synced: 1,
+                        errors: 0,
+                        total_processed: 1
+                    });
+                } else {
+                    alert('Erro: ' + data.error);
+                }
+            } catch (error) {
+                alert('Erro na sincronização: ' + error.message);
+            } finally {
+                loadStats();
+            }
+        }
+
+        function showResults(data) {
+            const resultsDiv = document.getElementById('results');
+            let html = '';
+            
+            if (data.results) {
+                data.results.forEach(result => {
+                    const statusClass = result.status === 'success' ? 'success' : 
+                                      result.status === 'error' ? 'error' : 'not-found';
+                    html += `
+                        <div class="result-item">
+                            <span>${result.name || result.aoe4world_id}</span>
+                            <span class="${statusClass}">${result.status}</span>
+                        </div>
+                    `;
+                });
+            }
+            
+            html += `<div class="result-item success">
+                <strong>Resumo:</strong> ${data.synced} sincronizados, ${data.errors} erros
+            </div>`;
+            
+            resultsDiv.innerHTML = html;
+        }
+
+        // ========== FUNÇÕES DE ATUALIZAÇÃO AUTOMÁTICA ==========
+        
+        async function loadAutoUpdateStatus() {
+            try {
+                const response = await fetch(`${API_BASE}/admin/auto-update/status`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    const status = data.auto_update;
+                    const cache = data.cache_status;
+                    
+                    document.getElementById('autoUpdateStatus').innerHTML = `
+                        <div class="stat-item">
+                            <div>Status: <strong>${status.enabled ? '✅ ATIVADO' : '⏸️ DESATIVADO'}</strong></div>
+                            <div>Intervalo: <strong>${status.interval_minutes} min</strong></div>
+                            <div>Próxima: <strong>${new Date(status.next_update).toLocaleTimeString()}</strong></div>
+                            <div>Cache Health: <strong>${cache.cache_health}</strong></div>
+                            <div>Precisa atualizar: <strong>${cache.needs_refresh} jogadores</strong></div>
+                        </div>
+                    `;
+                    
+                    // Atualizar botão de toggle
+                    document.getElementById('toggleAutoUpdateBtn').textContent = 
+                        status.enabled ? '⏸️ Desativar Auto-Update' : '▶️ Ativar Auto-Update';
+                }
+            } catch (error) {
+                console.error('Erro ao carregar status:', error);
+            }
+        }
+
+        async function triggerAutoUpdate() {
+            const btn = document.getElementById('triggerUpdateBtn');
+            btn.disabled = true;
+            btn.textContent = '🔄 Atualizando...';
+            
+            try {
+                const response = await fetch(`${API_BASE}/admin/auto-update/trigger`, {
+                    method: 'POST'
+                });
+                const data = await response.json();
+                
+                alert(`Atualização concluída: ${data.message}`);
+                loadAutoUpdateStatus();
+                
+            } catch (error) {
+                alert('Erro na atualização: ' + error.message);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '⚡ Forçar Atualização Agora';
+            }
+        }
+
+        async function toggleAutoUpdate() {
+            try {
+                const response = await fetch(`${API_BASE}/admin/auto-update/status`);
+                const data = await response.json();
+                const currentStatus = data.auto_update.enabled;
+                
+                const updateResponse = await fetch(`${API_BASE}/admin/auto-update/config`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ enabled: !currentStatus })
+                });
+                
+                const result = await updateResponse.json();
+                alert(result.message);
+                loadAutoUpdateStatus();
+                
+            } catch (error) {
+                alert('Erro ao alterar status: ' + error.message);
+            }
+        }
+
+        async function updateAutoConfig() {
+            const interval = document.getElementById('updateInterval').value;
+            const players = document.getElementById('playersPerBatch').value;
+            
+            const config = {};
+            if (interval) config.interval_minutes = parseInt(interval);
+            if (players) config.players_per_batch = parseInt(players);
+            
+            try {
+                const response = await fetch(`${API_BASE}/admin/auto-update/config`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(config)
+                });
+                
+                const result = await response.json();
+                alert('Configuração salva: ' + result.message);
+                loadAutoUpdateStatus();
+                
+            } catch (error) {
+                alert('Erro ao salvar configuração: ' + error.message);
+            }
+        }
+
+        // ========== INICIALIZAÇÃO ==========
+        
+        // Carregar estatísticas ao iniciar
+        loadStats();
+        
+        // Carregar status da atualização automática
+        loadAutoUpdateStatus();
+    </script>
+</body>
+</html>

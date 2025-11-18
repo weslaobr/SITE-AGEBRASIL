@@ -1,0 +1,17 @@
+esses arquivos estao assim
+backend>server.js
+backend>packge.json
+frontend>admin.html
+frontend>clan.html
+frontend>index.html
+frontend>leaderboard.html
+frontend>js>api.js
+frontend>js>debug.js
+frontend>js>filters.js
+frontend>js>home.js
+frontend>js>init.js
+frontend>js>players.js
+frontend>css>style.css
+
+o meu banco de dados esta organizado da seguinte forma
+no bot do discord que faz o cadastro dos jogadores ele gera tabela "users" lá é cadastrado as colunas id, discord_user_id, aoe4_world_id e discord_guild_id, no proprio discord nós criarmos os clans ele registra na tabela "clans" lá é cadastrado o id, name, tag, discord_guild_id, owner_id e description, no discord cadastramos tambem o usuario no clan e isso vai na tabela "clan_members" lá vai ter clan_id, discord_user_id, discord_guild_id, joined_at e is_owner,  isso tudo é o fluxo de cadastramento no banco de dados, agora vamos lá ao uso do banco de dados, o site ele pega esse aoe4_world_id puxa com api varios dados dos jogadores no aoe4world e guarda tudo na tabela "leaderboard_cache" e lá vamos ter as colunas user_id	aoe4_world_id	name	profile_url	points	elo	wins	losses	total_matches	rank	last_game	updated_at	civilization	region	clan_tag	avatar_url	discord_user_id	last_game_timestamp	cached_at	needs_refresh	refresh_attempts	game_mode	rm_solo_points	rm_solo_elo	rm_solo_wins	rm_solo_total_matches	rm_team_points	rm_team_elo	rm_team_wins	rm_team_total_matches	level	season_id	last_solo_game	last_team_game

@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Torneios - Age of Empires IV Brasil</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/responsive.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    .tournaments-grid { display:grid; grid-template-columns: repeat(auto-fit,minmax(320px,1fr)); gap:1rem; margin:1rem 0; }
+    .tournament-card { background:#0f172a; border:1px solid #1e293b; padding:16px; border-radius:10px; color:#e2e8f0; }
+    .api-status { padding:10px; border-radius:8px; margin:10px 0; }
+    .api-status.loading { background: rgba(66,153,225,0.12); color:#4299e1; border:1px solid #4299e1; }
+    .api-status.success { background: rgba(72,187,120,0.12); color:#48bb78; border:1px solid #48bb78; }
+    .api-status.error { background: rgba(245,101,101,0.12); color:#f56565; border:1px solid #f56565; }
+    .action-btn { background:#2563eb; color:white; padding:8px 12px; border-radius:8px; text-decoration:none; display:inline-block; }
+  </style>
+</head>
+<body>
+  <header><div class="container"><h1>Torneios de Age of Empires IV</h1></div></header>
+  <main class="container">
+    <div id="api-status" class="api-status loading"><i class="fas fa-sync fa-spin"></i> Carregando torneios...</div>
+    <section id="tournaments-container">
+      <div class="tournaments-grid">
+        <div class="loading">Buscando torneios...</div>
+      </div>
+    </section>
+  </main>
+  <script src="js/torneios-reais.js"></script>
+</body>
+</html>

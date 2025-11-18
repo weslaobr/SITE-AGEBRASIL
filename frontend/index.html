@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Age of Empires IV Brasil</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/responsive.css">
+<link rel="icon" type="image/png" href="https://i.postimg.cc/3JT4W3hz/favicon.png">
+
+    <style>
+        /* Estilos específicos para a home */
+        .hero-stats {
+            display: flex;
+            justify-content: center;
+            gap: 3rem;
+            margin-top: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .hero-stat {
+            text-align: center;
+            padding: 1rem;
+        }
+
+        .hero-stat .number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--accent-color);
+            display: block;
+        }
+
+        .hero-stat .label {
+            color: #cbd5e0;
+            font-size: 0.9rem;
+        }
+
+        .featured-players {
+            background: var(--card-bg);
+            padding: 3rem 0;
+            margin: 2rem 0;
+        }
+
+        .players-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .player-card {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 1.5rem;
+            border-radius: 8px;
+            border-left: 4px solid var(--accent-color);
+            transition: transform 0.3s ease;
+        }
+
+        .player-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .player-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .player-rank {
+            background: var(--accent-color);
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1.2rem;
+        }
+
+        .player-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            overflow: hidden;
+            background: var(--secondary-color);
+        }
+
+        .player-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .player-name a {
+            color: var(--text-color);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .player-name a:hover {
+            color: var(--accent-color);
+        }
+
+        .player-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.3rem 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .stat-label {
+            color: #a0aec0;
+            font-size: 0.8rem;
+        }
+
+        .stat-value {
+            font-weight: 600;
+            color: var(--text-color);
+        }
+
+        .quick-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .quick-stat-card {
+            background: var(--card-bg);
+            padding: 1.5rem;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .quick-stat-card i {
+            font-size: 2rem;
+            color: var(--accent-color);
+            margin-bottom: 1rem;
+        }
+
+        .tier-distribution {
+            display: flex;
+            height: 30px;
+            border-radius: 15px;
+            overflow: hidden;
+            margin-top: 1rem;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .tier-bar {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 0.7rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .tier-bar:hover {
+            transform: scale(1.05);
+        }
+
+        .conquer { background: linear-gradient(135deg, #ff0000, #cc0000); }
+        .diamond { background: linear-gradient(135deg, #b9f2ff, #7aeaff); color: #0066cc; }
+        .platinum { background: linear-gradient(135deg, #e5e4e2, #d0cfcc); color: #333; }
+        .gold { background: linear-gradient(135deg, #ffd700, #e6c200); color: #333; }
+        .silver { background: linear-gradient(135deg, #c0c0c0, #a8a8a8); color: #333; }
+        .bronze { background: linear-gradient(135deg, #cd7f32, #b87333); }
+
+        .clans-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .clan-card {
+            background: var(--card-bg);
+            padding: 1.5rem;
+            border-radius: 8px;
+            text-align: center;
+            border: 1px solid var(--border-color);
+            transition: transform 0.3s ease;
+        }
+
+        .clan-card:hover {
+            transform: translateY(-3px);
+            border-color: var(--accent-color);
+        }
+
+        .clan-badge-large {
+            background: linear-gradient(135deg, #3e8ce5, #ffee00);
+            color: white;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1.2rem;
+            margin: 0 auto 1rem;
+        }
+
+        .clan-stats {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 1rem;
+            font-size: 0.8rem;
+            color: #a0aec0;
+        }
+
+        .activity-feed {
+            max-height: 400px;
+            overflow-y: auto;
+            margin-top: 1rem;
+        }
+
+        .activity-item {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .activity-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--secondary-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--accent-color);
+        }
+
+        .activity-content {
+            flex: 1;
+        }
+
+        .activity-time {
+            color: #a0aec0;
+            font-size: 0.8rem;
+        }
+
+        .cta-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .cta-card {
+            background: var(--card-bg);
+            padding: 2rem;
+            border-radius: 8px;
+            text-decoration: none;
+            color: inherit;
+            transition: all 0.3s ease;
+            text-align: center;
+            border: 2px solid transparent;
+        }
+
+        .cta-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--accent-color);
+        }
+
+        .cta-card i {
+            font-size: 3rem;
+            color: var(--accent-color);
+            margin-bottom: 1rem;
+        }
+
+        .cta-card h3 {
+            margin-bottom: 0.5rem;
+            color: var(--text-color);
+        }
+
+        .cta-card p {
+            color: #a0aec0;
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 768px) {
+            .hero-stats {
+                gap: 1rem;
+            }
+            
+            .hero-stat .number {
+                font-size: 2rem;
+            }
+            
+            .players-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+    <img src="https://i.postimg.cc/rFNdr7FV/logo.png" alt="Age of Empires IV Brasil" class="logo-img">
+    <h1>Age of Empires IV Brasil</h1>
+</div>
+                <nav>
+                    <ul>
+                        <li><a href="index.html" class="active">Início</a></li>
+                        <li><a href="leaderboard.html">Tabela de classificação</a></li>
+                        <li><a href="torneios.html">Torneios</a></li>
+                        <li><a href="about.html">Sobre</a></li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <section class="hero">
+        <div class="container">
+            <h2>Age of Empires IV <span style="color: #ffee00;"> Brasil</span></h2>
+            <p>A plataforma definitiva para acompanhar estatísticas, rankings e histórico de partidas do Age of Empires IV em tempo real</p>
+            
+            <div class="hero-stats" id="hero-stats">
+                <div class="hero-stat">
+                    <span class="number">0</span>
+                    <span class="label">Jogadores</span>
+                </div>
+                <div class="hero-stat">
+                    <span class="number">0</span>
+                    <span class="label">Partidas</span>
+                </div>
+                <div class="hero-stat">
+                    <span class="number">0</span>
+                    <span class="label">Clans</span>
+                </div>
+                <div class="hero-stat">
+                    <span class="number">0</span>
+                    <span class="label">Ativos hoje</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <main class="container">
+        <!-- Top Players -->
+        <section class="featured-players">
+            <div class="container">
+                <h2 class="section-title">🏆 Os 5 melhores jogadores - Temporada 12</h2>
+                <div class="players-grid" id="top-players">
+                    <div class="loading">
+                        <i class="fas fa-spinner fa-spin"></i> Carregando top players...
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Estatísticas Rápidas -->
+        <section class="quick-stats">
+            <h2 class="section-title">📈 Estatísticas da Comunidade</h2>
+            <div class="quick-stats-grid" id="community-stats">
+                <div class="loading">
+                    <i class="fas fa-chart-bar"></i> Carregando estatísticas...
+                </div>
+            </div>
+        </section>
+
+        <!-- Clans em Destaque -->
+        <section class="featured-clans">
+            <h2 class="section-title">👑 Clans em Destaque</h2>
+            <div class="clans-grid" id="top-clans">
+                <div class="loading">
+                    <i class="fas fa-users"></i> Carregando clans...
+                </div>
+            </div>
+        </section>
+
+        <!-- Atividade Recente -->
+        <section class="recent-activity">
+            <h2 class="section-title">🔄 Atividade Recente</h2>
+            <div class="activity-feed" id="recent-activity">
+                <div class="loading">
+                    <i class="fas fa-sync-alt fa-spin"></i> Carregando atividade...
+                </div>
+            </div>
+        </section>
+
+        <!-- Call-to-Action -->
+        <section class="cta-section">
+            <h2 class="section-title">Explorar Mais</h2>
+            <div class="cta-grid">
+                <a href="leaderboard.html" class="cta-card">
+                    <i class="fas fa-trophy"></i>
+                    <h3>Classificação completa</h3>
+                    <p>Classificações ranqueados solo e em equipe</p>
+                </a>
+                <a href="players.html" class="cta-card">
+                    <i class="fas fa-search"></i>
+                    <h3>Buscar jogadores</h3>
+                    <p>Encontre jogadores específicos e compare estatísticas</p>
+                </a>
+                <a href="stats.html" class="cta-card">
+                    <i class="fas fa-chart-bar"></i>
+                    <h3>Estatísticas avançadas</h3>
+                    <p>Dados detalhados, gráficos e análises</p>
+                </a>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="logo">
+                    <i class="fas fa-crown" style="color: #e53e3e;"></i>
+                    <h2>Age of Empires IV Brasil</h2>
+                </div>
+                <div class="footer-links">
+                    <a href="#">Início</a>
+                    <a href="#">Tabela de classificação</a>
+                    <a href="#">Torneios</a>
+                    <a href="#">Sobre</a>
+                </div>
+                <div class="copyright">
+                    &copy; 2025 - Age of Empires IV Brasil. Dados de aoe4world.com. Este site não possui qualquer vínculo com a Microsoft ou a Relic Entertainment.
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/api.js"></script>
+    <script src="js/home.js"></script>
+    
+</body>
+</html>

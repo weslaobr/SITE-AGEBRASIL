@@ -1,0 +1,972 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detalhes do Clan - AOE4 Brasil</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/responsive.css">
+    <link rel="icon" type="image/png" href="https://i.postimg.cc/3JT4W3hz/favicon.png">
+    <style>
+
+/* Melhorar visualização das estatísticas */
+.clan-member-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.clan-member-stat {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 6px;
+    border-left: 3px solid var(--accent-color);
+}
+
+.clan-member-stat .stat-label {
+    font-size: 0.75rem;
+    color: #a0aec0;
+    font-weight: 500;
+}
+
+.clan-member-stat .stat-value {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-color);
+}
+
+.clan-member-stat .stat-value.positive {
+    color: #48bb78;
+}
+
+.clan-member-stat .stat-value.negative {
+    color: #e53e3e;
+}
+
+.clan-member-no-data {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 1rem;
+    color: #a0aec0;
+    font-size: 0.8rem;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 6px;
+}
+
+.clan-member-details {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.member-detail {
+    background: var(--secondary-color);
+    padding: 3px 8px;
+    border-radius: 8px;
+    font-size: 0.7rem;
+    color: #cbd5e0;
+}
+
+/* Cores para a distribuição de tiers */
+.tier-bar.conquer { 
+    background: linear-gradient(135deg, #ff0000, #cc0000);
+}
+.tier-bar.diamond { 
+    background: linear-gradient(135deg, #b9f2ff, #7aeaff);
+    color: #0066cc;
+}
+.tier-bar.platinum { 
+    background: linear-gradient(135deg, #e5e4e2, #d0cfcc);
+    color: #333;
+}
+.tier-bar.gold { 
+    background: linear-gradient(135deg, #ffd700, #e6c200);
+    color: #333;
+}
+.tier-bar.silver { 
+    background: linear-gradient(135deg, #c0c0c0, #a8a8a8);
+    color: #333;
+}
+.tier-bar.bronze { 
+    background: linear-gradient(135deg, #cd7f32, #b87333);
+}
+.tier-bar.unranked { 
+    background: linear-gradient(135deg, #718096, #4a5568);
+    color: white;
+}
+
+        .clan-header {
+            background: var(--card-bg);
+            padding: 2.5rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            text-align: center;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .clan-badge-large {
+            background: linear-gradient(135deg, #3e8ce5, #ffee00);
+            color: white;
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 2rem;
+            margin: 0 auto 1.5rem;
+            border: 4px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 4px 15px rgba(229, 62, 62, 0.3);
+        }
+
+        .clan-stats-overview {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 1.5rem;
+            margin: 2.5rem 0;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 1.8rem 1rem;
+            border-radius: 12px;
+            text-align: center;
+            border: 1px solid var(--border-color);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--accent-color);
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+        }
+
+        .stat-card .stat-number {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: var(--accent-color);
+            margin-bottom: 0.5rem;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .stat-card .stat-label {
+            color: #a0aec0;
+            font-size: 0.95rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .members-section {
+            background: var(--card-bg);
+            padding: 2.5rem;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .members-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .member-card {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 1.8rem;
+            border-radius: 12px;
+            border-left: 5px solid var(--accent-color);
+            transition: all 0.3s ease;
+            border: 1px solid var(--border-color);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .member-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--accent-color);
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+        }
+
+        .member-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+            border-left-color: #48bb78;
+        }
+
+        .member-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .member-header {
+            display: flex;
+            align-items: center;
+            gap: 1.2rem;
+            margin-bottom: 1.2rem;
+            padding-bottom: 1.2rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .member-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            overflow: hidden;
+            background: var(--secondary-color);
+            border: 3px solid var(--accent-color);
+            flex-shrink: 0;
+        }
+
+        .member-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .avatar-fallback {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--secondary-color);
+            color: var(--text-color);
+            font-weight: 700;
+            font-size: 1.2rem;
+        }
+
+        .member-name {
+            font-weight: 700;
+            font-size: 1.3rem;
+            color: var(--text-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .member-stats {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 0.8rem;
+            margin-top: 1rem;
+        }
+
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.8rem 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .stat-item:last-child {
+            border-bottom: none;
+        }
+
+        .stat-label {
+            color: #a0aec0;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .stat-value {
+            font-weight: 700;
+            color: var(--text-color);
+        }
+
+        .no-data {
+            color: #a0aec0;
+            font-style: italic;
+            text-align: center;
+            padding: 2rem;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 8px;
+            margin: 1rem 0;
+        }
+
+        .no-data i {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            display: block;
+            color: #718096;
+        }
+
+        .back-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.7rem;
+            background: var(--secondary-color);
+            color: var(--text-color);
+            padding: 0.8rem 1.5rem;
+            border-radius: 8px;
+            text-decoration: none;
+            margin-bottom: 2rem;
+            transition: all 0.3s ease;
+            border: 1px solid var(--border-color);
+            font-weight: 600;
+        }
+
+        .back-button:hover {
+            background: var(--accent-color);
+            color: white;
+            transform: translateX(-5px);
+            box-shadow: 0 4px 12px rgba(229, 62, 62, 0.3);
+        }
+
+        .tier-distribution {
+            display: flex;
+            height: 35px;
+            border-radius: 18px;
+            overflow: hidden;
+            margin: 1.5rem 0;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            border: 2px solid var(--border-color);
+        }
+
+        .tier-bar {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 0.8rem;
+            font-weight: 700;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .tier-bar:hover {
+            filter: brightness(1.2);
+            transform: scale(1.05);
+            z-index: 2;
+        }
+
+        .tier-bar::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(rgba(255,255,255,0.1), rgba(255,255,255,0));
+            pointer-events: none;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: #a0aec0;
+            font-size: 1.1rem;
+        }
+
+        .loading i {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            color: var(--accent-color);
+        }
+
+        .error {
+            text-align: center;
+            padding: 3rem;
+            color: #a0aec0;
+            background: var(--card-bg);
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+        }
+
+        .error i {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            color: #e53e3e;
+        }
+
+        .error h2 {
+            margin-bottom: 1rem;
+            color: var(--text-color);
+        }
+
+        /* Cores para a distribuição de tiers */
+        .tier-bar.conquer { 
+            background: linear-gradient(135deg, #ff0000, #cc0000);
+        }
+        .tier-bar.platinum { 
+            background: linear-gradient(135deg, #e5e4e2, #d0cfcc);
+            color: #333;
+        }
+        .tier-bar.silver { 
+            background: linear-gradient(135deg, #c0c0c0, #a8a8a8);
+            color: #333;
+        }
+
+        @media (max-width: 768px) {
+            .clan-header {
+                padding: 1.5rem;
+            }
+            
+            .clan-badge-large {
+                width: 80px;
+                height: 80px;
+                font-size: 1.5rem;
+            }
+            
+            .clan-stats-overview {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 1rem;
+            }
+            
+            .members-section {
+                padding: 1.5rem;
+            }
+            
+            .members-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .member-card {
+                padding: 1.2rem;
+            }
+            
+            .member-header {
+                flex-direction: column;
+                text-align: center;
+                gap: 0.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <i class="fas fa-crown fa-2x" style="color: #e53e3e;"></i>
+                    <h1>Age of Empires IV Brasil</h1>
+                </div>
+                <nav>
+                    <ul>
+                        <li><a href="index.html" class="active">Início</a></li>
+                        <li><a href="leaderboard.html">Tabela de classificação</a></li>
+                        <li><a href="players.html">Jogadores</a></li>
+                        <li><a href="stats.html">Estatísticas</a></li>
+                        <li><a href="about.html">Sobre</a></li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+        <a href="index.html" class="back-button">
+            <i class="fas fa-arrow-left"></i>
+            Voltar para Home
+        </a>
+
+        <div id="clan-details">
+            <div class="loading">
+                <i class="fas fa-spinner fa-spin"></i> Carregando detalhes do clan...
+            </div>
+        </div>
+    </main>
+
+<script>
+    // Pegar ID do clan da URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const clanId = urlParams.get('id');
+
+    // Função de debug
+    async function debugClanLoad() {
+        console.log('🔍 DEBUG - Clan ID da URL:', clanId);
+        console.log('🔍 DEBUG - URL completa:', window.location.href);
+        
+        if (!clanId) {
+            console.error('❌ DEBUG - Clan ID não encontrado na URL');
+            return;
+        }
+        
+        try {
+            console.log('🔍 DEBUG - Testando conexão com API...');
+            const testResponse = await fetch('http://localhost:3001/health');
+            console.log('🔍 DEBUG - Health check:', testResponse.status);
+            
+            const clanResponse = await fetch(`http://localhost:3001/api/clans/${clanId}`);
+            console.log('🔍 DEBUG - Resposta do clan:', clanResponse.status);
+            
+            if (!clanResponse.ok) {
+                console.error('🔍 DEBUG - Erro HTTP:', clanResponse.status, clanResponse.statusText);
+                return;
+            }
+            
+            const clanData = await clanResponse.json();
+            console.log('🔍 DEBUG - Dados recebidos:', clanData);
+            
+        } catch (error) {
+            console.error('🔍 DEBUG - Erro completo:', error);
+        }
+    }
+
+    async function loadClanDetails() {
+        if (!clanId) {
+            showError('Clan não especificado na URL. Use: clan.html?id=1');
+            return;
+        }
+
+        console.log('🚀 Iniciando carga do clan ID:', clanId);
+
+        try {
+            // Mostrar loading
+            document.getElementById('clan-details').innerHTML = `
+                <div class="loading">
+                    <i class="fas fa-spinner fa-spin"></i> 
+                    <p>Conectando com o servidor...</p>
+                    <small>Aguarde, isso pode levar alguns segundos</small>
+                </div>
+            `;
+
+            const response = await fetch(`http://localhost:3001/api/clans/${clanId}`, {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            console.log('📡 Status da resposta:', response.status, response.statusText);
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error('❌ Resposta não OK:', errorText);
+                throw new Error(`Erro do servidor: ${response.status} ${response.statusText}`);
+            }
+
+            const clanData = await response.json();
+            console.log('✅ Dados recebidos com sucesso:', clanData);
+
+            if (!clanData.success) {
+                throw new Error(clanData.error || 'Resposta inválida da API');
+            }
+
+            displayClanDetails(clanData);
+
+        } catch (error) {
+            console.error('💥 Erro crítico:', error);
+            showError(`Falha ao carregar clan: ${error.message}`);
+            
+            // Tentar carregar dados mock após 3 segundos
+            setTimeout(() => {
+                console.log('🔄 Tentando carregar dados mock...');
+                loadMockClanData();
+            }, 3000);
+        }
+    }
+
+    // Função fallback com dados mock
+    function loadMockClanData() {
+        console.log('🎭 Carregando dados mock...');
+        
+        const mockClanData = {
+            success: true,
+            clan: {
+                id: clanId,
+                name: "No Brakes Players",
+                tag: "NBP",
+                description: "Top Brazilian competitive clan focused on Age of Empires IV"
+            },
+            members: [
+                {
+                    name: "Sektor",
+                    is_owner: true,
+                    current_solo_points: 2450,
+                    current_solo_elo: 1850,
+                    current_solo_wins: 235,
+                    current_solo_total_matches: 342,
+                    avatar_url: ""
+                },
+                {
+                    name: "Erik",
+                    is_owner: false,
+                    current_solo_points: 2380,
+                    current_solo_elo: 1820,
+                    current_solo_wins: 194,
+                    current_solo_total_matches: 298,
+                    avatar_url: ""
+                },
+                {
+                    name: "TheViper",
+                    is_owner: false,
+                    current_solo_points: 2280,
+                    current_solo_elo: 1750,
+                    current_solo_wins: 272,
+                    current_solo_total_matches: 389,
+                    avatar_url: ""
+                }
+            ],
+            stats: {
+                total_members: 3,
+                players_with_data: 3,
+                data_coverage: 100,
+                avg_solo_points: 2370,
+                max_solo_points: 2450,
+                conquer_diamond_players: 3,
+                platinum_gold_players: 0
+            }
+        };
+        
+        displayClanDetails(mockClanData);
+    }
+
+    function displayClanDetails(clanData) {
+        const clan = clanData.clan;
+        const clanMembers = clanData.members || [];
+        const stats = clanData.stats || {};
+
+        console.log('🎨 Renderizando clan:', clan);
+        console.log('👥 Membros:', clanMembers.length);
+
+        // Filtrar membros únicos
+        const uniqueMembers = filterUniqueMembers(clanMembers);
+
+        document.getElementById('clan-details').innerHTML = `
+            <div class="clan-header">
+                <div class="clan-badge-large">${clan.tag || 'CLAN'}</div>
+                <h1>${clan.name || 'Clan sem nome'}</h1>
+                <p class="clan-description">${clan.description || 'Clan de Age of Empires IV'}</p>
+                
+                <div class="season-badge" style="background: #48bb78; color: white; padding: 0.5rem 1rem; border-radius: 20px; display: inline-block; margin: 1rem 0; font-weight: 600;">
+                    <i class="fas fa-calendar-alt"></i> Season 12
+                </div>
+                
+                <div class="clan-stats-overview">
+                    <div class="stat-card">
+                        <div class="stat-number">${uniqueMembers.length}</div>
+                        <div class="stat-label">Membros</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">${stats.avg_solo_points || 0}</div>
+                        <div class="stat-label">Pontos Médios</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">${stats.max_solo_points || 0}</div>
+                        <div class="stat-label">Melhor Player</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">${stats.data_coverage || 0}%</div>
+                        <div class="stat-label">Dados Disponíveis</div>
+                    </div>
+                </div>
+
+                ${stats.conquer_diamond_players > 0 || stats.platinum_gold_players > 0 ? `
+                    <div class="tier-breakdown">
+                        <h3>Distribuição por Tier do Clan</h3>
+                        <div class="tier-distribution">
+                            ${calculateTierDistribution(uniqueMembers).map(tier => `
+                                <div class="tier-bar ${tier.class}" 
+                                     style="width: ${tier.percentage}%"
+                                     title="${tier.name}: ${tier.count} players (${tier.percentage}%)">
+                                    ${tier.percentage > 10 ? tier.count : ''}
+                                </div>
+                            `).join('')}
+                        </div>
+                        <div style="margin-top: 10px; font-size: 0.8rem; color: #a0aec0;">
+                            ${calculateTierDistribution(uniqueMembers).map(tier => 
+                                `<span style="margin-right: 10px;">${tier.name}: ${tier.count}</span>`
+                            ).join('')}
+                        </div>
+                    </div>
+                ` : ''}
+            </div>
+
+            <div class="members-section">
+                <h2><i class="fas fa-users"></i> Membros do Clan (${uniqueMembers.length})</h2>
+                
+                ${uniqueMembers.length > 0 ? `
+                    <div class="members-grid">
+                        ${uniqueMembers.map(member => `
+                            <div class="member-card">
+                                <div class="member-header">
+                                    <div class="member-avatar">
+                                        ${member.avatar_url ? 
+                                            `<img src="${member.avatar_url}" alt="${member.name}" onerror="this.style.display='none'">` : 
+                                            `<div class="avatar-fallback">${member.name ? member.name.charAt(0).toUpperCase() : '?'}</div>`
+                                        }
+                                    </div>
+                                    <div>
+                                       <div class="member-name">
+    ${member.name ? `
+        <a href="https://aoe4world.com/players/${getAoe4WorldId(member)}" 
+           target="_blank" 
+           class="player-link"
+           title="Ver perfil no AOE4 World">
+            ${member.name}
+            
+        </a>
+    ` : 'Jogador sem dados'}
+</div>
+                                        ${member.is_owner ? '<div class="owner-badge"><i class="fas fa-crown"></i> Líder</div>' : ''}
+                                    </div>
+                                </div>
+                                
+                                ${getCurrentPoints(member) ? `
+                                    <div class="member-stats">
+                                        <div class="stat-item">
+                                            <span class="stat-label">Level:</span>
+                                            <span class="level-badge-compact ${getLevelClass(member)}">
+                                                ${getLevelText(member)}
+                                            </span>
+                                        </div>
+                                        <div class="stat-item">
+                                            <span class="stat-label">Pontos Solo:</span>
+                                            <span class="stat-value">${getCurrentPoints(member)}</span>
+                                        </div>
+                                        <div class="stat-item">
+                                            <span class="stat-label">ELO:</span>
+                                            <span class="stat-value">${getCurrentElo(member)}</span>
+                                        </div>
+                                        <div class="stat-item">
+                                            <span class="stat-label">Vitórias/Derrotas:</span>
+                                            <span class="stat-value">${getCurrentWins(member)}/${getCurrentLosses(member)}</span>
+                                        </div>
+                                        <div class="stat-item">
+                                            <span class="stat-label">Win Rate:</span>
+                                            <span class="stat-value ${getWinRateClass(getCurrentWins(member), getCurrentMatches(member))}">
+                                                ${calculateWinRate(getCurrentWins(member), getCurrentMatches(member))}%
+                                            </span>
+                                        </div>
+                                    </div>
+                                ` : `
+                                    <div class="no-data">
+                                        <i class="fas fa-info-circle"></i>
+                                        <p>Sem dados de ranked disponíveis</p>
+                                    </div>
+                                `}
+                            </div>
+                        `).join('')}
+                    </div>
+                ` : `
+                    <div class="no-data">
+                        <i class="fas fa-users-slash"></i>
+                        <p>Nenhum membro encontrado</p>
+                    </div>
+                `}
+            </div>
+        `;
+    }
+
+function getAoe4WorldId(playerData) {
+    // Tenta encontrar o AOE4 World ID em várias propriedades possíveis
+    return playerData.aoe4_world_id || 
+           playerData.aoe4world_id || 
+           playerData.player_id || 
+           playerData.name || 
+           'unknown';
+}
+
+    // Funções auxiliares (mantenha as existentes e adicione estas)
+    function getCurrentLosses(playerData) {
+        const wins = getCurrentWins(playerData);
+        const matches = getCurrentMatches(playerData);
+        return Math.max(0, matches - wins);
+    }
+
+    function getCurrentWins(playerData) {
+        return playerData.current_solo_wins || playerData.rm_solo_wins || 0;
+    }
+
+    function getCurrentMatches(playerData) {
+        return playerData.current_solo_total_matches || playerData.rm_solo_total_matches || 0;
+    }
+
+    function calculateWinRate(wins, matches) {
+        if (!matches || matches === 0) return 0;
+        return Math.round((wins / matches) * 100);
+    }
+
+    function getWinRateClass(wins, matches) {
+        const winRate = calculateWinRate(wins, matches);
+        if (winRate >= 60) return 'positive';
+        if (winRate >= 40) return '';
+        return 'negative';
+    }
+
+    // ... (mantenha as outras funções existentes: filterUniqueMembers, getLevelClass, getLevelText, getCurrentPoints, getCurrentElo, showError)
+
+    function filterUniqueMembers(members) {
+        const uniqueMembers = [];
+        const seenPlayers = new Set();
+        
+        const sortedMembers = members.sort((a, b) => (b.season_number || 0) - (a.season_number || 0));
+        
+        for (const member of sortedMembers) {
+            const playerId = member.player_id || member.name;
+            
+            if (!seenPlayers.has(playerId)) {
+                seenPlayers.add(playerId);
+                uniqueMembers.push(member);
+            }
+        }
+        
+        return uniqueMembers;
+    }
+
+    function getLevelClass(playerData) {
+        const points = getCurrentPoints(playerData);
+        
+        if (!points || points === 0) return 'no-data';
+        
+        if (points >= 1600) return 'conquer-3';
+        if (points >= 1500) return 'conquer-2';
+        if (points >= 1400) return 'conquer-1';
+        
+        if (points >= 1300) return 'diamante-3';
+        if (points >= 1200) return 'diamante-2';
+        if (points >= 1100) return 'diamante-1';
+        
+        if (points >= 1000) return 'platina-3';
+        if (points >= 900) return 'platina-2';
+        if (points >= 800) return 'platina-1';
+        
+        if (points >= 700) return 'ouro-3';
+        if (points >= 650) return 'ouro-2';
+        if (points >= 600) return 'ouro-1';
+        
+        if (points >= 500) return 'prata-3';
+        if (points >= 450) return 'prata-2';
+        if (points >= 400) return 'prata-1';
+        
+        if (points >= 300) return 'bronze-3';
+        if (points >= 200) return 'bronze-2';
+        
+        return 'bronze-1';
+    }
+
+    function getLevelText(playerData) {
+        const points = getCurrentPoints(playerData);
+        
+        if (!points || points === 0) return 'Unranked';
+        
+        if (points >= 1600) return 'Conqueror III';
+        if (points >= 1500) return 'Conqueror II';
+        if (points >= 1400) return 'Conqueror I';
+        
+        if (points >= 1300) return 'Diamond III';
+        if (points >= 1200) return 'Diamond II';
+        if (points >= 1100) return 'Diamond I';
+        
+        if (points >= 1000) return 'Platinum III';
+        if (points >= 900) return 'Platinum II';
+        if (points >= 800) return 'Platinum I';
+        
+        if (points >= 700) return 'Gold III';
+        if (points >= 650) return 'Gold II';
+        if (points >= 600) return 'Gold I';
+        
+        if (points >= 500) return 'Silver III';
+        if (points >= 450) return 'Silver II';
+        if (points >= 400) return 'Silver I';
+        
+        if (points >= 300) return 'Bronze III';
+        if (points >= 200) return 'Bronze II';
+        
+        return 'Bronze I';
+    }
+
+    function getCurrentPoints(playerData) {
+        return playerData.current_solo_points || playerData.rm_solo_points || 0;
+    }
+
+    function getCurrentElo(playerData) {
+        return playerData.current_solo_elo || playerData.rm_solo_elo || 0;
+    }
+
+    function showError(message) {
+        document.getElementById('clan-details').innerHTML = `
+            <div class="error">
+                <i class="fas fa-exclamation-triangle"></i>
+                <h2>Erro ao carregar clan</h2>
+                <p>${message}</p>
+                <div style="margin-top: 1.5rem; background: rgba(255,255,255,0.1); padding: 1rem; border-radius: 8px;">
+                    <h4>Debug Info:</h4>
+                    <p>Clan ID: ${clanId || 'Não especificado'}</p>
+                    <p>URL: ${window.location.href}</p>
+                </div>
+                <a href="index.html" class="back-button" style="margin-top: 1.5rem;">
+                    <i class="fas fa-arrow-left"></i>
+                    Voltar para Home
+                </a>
+            </div>
+        `;
+    }
+
+    // Calcular distribuição por tier
+    function calculateTierDistribution(members) {
+        const tiers = {
+            conquer: { name: 'Conquer', class: 'conquer', count: 0, minPoints: 1400 },
+            diamond: { name: 'Diamond', class: 'diamond', count: 0, minPoints: 1200, maxPoints: 1399 },
+            platinum: { name: 'Platinum', class: 'platinum', count: 0, minPoints: 1000, maxPoints: 1199 },
+            gold: { name: 'Gold', class: 'gold', count: 0, minPoints: 700, maxPoints: 999 },
+            silver: { name: 'Silver', class: 'silver', count: 0, minPoints: 500, maxPoints: 699 },
+            bronze: { name: 'Bronze', class: 'bronze', count: 0, minPoints: 0, maxPoints: 499 },
+            unranked: { name: 'Unranked', class: 'unranked', count: 0 }
+        };
+
+        members.forEach(member => {
+            const points = getCurrentPoints(member);
+            
+            if (!points || points === 0) {
+                tiers.unranked.count++;
+            } else if (points >= tiers.conquer.minPoints) {
+                tiers.conquer.count++;
+            } else if (points >= tiers.diamond.minPoints) {
+                tiers.diamond.count++;
+            } else if (points >= tiers.platinum.minPoints) {
+                tiers.platinum.count++;
+            } else if (points >= tiers.gold.minPoints) {
+                tiers.gold.count++;
+            } else if (points >= tiers.silver.minPoints) {
+                tiers.silver.count++;
+            } else {
+                tiers.bronze.count++;
+            }
+        });
+
+        const totalWithData = members.length - tiers.unranked.count;
+        
+        return Object.values(tiers)
+            .filter(tier => tier.count > 0)
+            .map(tier => ({
+                ...tier,
+                percentage: totalWithData > 0 ? Math.round((tier.count / members.length) * 100) : 0
+            }));
+    }
+
+    // Iniciar debug e carregamento
+    console.log('🚀 Iniciando clan page...');
+    setTimeout(debugClanLoad, 500);
+    loadClanDetails();
+</script>
+</body>
+</html>

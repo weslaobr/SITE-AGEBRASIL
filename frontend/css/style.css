@@ -1,0 +1,1925 @@
+/* ===== VARIÁVEIS CSS ===== */
+:root {
+    --primary-color: #1a365d;
+    --secondary-color: #2d3748;
+    --accent-color: #3e8ce5;
+    --text-color: #e2e8f0;
+    --border-color: #4a5568;
+    --card-bg: rgba(26, 32, 44, 0.8);
+    --header-bg: rgba(15, 23, 42, 0.9);
+}
+
+/* ===== RESET E CONFIGURAÇÕES GERAIS ===== */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    color: var(--text-color);
+    min-height: 100vh;
+    background-image: url('https://i.postimg.cc/qMqXGgcj/background.png');
+    background-size: cover;
+    background-attachment: fixed;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+/* ===== HEADER E NAVEGAÇÃO ===== */
+
+/* Estilo para tag do clan na leaderboard */
+.clan-tag-leaderboard {
+    background: linear-gradient(135deg, #3e8ce5, #ffee00);
+    color: white;
+    padding: 3px 8px;
+    border-radius: 8px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.player-stats {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.player-stats .region,
+.player-stats .civ {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 3px 8px;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    color: #cbd5e0;
+}
+
+.no-team-tag {
+    background: rgba(229, 62, 62, 0.2);
+    color: #e53e3e;
+    padding: 3px 8px;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.clan-tag-leaderboard {
+    background: linear-gradient(135deg, #3e8ce5, #ffee00);
+    color: white;
+    padding: 4px 10px;
+    border-radius: 10px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.region, .civ {
+    background: rgba(255, 255, 255, 0.08);
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    color: #cbd5e0;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.no-clan-tag {
+    background: rgba(255, 255, 255, 0.05);
+    color: #a0aec0;
+    padding: 3px 8px;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-style: italic;
+    border: 1px dashed rgba(255, 255, 255, 0.2);
+}
+
+/* Clan badge discreto */
+.clan-badge-minimal {
+    background: rgba(255, 255, 255, 0.1);
+    color: #a0aec0;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    margin-left: 8px;
+    display: inline-block;
+}
+
+.clan-badge-minimal:hover {
+    background: rgba(255, 255, 255, 0.15);
+    color: #cbd5e0;
+}
+
+header {
+    background-color: var(--header-bg);
+    padding: 1rem 0;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.logo img {
+    height: 40px;
+}
+
+.logo h1 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    background: linear-gradient(to right, #3e8ce5, #ffee00);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+nav ul {
+    display: flex;
+    list-style: none;
+    gap: 2rem;
+}
+
+nav a {
+    color: var(--text-color);
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.3s;
+    padding: 0.5rem 0;
+}
+
+nav a:hover, nav a.active {
+    color: var(--accent-color);
+    border-bottom: 2px solid var(--accent-color);
+}
+
+/* ===== HERO SECTION ===== */
+.hero {
+    padding: 4rem 0;
+    text-align: center;
+    background: rgba(15, 23, 42, 0.7);
+    margin-bottom: 2rem;
+}
+
+.hero h2 {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+    background: linear-gradient(to right, #3e8ce5, #ffee00);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.hero p {
+    font-size: 1.2rem;
+    max-width: 800px;
+    margin: 0 auto 2rem;
+    color: #cbd5e0;
+}
+
+.search-box {
+    display: flex;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.search-box input {
+    flex: 1;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 4px 0 0 4px;
+    background: var(--secondary-color);
+    color: var(--text-color);
+    font-size: 1rem;
+}
+
+.search-box button {
+    padding: 12px 24px;
+    background: var(--accent-color);
+    color: white;
+    border: none;
+    border-radius: 0 4px 4px 0;
+    cursor: pointer;
+    font-weight: 600;
+    transition: background 0.3s;
+}
+
+.search-box button:hover {
+    background: #013a08;
+}
+
+/* ===== TÍTULOS DE SEÇÃO ===== */
+.section-title {
+    font-size: 2rem;
+    margin-bottom: 2rem;
+    text-align: center;
+    position: relative;
+    padding-bottom: 10px;
+}
+
+.section-title:after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100px;
+    height: 3px;
+    background: var(--accent-color);
+}
+
+/* ===== LEADERBOARD ===== */
+.leaderboard {
+    background: var(--card-bg);
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 3rem;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+.leaderboard-header {
+    display: grid;
+    grid-template-columns: 80px 1fr 120px 100px 100px 120px 100px 120px;
+    padding: 1rem;
+    background: var(--primary-color);
+    font-weight: 600;
+    border-bottom: 1px solid var(--border-color);
+    text-align: center;
+}
+
+.leaderboard-header > div:first-child {
+    text-align: center;
+}
+
+.leaderboard-header > div:nth-child(2) {
+    text-align: left;
+}
+
+.player-row {
+    display: grid;
+    grid-template-columns: 80px 1fr 120px 100px 100px 120px 100px 120px;
+    padding: 1rem;
+    border-bottom: 1px solid var(--border-color);
+    transition: background 0.3s;
+    align-items: center;
+    text-align: center;
+}
+
+.player-row:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.player-row.top-3 {
+    background: linear-gradient(90deg, rgba(229, 62, 62, 0.1) 0%, rgba(237, 137, 54, 0.1) 100%);
+}
+
+/* ===== RANKS E BADGES ===== */
+.rank {
+    text-align: center;
+    font-weight: 700;
+    font-size: 1.1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.rank-1, .rank-2, .rank-3 {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;
+    font-weight: bold;
+}
+
+.rank-1 {
+    background: linear-gradient(135deg, #FFD700, #FFA500);
+    color: #000;
+}
+
+.rank-2 {
+    background: linear-gradient(135deg, #C0C0C0, #A0A0A0);
+    color: #000;
+}
+
+.rank-3 {
+    background: linear-gradient(135deg, #CD7F32, #8B5A2B);
+    color: #000;
+}
+
+.rank-number {
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: var(--text-color);
+}
+
+/* ===== INFORMAÇÕES DO JOGADOR ===== */
+.player-info {
+    text-align: left;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--secondary-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.player-name {
+    font-weight: 600;
+}
+
+.player-clan {
+    color: #a0aec0;
+    font-size: 0.9rem;
+}
+
+/* ===== WINRATE ===== */
+.winrate {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    text-align: center;
+    padding: 0 5px;
+}
+
+.winrate-bar {
+    width: 80px;
+    height: 6px;
+    background: var(--secondary-color);
+    border-radius: 3px;
+    overflow: hidden;
+    margin: 0 auto;
+}
+
+.winrate-fill {
+    height: 100%;
+    background: var(--accent-color);
+    border-radius: 3px;
+    transition: width 0.3s ease;
+}
+
+.winrate span {
+    text-align: center;
+    display: block;
+    font-weight: 600;
+    min-width: 45px;
+}
+
+.positive {
+    color: #48bb78;
+}
+
+.negative {
+    color: #f56565;
+}
+
+.last-game {
+    text-align: center;
+    color: #a0aec0;
+    font-size: 0.9rem;
+}
+
+/* ===== FILTROS E PAGINAÇÃO ===== */
+.filters {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 2rem;
+    gap: 1rem;
+}
+
+.filter-group {
+    display: flex;
+    gap: 1rem;
+}
+
+select {
+    padding: 10px 15px;
+    background: var(--secondary-color);
+    color: var(--text-color);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    font-size: 1rem;
+}
+
+.pagination {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 2rem 0;
+    padding: 1rem;
+    background: var(--card-bg);
+    border-radius: 8px;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.pagination-info {
+    color: var(--text-color);
+    font-weight: 600;
+}
+
+.pagination-buttons {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.pagination-btn {
+    padding: 8px 16px;
+    background: var(--secondary-color);
+    color: var(--text-color);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.3s;
+    font-weight: 500;
+}
+
+.pagination-btn:hover:not(.disabled):not(.active) {
+    background: var(--accent-color);
+    color: white;
+    border-color: var(--accent-color);
+}
+
+.pagination-btn.active {
+    background: var(--accent-color);
+    color: white;
+    border-color: var(--accent-color);
+}
+
+.pagination-btn.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* ===== CORES DOS LEVELS PARA CLAN (CONSISTENTES COM LEADERBOARD) ===== */
+
+/* Cores das classes - Conquer */
+.level-badge-compact.conquer-3 { 
+    background: linear-gradient(135deg, #ff0000, #cc0000);
+    color: white;
+    border-color: #ff6666;
+}
+.level-badge-compact.conquer-2 { 
+    background: linear-gradient(135deg, #ff3333, #cc2222);
+    color: white;
+    border-color: #ff5555;
+}
+.level-badge-compact.conquer-1 { 
+    background: linear-gradient(135deg, #ff6666, #cc4444);
+    color: white;
+    border-color: #ff7777;
+}
+
+/* Cores das classes - Diamante */
+.level-badge-compact.diamante-3 { 
+    background: linear-gradient(135deg, #b9f2ff, #7aeaff);
+    color: #0066cc;
+    border-color: #40e0ff;
+}
+.level-badge-compact.diamante-2 { 
+    background: linear-gradient(135deg, #7aeaff, #40e0ff);
+    color: #0066cc;
+    border-color: #00ccff;
+}
+.level-badge-compact.diamante-1 { 
+    background: linear-gradient(135deg, #40e0ff, #00ccff);
+    color: #0066cc;
+    border-color: #00aaff;
+}
+
+/* Cores das classes - Platina */
+.level-badge-compact.platina-3 { 
+    background: linear-gradient(135deg, #e5e4e2, #d0cfcc);
+    color: #333333;
+    border-color: #b8b7b5;
+}
+.level-badge-compact.platina-2 { 
+    background: linear-gradient(135deg, #d8d6d2, #c4c2bd);
+    color: #333333;
+    border-color: #a9a7a2;
+}
+.level-badge-compact.platina-1 { 
+    background: linear-gradient(135deg, #c9c7c1, #b5b3ac);
+    color: #333333;
+    border-color: #9a9891;
+}
+
+/* Cores das classes - Ouro */
+.level-badge-compact.ouro-3 { 
+    background: linear-gradient(135deg, #ffd700, #e6c200);
+    color: #333333;
+    border-color: #ccad00;
+}
+.level-badge-compact.ouro-2 { 
+    background: linear-gradient(135deg, #e6c200, #ccad00);
+    color: #333333;
+    border-color: #b39900;
+}
+.level-badge-compact.ouro-1 { 
+    background: linear-gradient(135deg, #ccad00, #b39900);
+    color: #333333;
+    border-color: #998000;
+}
+
+/* Cores das classes - Prata */
+.level-badge-compact.prata-3 { 
+    background: linear-gradient(135deg, #c0c0c0, #a8a8a8);
+    color: #333333;
+    border-color: #909090;
+}
+.level-badge-compact.prata-2 { 
+    background: linear-gradient(135deg, #a8a8a8, #909090);
+    color: white;
+    border-color: #787878;
+}
+.level-badge-compact.prata-1 { 
+    background: linear-gradient(135deg, #909090, #787878);
+    color: white;
+    border-color: #606060;
+}
+
+/* Cores das classes - Bronze */
+.level-badge-compact.bronze-3 { 
+    background: linear-gradient(135deg, #cd7f32, #b87333);
+    color: white;
+    border-color: #a3662d;
+}
+.level-badge-compact.bronze-2 { 
+    background: linear-gradient(135deg, #b87333, #a3662d);
+    color: white;
+    border-color: #8c5a27;
+}
+.level-badge-compact.bronze-1 { 
+    background: linear-gradient(135deg, #a3662d, #8c5a27);
+    color: white;
+    border-color: #754d21;
+}
+
+/* Para players sem dados */
+.level-badge-compact.no-data { 
+    background: #4a5568;
+    color: #cbd5e0;
+    border-color: #718096;
+}
+
+/* Badge compacto para clan */
+.level-badge-compact {
+    padding: 0.4rem 0.8rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    display: inline-block;
+    min-width: 80px;
+    text-align: center;
+    border: 2px solid transparent;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* ===== BADGES DE LEVEL ===== */
+.level-cell {
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.level-badge {
+    padding: 4px 10px;
+    border-radius: 15px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    display: inline-block;
+    min-width: 85px;
+    text-align: center;
+    border: 2px solid transparent;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Cores das classes - Conquer */
+.level-badge.conquer-3 { 
+    background: linear-gradient(135deg, #ff0000, #cc0000);
+    color: white;
+    border-color: #ff6666;
+}
+.level-badge.conquer-2 { 
+    background: linear-gradient(135deg, #ff3333, #cc2222);
+    color: white;
+    border-color: #ff5555;
+}
+.level-badge.conquer-1 { 
+    background: linear-gradient(135deg, #ff6666, #cc4444);
+    color: white;
+    border-color: #ff7777;
+}
+
+/* Cores das classes - Diamante */
+.level-badge.diamante-3 { 
+    background: linear-gradient(135deg, #b9f2ff, #7aeaff);
+    color: #0066cc;
+    border-color: #40e0ff;
+}
+.level-badge.diamante-2 { 
+    background: linear-gradient(135deg, #7aeaff, #40e0ff);
+    color: #0066cc;
+    border-color: #00ccff;
+}
+.level-badge.diamante-1 { 
+    background: linear-gradient(135deg, #40e0ff, #00ccff);
+    color: #0066cc;
+    border-color: #00aaff;
+}
+
+/* Cores das classes - Platina */
+.level-badge.platina-3 { 
+    background: linear-gradient(135deg, #e5e4e2, #d0cfcc);
+    color: #333333;
+    border-color: #b8b7b5;
+}
+.level-badge.platina-2 { 
+    background: linear-gradient(135deg, #d8d6d2, #c4c2bd);
+    color: #333333;
+    border-color: #a9a7a2;
+}
+.level-badge.platina-1 { 
+    background: linear-gradient(135deg, #c9c7c1, #b5b3ac);
+    color: #333333;
+    border-color: #9a9891;
+}
+
+/* Cores das classes - Ouro */
+.level-badge.ouro-3 { 
+    background: linear-gradient(135deg, #ffd700, #e6c200);
+    color: #333333;
+    border-color: #ccad00;
+}
+.level-badge.ouro-2 { 
+    background: linear-gradient(135deg, #e6c200, #ccad00);
+    color: #333333;
+    border-color: #b39900;
+}
+.level-badge.ouro-1 { 
+    background: linear-gradient(135deg, #ccad00, #b39900);
+    color: #333333;
+    border-color: #998000;
+}
+
+/* Cores das classes - Prata */
+.level-badge.prata-3 { 
+    background: linear-gradient(135deg, #c0c0c0, #a8a8a8);
+    color: #333333;
+    border-color: #909090;
+}
+.level-badge.prata-2 { 
+    background: linear-gradient(135deg, #a8a8a8, #909090);
+    color: white;
+    border-color: #787878;
+}
+.level-badge.prata-1 { 
+    background: linear-gradient(135deg, #909090, #787878);
+    color: white;
+    border-color: #606060;
+}
+
+/* Cores das classes - Bronze */
+.level-badge.bronze-3 { 
+    background: linear-gradient(135deg, #cd7f32, #b87333);
+    color: white;
+    border-color: #a3662d;
+}
+.level-badge.bronze-2 { 
+    background: linear-gradient(135deg, #b87333, #a3662d);
+    color: white;
+    border-color: #8c5a27;
+}
+.level-badge.bronze-1 { 
+    background: linear-gradient(135deg, #a3662d, #8c5a27);
+    color: white;
+    border-color: #754d21;
+}
+
+/* Para players sem dados */
+.level-badge.no-data { 
+    background: #4a5568;
+    color: #cbd5e0;
+    border-color: #718096;
+}
+
+/* ===== CLAN MEMBERS PREVIEW ===== */
+.clan-members-preview {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem;
+    margin-top: 1rem;
+    justify-content: center;
+}
+
+.member-tag {
+    background: var(--secondary-color);
+    padding: 0.2rem 0.5rem;
+    border-radius: 10px;
+    font-size: 0.7rem;
+    color: #a0aec0;
+}
+
+.owner-badge {
+    background: linear-gradient(135deg, #3e8ce5, #ffee00);
+    color: #000;
+    padding: 0.2rem 0.5rem;
+    border-radius: 8px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.2rem;
+}
+
+/* ===== DETALHES DO CLAN ===== */
+.clan-header {
+    background: var(--card-bg);
+    padding: 2.5rem;
+    border-radius: 12px;
+    margin-bottom: 2rem;
+    text-align: center;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.clan-badge-large {
+    background: linear-gradient(135deg, #3e8ce5, #ffee00);
+    color: white;
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 2rem;
+    margin: 0 auto 1.5rem;
+    border: 4px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 4px 15px rgba(229, 62, 62, 0.3);
+}
+
+.clan-description {
+    color: #a0aec0;
+    font-size: 1.1rem;
+    max-width: 600px;
+    margin: 1rem auto;
+    line-height: 1.6;
+}
+
+.clan-stats-overview {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1.5rem;
+    margin: 2.5rem 0;
+}
+
+.stat-card {
+    background: rgba(255, 255, 255, 0.05);
+    padding: 1.8rem 1rem;
+    border-radius: 12px;
+    text-align: center;
+    border: 1px solid var(--border-color);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: var(--accent-color);
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+}
+
+.stat-card .stat-number {
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: var(--accent-color);
+    margin-bottom: 0.5rem;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.stat-card .stat-label {
+    color: #a0aec0;
+    font-size: 0.95rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* ===== MEMBROS DO CLAN ===== */
+.members-section {
+    background: var(--card-bg);
+    padding: 2.5rem;
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.members-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 1.5rem;
+    margin-top: 1.5rem;
+}
+
+.member-card {
+    background: rgba(255, 255, 255, 0.05);
+    padding: 1.8rem;
+    border-radius: 12px;
+    border-left: 5px solid var(--accent-color);
+    transition: all 0.3s ease;
+    border: 1px solid var(--border-color);
+    position: relative;
+    overflow: hidden;
+}
+
+.member-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: var(--accent-color);
+    transform: scaleX(0);
+    transition: transform 0.3s ease;
+}
+
+.member-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+    border-left-color: #48bb78;
+}
+
+.member-card:hover::before {
+    transform: scaleX(1);
+}
+
+.member-header {
+    display: flex;
+    align-items: center;
+    gap: 1.2rem;
+    margin-bottom: 1.2rem;
+    padding-bottom: 1.2rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.member-avatar {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    overflow: hidden;
+    background: var(--secondary-color);
+    border: 3px solid var(--accent-color);
+    flex-shrink: 0;
+}
+
+.member-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.avatar-fallback {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--secondary-color);
+    color: var(--text-color);
+    font-weight: 700;
+    font-size: 1.2rem;
+}
+
+.member-name {
+    font-weight: 700;
+    font-size: 1.3rem;
+    color: var(--text-color);
+    margin-bottom: 0.5rem;
+}
+
+.member-stats {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.8rem;
+    margin-top: 1rem;
+}
+
+.stat-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.8rem 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.stat-item:last-child {
+    border-bottom: none;
+}
+
+.stat-label {
+    color: #a0aec0;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.stat-value {
+    font-weight: 700;
+    color: var(--text-color);
+}
+
+/* ===== BADGES ESPECIAIS ===== */
+.clan-badge {
+    background: linear-gradient(135deg, #3e8ce5, #ffee00);
+    color: white;
+    padding: 4px 10px;
+    border-radius: 15px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    white-space: nowrap;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s ease;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.data-badge {
+    background: #48bb78;
+    color: white;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.6rem;
+}
+
+.warning-badge {
+    background: #ed8936;
+    color: white;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.6rem;
+}
+
+.team-badge {
+    background: #48bb78 !important;
+    color: white;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.6rem;
+}
+
+.no-team-badge {
+    background: #ed8936 !important;
+    color: white;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.6rem;
+}
+
+/* ===== LINKS DE JOGADORES ===== */
+.player-link {
+    color: inherit;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    font-weight: 600;
+}
+
+.player-link:hover {
+    color: var(--accent-color);
+    text-decoration: underline;
+}
+
+.player-link::after {
+    content: " ↗";
+    font-size: 0.8em;
+    opacity: 0.7;
+    transition: opacity 0.3s ease;
+}
+
+.player-link:hover::after {
+    opacity: 1;
+}
+
+/* ===== ESTADOS ESPECIAIS ===== */
+.no-data {
+    color: #a0aec0;
+    font-style: italic;
+    text-align: center;
+    padding: 2rem;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 8px;
+    margin: 1rem 0;
+}
+
+.no-data i {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+    display: block;
+    color: #718096;
+}
+
+.error {
+    text-align: center;
+    padding: 3rem;
+    color: #a0aec0;
+    background: var(--card-bg);
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+}
+
+.error i {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    color: #e53e3e;
+}
+
+.loading {
+    text-align: center;
+    padding: 4rem 2rem;
+    color: #a0aec0;
+    font-size: 1.1rem;
+}
+
+.loading i {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+    color: var(--accent-color);
+}
+
+/* ===== JOGADORES NÃO RANQUEADOS ===== */
+.player-row.unranked {
+    background: rgba(74, 85, 104, 0.3);
+    opacity: 0.8;
+}
+
+.player-row.unranked:hover {
+    background: rgba(74, 85, 104, 0.5);
+}
+
+.unranked-name {
+    color: #a0aec0 !important;
+    font-style: italic;
+}
+
+.unranked-points {
+    color: #a0aec0 !important;
+    font-style: italic;
+}
+
+.unranked-number {
+    color: #a0aec0 !important;
+    font-style: italic;
+}
+
+.level-badge.unranked {
+    background: #4a5568 !important;
+    color: #a0aec0 !important;
+    border-color: #718096 !important;
+    font-style: italic;
+}
+
+.unranked-badge {
+    background: #a0aec0 !important;
+    color: #2d3748 !important;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.6rem;
+}
+
+.unranked-tag {
+    background: #4a5568;
+    padding: 2px 6px;
+    border-radius: 8px;
+    font-size: 0.7rem;
+    color: #a0aec0;
+    font-style: italic;
+}
+
+/* ===== JOGADORES SEM TEAM RANKED ===== */
+.player-row.no-team-data {
+    background: rgba(74, 85, 104, 0.3);
+    opacity: 0.8;
+}
+
+.player-row.no-team-data:hover {
+    background: rgba(74, 85, 104, 0.5);
+}
+
+.no-team-name {
+    color: #a0aec0 !important;
+    font-style: italic;
+}
+
+.no-team-points {
+    color: #a0aec0 !important;
+    font-style: italic;
+}
+
+.no-data-rank {
+    color: #a0aec0 !important;
+    font-style: italic;
+}
+
+.level-badge.no-team-data {
+    background: #4a5568 !important;
+    color: #a0aec0 !important;
+    border-color: #718096 !important;
+    font-style: italic;
+}
+
+.no-team-tag {
+    background: #4a5568;
+    padding: 2px 6px;
+    border-radius: 8px;
+    font-size: 0.7rem;
+    color: #a0aec0;
+    font-style: italic;
+}
+
+/* ===== BOTÕES E CTA ===== */
+.back-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.7rem;
+    background: var(--secondary-color);
+    color: var(--text-color);
+    padding: 0.8rem 1.5rem;
+    border-radius: 8px;
+    text-decoration: none;
+    margin-bottom: 2rem;
+    transition: all 0.3s ease;
+    border: 1px solid var(--border-color);
+    font-weight: 600;
+}
+
+.back-button:hover {
+    background: var(--accent-color);
+    color: white;
+    transform: translateX(-5px);
+    box-shadow: 0 4px 12px rgba(229, 62, 62, 0.3);
+}
+
+.cta-buttons {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    margin-top: 2rem;
+    flex-wrap: wrap;
+}
+
+.cta-btn {
+    padding: 12px 24px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.cta-btn.primary {
+    background: var(--accent-color);
+    color: white;
+}
+
+.cta-btn.primary:hover {
+    background: #c53030;
+    transform: translateY(-2px);
+}
+
+.cta-btn.secondary {
+    background: var(--secondary-color);
+    color: var(--text-color);
+    border: 1px solid var(--border-color);
+}
+
+.cta-btn.secondary:hover {
+    background: var(--primary-color);
+    transform: translateY(-2px);
+}
+
+/* ===== FOOTER ===== */
+footer {
+    background: var(--header-bg);
+    padding: 2rem 0;
+    text-align: center;
+    margin-top: 3rem;
+}
+
+.footer-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+}
+
+.footer-links {
+    display: flex;
+    gap: 2rem;
+    margin-bottom: 1rem;
+}
+
+.footer-links a {
+    color: var(--text-color);
+    text-decoration: none;
+    transition: color 0.3s;
+}
+
+.footer-links a:hover {
+    color: var(--accent-color);
+}
+
+.copyright {
+    color: #a0aec0;
+    font-size: 0.9rem;
+}
+
+/* ===== ANIMAÇÕES ===== */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
+}
+
+.clan-header,
+.members-section {
+    animation: fadeInUp 0.6s ease-out;
+}
+
+.member-card {
+    animation: fadeInUp 0.6s ease-out;
+    animation-fill-mode: both;
+}
+
+.member-card:nth-child(odd) {
+    animation-delay: 0.1s;
+}
+
+.member-card:nth-child(even) {
+    animation-delay: 0.2s;
+}
+
+.status-online .status-dot {
+    background: #48bb78;
+    animation: pulse 2s infinite;
+}
+
+/* ===== RESPONSIVIDADE ===== */
+@media (max-width: 768px) {
+    .header-content {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    nav ul {
+        gap: 1rem;
+    }
+    
+    .leaderboard-header,
+    .player-row {
+        grid-template-columns: 60px 1fr 100px;
+        font-size: 0.9rem;
+    }
+    
+    .leaderboard-header > div:nth-child(n+4),
+    .player-row > div:nth-child(n+4) {
+        display: none;
+    }
+    
+    .clan-stats-overview {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+    }
+    
+    .members-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .member-card {
+        padding: 1.2rem;
+    }
+    
+    .member-header {
+        flex-direction: column;
+        text-align: center;
+        gap: 0.8rem;
+    }
+    
+    .pagination {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .pagination-buttons {
+        justify-content: center;
+    }
+    
+    .search-box {
+        flex-direction: column;
+    }
+    
+    .search-box input,
+    .search-box button {
+        border-radius: 4px;
+        margin-bottom: 0.5rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .clan-stats-overview {
+        grid-template-columns: 1fr;
+    }
+    
+    .hero h2 {
+        font-size: 2rem;
+    }
+    
+    .section-title {
+        font-size: 1.5rem;
+    }
+    
+    .cta-buttons {
+        flex-direction: column;
+    }
+    
+    .footer-links {
+        flex-direction: column;
+        gap: 1rem;
+    }
+}
+
+/* ===== UTILITÁRIOS ===== */
+.no-results {
+    text-align: center;
+    padding: 2rem;
+    color: #a0aec0;
+}
+
+.solo-comparison {
+    background: #2d3748;
+    padding: 2px 6px;
+    border-radius: 8px;
+    font-size: 0.7rem;
+    color: #cbd5e0;
+    border: 1px solid #4a5568;
+}
+
+.source-badge {
+    background: #4a5568;
+    color: white;
+    padding: 2px 6px;
+    border-radius: 8px;
+    font-size: 0.7rem;
+    margin-top: 2px;
+}
+
+.player-name-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.aoe4-id, .region, .civ {
+    background: var(--secondary-color);
+    padding: 2px 6px;
+    border-radius: 8px;
+    font-size: 0.7rem;
+    color: #a0aec0;
+}
+
+.player-stats {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 4px;
+}
+
+/* ============================
+   ESTILO DA PÁGINA DE TORNEIOS
+   ============================ */
+
+/* HERO */
+.tournaments-hero {
+    padding: 3rem 0 2rem;
+    text-align: left;
+}
+.tournaments-hero h1 {
+    font-size: 2.4rem;
+    font-weight: 700;
+    color: var(--text-color);
+}
+.tournaments-hero p {
+    margin-top: 0.5rem;
+    color: #9aa6b8;
+    font-size: 1.1rem;
+}
+
+/* FILTROS */
+.tournaments-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+.filter-btn {
+    padding: 8px 14px;
+    background: #1e2633;
+    border: 1px solid #2d3645;
+    color: #cbd5e1;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: 0.2s;
+}
+.filter-btn:hover {
+    background: #2a3242;
+}
+.filter-btn.active {
+    background: #3b82f6;
+    border-color: #3b82f6;
+    color: #fff;
+}
+
+/* SEARCH + BOTÕES */
+.search-area input {
+    background: #0f172a;
+    border: 1px solid #1e293b;
+    padding: 10px;
+    border-radius: 8px;
+    color: #e2e8f0;
+}
+.action-btn {
+    display: inline-flex;
+    align-items: center;
+    padding: 9px 12px;
+    background: #1e293b;
+    border: 1px solid #2d3645;
+    border-radius: 8px;
+    color: #cbd5e1;
+    cursor: pointer;
+    transition: 0.2s;
+}
+.action-btn:hover {
+    background: #2a364d;
+}
+
+/* STAT CARDS */
+.stat-card {
+    background: #111827;
+    padding: 12px 18px;
+    border-radius: 10px;
+    border: 1px solid #1f2937;
+    text-align: center;
+    min-width: 120px;
+}
+.stat-card b {
+    display: block;
+    font-size: 1.4rem;
+    margin-bottom: 5px;
+}
+.stat-card span {
+    font-size: 0.9rem;
+    color: #94a3b8;
+}
+
+/* LISTA DE TORNEIOS */
+.tournaments-grid {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 1.2rem;
+    margin-top: 1rem;
+}
+
+.tournament-card {
+    background: #111827;
+    border: 1px solid #1f2937;
+    border-radius: 14px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    transition: 0.2s;
+}
+.tournament-card:hover {
+    transform: translateY(-3px);
+    border-color: #334155;
+}
+
+/* STATUS BADGE */
+.tournament-status {
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+.status-ongoing {
+    background: #1d4ed8;
+    color: #fff;
+}
+.status-upcoming {
+    background: #065f46;
+    color: #fff;
+}
+.status-completed {
+    background: #4b5563;
+    color: #fff;
+}
+
+/* TITULO E TEXTO */
+.tournament-title {
+    font-size: 1.1rem;
+    margin: 0;
+}
+.tournament-organizer {
+    color: #9aa6b8;
+    font-size: 0.9rem;
+}
+
+/* TIMELINE */
+.timeline {
+    background: #0f172a;
+    border: 1px solid #1e293b;
+    border-radius: 10px;
+    padding: 1.2rem;
+}
+.timeline h4 {
+    margin-bottom: 1rem;
+}
+.timeline .item {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px dashed rgba(255,255,255,0.05);
+}
+.timeline .item:last-child {
+    border: none;
+}
+
+/* MODAL */
+.modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+}
+.modal-content {
+    background: #111827;
+    border: 1px solid #1f2937;
+    border-radius: 10px;
+    padding: 20px;
+}
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.modal-close {
+    background: none;
+    border: none;
+    color: #fff;
+    cursor: pointer;
+}
+
+/* Estilos para os cards de torneio */
+.tournament-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 1.5rem;
+    position: relative;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.tournament-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+}
+
+.tournament-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+}
+
+.tournament-header h3 {
+    margin: 0;
+    font-size: 1.2rem;
+    color: var(--text-color);
+    flex: 1;
+    margin-right: 1rem;
+}
+
+.tournament-prize {
+    background: linear-gradient(135deg, #f6e05e, #d69e2e);
+    color: #1a202c;
+    padding: 0.4rem 0.8rem;
+    border-radius: 6px;
+    font-weight: bold;
+    font-size: 0.9rem;
+    white-space: nowrap;
+}
+
+.tournament-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.4rem 0.8rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+}
+
+.status-ongoing {
+    background: rgba(72, 187, 120, 0.2);
+    color: #48bb78;
+    border: 1px solid #48bb78;
+}
+
+.status-upcoming {
+    background: rgba(237, 137, 54, 0.2);
+    color: #ed8936;
+    border: 1px solid #ed8936;
+}
+
+.status-completed {
+    background: rgba(160, 174, 192, 0.2);
+    color: #a0aec0;
+    border: 1px solid #a0aec0;
+}
+
+.tournament-details {
+    margin-bottom: 1.5rem;
+}
+
+.detail-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+    font-size: 0.95rem;
+}
+
+.detail-item i {
+    width: 16px;
+    color: #a0aec0;
+}
+
+.view-details-btn {
+    width: 100%;
+    padding: 0.75rem;
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+
+.view-details-btn:hover {
+    background: var(--primary-dark);
+}
+
+.featured-badge {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background: linear-gradient(135deg, #e53e3e, #c53030);
+    color: white;
+    padding: 0.4rem 0.8rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    box-shadow: 0 2px 8px rgba(229, 62, 62, 0.3);
+}
+
+/* Modal styles */
+.modal-content {
+    background: var(--card-bg);
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    animation: modalSlideIn 0.3s ease;
+}
+
+@keyframes modalSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.modal-header h2 {
+    margin: 0;
+    color: var(--text-color);
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    color: var(--text-color);
+    font-size: 1.2rem;
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 6px;
+}
+
+.modal-close:hover {
+    background: rgba(255,255,255,0.1);
+}
+
+.modal-body {
+    padding: 1.5rem;
+}
+
+.modal-tournament-details {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.detail-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.detail-row:last-child {
+    border-bottom: none;
+}
+
+.detail-label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 600;
+    color: var(--text-color);
+}
+
+.detail-value {
+    color: var(--text-color);
+}
+
+.prize-value {
+    color: #f6e05e;
+    font-weight: bold;
+}
+
+.winner-value {
+    color: #48bb78;
+    font-weight: bold;
+}
+
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.4rem 0.8rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+/* API Status */
+.api-status {
+    padding: 1rem;
+    border-radius: 8px;
+    text-align: center;
+    font-weight: 600;
+}
+
+.api-status.loading {
+    background: rgba(66, 153, 225, 0.2);
+    color: #4299e1;
+    border: 1px solid #4299e1;
+}
+
+.api-status.success {
+    background: rgba(72, 187, 120, 0.2);
+    color: #48bb78;
+    border: 1px solid #48bb78;
+}
+
+.api-status.error {
+    background: rgba(245, 101, 101, 0.2);
+    color: #f56565;
+    border: 1px solid #f56565;
+}
+
+/* No tournaments state */
+.no-tournaments {
+    text-align: center;
+    padding: 3rem;
+    color: #a0aec0;
+}
+
+.no-tournaments h3 {
+    margin-bottom: 0.5rem;
+    color: #a0aec0;
+}

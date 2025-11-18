@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Age of Empires IV Brasil</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/responsive.css">
+    <link rel="icon" type="image/png" href="https://i.postimg.cc/3JT4W3hz/favicon.png">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+    <img src="https://i.postimg.cc/rFNdr7FV/logo.png" alt="Age of Empires IV Brasil" class="logo-img">
+    <h1>Age of Empires IV Brasil</h1>
+</div>
+                <nav>
+    <ul>
+                        <li><a href="index.html">Início</a></li>
+                        <li><a href="leaderboard.html" class="active">Tabela de classificação</a></li>
+                        <li><a href="torneios.html">Torneios</a></li>
+                        <li><a href="about.html">Sobre</a></li>
+    </ul>
+</nav>
+            </div>
+        </div>
+    </header>
+
+    <section class="hero">
+        <div class="container">
+            <h2>Tabela de classificação brasileira</h2>
+            <p>Acompanhe as estatísticas, classificações e histórico de partidas dos jogadores em Age of Empires IV.</p>
+            <div class="search-box">
+                <input type="text" placeholder="Buscar jogador">
+                <button><i class="fas fa-search"></i> Buscar</button>
+            </div>
+        </div>
+    </section>
+
+    <main class="container">
+        <h2 class="section-title">Classificações de jogadores</h2>
+        
+        <div class="filters">
+            <div class="filter-group">
+                <select id="season-filter">
+                    <option value="current">Temporada atual</option>
+                </select>
+                <select id="mode-filter">
+                    <option value="rm_solo">Classificação solo</option>
+                    <option value="rm_team">Classificação em equipe</option>
+                </select>
+            </div>
+
+        </div>
+        
+        <div class="leaderboard">
+            <div class="leaderboard-header">
+                <div>Rank</div>
+                <div>Jogador</div>
+                <div>Nível</div>
+                <div>Pontos</div>
+                <div>ELO</div>
+                <div>Taxa de vitórias</div>
+                <div>Jogos</div>
+                <div>Último jogo</div>
+            </div>
+            
+            <div id="players-container">
+                <div class="loading">
+                    <i class="fas fa-spinner fa-spin"></i> Inicializando sistema...
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="logo">
+                    <i class="fas fa-crown" style="color: #e53e3e;"></i>
+                    <h2>AoE IV Rankings</h2>
+                </div>
+                <div class="footer-links">
+                    <a href="#">Início</a>
+                    <a href="#">Tabela de classificação</a>
+                    <a href="#">Torneios</a>
+                    <a href="#">Sobre</a>
+                </div>
+                <div class="copyright">
+                    &copy; 2025 - Age of Empires IV Brasil. Dados de aoe4world.com. Este site não possui qualquer vínculo com a Microsoft ou a Relic Entertainment.
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Carregar scripts na ordem correta -->
+    <script src="js/api.js"></script>
+    <script src="js/debug.js"></script>
+    <script src="js/players.js"></script>
+    <script src="js/filters.js"></script>
+    <script src="js/init.js"></script>
+</body>
+</html>

@@ -20,7 +20,7 @@ const PORT = 3001;
 app.use(cors());
 app.use(express.json());
 
-const DATABASE_URL = DATABASE_URL,
+const DATABASE_URL = "postgresql://postgres:ljPQHCOBFkYKHSAnZshLkQDmSWDZqBqW@mainline.proxy.rlwy.net:27194/railway";
 
 // Configuração do PostgreSQL
 const pool = new Pool({

@@ -1,14 +1,28 @@
 {
   "name": "aoe4-backend",
   "version": "1.0.0",
-  "type": "module",
+  "description": "Backend para o site AOE4",
+  "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "node server.js"
+    "dev": "node server.js",
+    "migrate-local": "node migrate-local-players.js",
+    "debug-db": "node find-players.js",
+    "discover": "node discover-tables.js",
+    "criar-tabelas": "node criar-tabelas.js",
+    "create-tables": "node criar-tabelas.js",
+    "update-db": "node update-database.js",
+    "migrate-data": "node migrate-data.js",
+    "check-data": "node check-data.js"
   },
   "dependencies": {
-    "express": "^4.21.2",
+    "axios": "^1.13.2",
+    "cheerio": "^1.1.2",
     "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
+    "express": "^4.21.2",
+    "lru-cache": "^11.2.2",
+    "node-fetch": "^3.3.2",
     "pg": "^8.16.3"
   }
 }

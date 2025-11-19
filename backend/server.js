@@ -2064,25 +2064,28 @@ app.get('/api/game-modes', (req, res) => {
   });
 });
 
-// Rota raiz para servir o frontend
+
+// SUBSTITUA:
+app.use(express.static('.'));
+
+// POR:
+app.use(express.static('backend/frontend'));
+
+// E as rotas:
 app.get('/', (req, res) => {
-  res.send(`
-    <!DOCTYPE html>
-    <html>
-    <head>
-        <title>AOE4 Brasil - Site em Manutenção</title>
-        <style>
-            body { font-family: Arial, sans-serif; text-align: center; padding: 50px; }
-            h1 { color: #333; }
-        </style>
-    </head>
-    <body>
-        <h1>🚀 AOE4 Brasil</h1>
-        <p>Backend está funcionando! O frontend será carregado em breve.</p>
-        <p><a href="/health">Verificar Health</a> | <a href="/api/players">Testar API</a></p>
-    </body>
-    </html>
-  `);
+  res.sendFile(__dirname + '/frontend/index.html');
+});
+
+app.get('/leaderboard', (req, res) => {
+  res.sendFile(__dirname + '/frontend/leaderboard.html');
+});
+
+app.get('/torneios', (req, res) => {
+  res.sendFile(__dirname + '/frontend/torneios.html');
+});
+
+app.get('/about', (req, res) => {
+  res.sendFile(__dirname + '/frontend/about.html');
 });
 
 // Servir arquivos estáticos

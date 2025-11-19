@@ -6,10 +6,10 @@ const PORT = process.env.PORT || 8080;
 // CONFIGURAÇÃO DE ATUALIZAÇÃO AUTOMÁTICA - TESTES
 const AUTO_UPDATE_CONFIG = {
   enabled: true,
-  interval: 15 * 60 * 1000, // ⚡ 5 minutos para testes (depois volta para 30)
+  interval: 10 * 60 * 1000, // ⚡ 5 minutos para testes (depois volta para 30)
   playersPerBatch: 10, // Menos jogadores por lote
   delayBetweenRequests: 2000, // Mais delay entre requests
-  maxPlayersPerUpdate: 30 // Menos jogadores por atualização
+  maxPlayersPerUpdate: 10 // Menos jogadores por atualização
 };
 
 const { Pool } = pkg;
@@ -21,7 +21,7 @@ app.use(cors({
   origin: [
     'https://ageivbrasil.up.railway.app',
     'https://aoe4.com.br',
-    'http://localhost:3000'
+    'http://localhost:8080'
   ],
   credentials: true
 }));
@@ -2064,8 +2064,32 @@ app.get('/api/game-modes', (req, res) => {
   });
 });
 
+// Rota raiz para servir o frontend
+app.get('/', (req, res) => {
+  res.send(`
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>AOE4 Brasil - Site em Manutenção</title>
+        <style>
+            body { font-family: Arial, sans-serif; text-align: center; padding: 50px; }
+            h1 { color: #333; }
+        </style>
+    </head>
+    <body>
+        <h1>🚀 AOE4 Brasil</h1>
+        <p>Backend está funcionando! O frontend será carregado em breve.</p>
+        <p><a href="/health">Verificar Health</a> | <a href="/api/players">Testar API</a></p>
+    </body>
+    </html>
+  `);
+});
+
+// Servir arquivos estáticos
+app.use(express.static('.'));
+
 // Inicialização do servidor
-app.listen(PORT, async () => {
+app.listen(PORT, '0.0.0.0', async () => {
     console.log(`🚀 Backend AOE4 rodando na porta ${PORT}`);
     console.log(`🎯🎯🎯 CONFIGURAÇÃO: EXCLUSIVAMENTE BANCO DE DADOS LOCAL 🎯🎯🎯`);
     console.log(`🎮 Sistema de Seasons: ATIVADO`);

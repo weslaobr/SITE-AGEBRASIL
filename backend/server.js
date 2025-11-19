@@ -2071,34 +2071,8 @@ app.get('/api/game-modes', (req, res) => {
 });
 
 
-// SUBSTITUA:
-app.use(express.static('.'));
+app.use(express.static('frontend'));
 
-// POR:
-app.use(express.static('backend/frontend'));
-
-// E as rotas:
-// Servir arquivos estáticos
-app.use(express.static(join(__dirname, 'frontend')));
-
-// Rotas para páginas HTML
-app.get('/', (req, res) => {
-  res.sendFile(join(__dirname, 'frontend', 'index.html'));
-});
-
-app.get('/leaderboard', (req, res) => {
-  res.sendFile(join(__dirname, 'frontend', 'leaderboard.html'));
-});
-
-app.get('/torneios', (req, res) => {
-  res.sendFile(join(__dirname, 'frontend', 'torneios.html'));
-});
-
-app.get('/about', (req, res) => {
-  res.sendFile(join(__dirname, 'frontend', 'about.html'));
-});
-// Servir arquivos estáticos
-app.use(express.static('.'));
 
 // Inicialização do servidor
 app.listen(PORT, '0.0.0.0', async () => {

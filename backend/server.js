@@ -3,18 +3,24 @@ import cors from 'cors';
 import pkg from 'pg';
 const PORT = process.env.PORT || 8080;
 
-// CONFIGURAÇÃO DE ATUALIZAÇÃO AUTOMÁTICA - TESTES
-const AUTO_UPDATE_CONFIG = {
-  enabled: true,
-  interval: 10 * 60 * 1000, // ⚡ 5 minutos para testes (depois volta para 30)
-  playersPerBatch: 10, // Menos jogadores por lote
-  delayBetweenRequests: 2000, // Mais delay entre requests
-  maxPlayersPerUpdate: 10 // Menos jogadores por atualização
-};
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 const { Pool } = pkg;
 
 const app = express();
+
+// CONFIGURAÇÃO DE ATUALIZAÇÃO AUTOMÁTICA - TESTES
+const AUTO_UPDATE_CONFIG = {
+  enabled: true,
+  interval: 15 * 60 * 1000, // ⚡ 5 minutos para testes (depois volta para 30)
+  playersPerBatch: 10, // Menos jogadores por lote
+  delayBetweenRequests: 2000, // Mais delay entre requests
+  maxPlayersPerUpdate: 10 // Menos jogadores por atualização
+};
 
 // Middleware
 app.use(cors({
@@ -2073,19 +2079,19 @@ app.use(express.static('backend/frontend'));
 
 // E as rotas:
 app.get('/', (req, res) => {
-  res.sendFile(__dirname + '/frontend/index.html');
+  res.sendFile(join(__dirname, 'frontend', 'index.html'));
 });
 
 app.get('/leaderboard', (req, res) => {
-  res.sendFile(__dirname + '/frontend/leaderboard.html');
+  res.sendFile(join(__dirname, 'frontend', 'leaderboard.html'));
 });
 
 app.get('/torneios', (req, res) => {
-  res.sendFile(__dirname + '/frontend/torneios.html');
+  res.sendFile(join(__dirname, 'frontend', 'torneios.html'));
 });
 
 app.get('/about', (req, res) => {
-  res.sendFile(__dirname + '/frontend/about.html');
+  res.sendFile(join(__dirname, 'frontend', 'about.html'));
 });
 
 // Servir arquivos estáticos

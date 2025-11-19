@@ -604,7 +604,7 @@ async function updatePlayerSeasonData(userId, playerId, playerData, seasonId, so
     }
 }
 
-// ✅ FUNÇÃO AUXILIAR: Atualizar dados de seasons históricas
+// ✅ FUNÇÃO AUXILIAR: Atualizar dados de seasons históricas (VERIFIQUE SE EXISTE)
 async function updateHistoricalSeasonData(userId, playerId, playerData, seasonData) {
     try {
         const seasonId = seasonData.id;
@@ -612,6 +612,8 @@ async function updateHistoricalSeasonData(userId, playerId, playerData, seasonDa
         const wins = seasonData.wins_count || 0;
         const games = seasonData.games_count || 0;
         const lastGame = seasonData.last_game_at;
+
+        console.log(`📊 Salvando season histórica ${seasonId} para ${playerData.name}: ${rating} pontos`);
 
         // Para seasons históricas, usamos dados básicos
         await pool.query(`
@@ -644,16 +646,16 @@ async function updateHistoricalSeasonData(userId, playerId, playerData, seasonDa
             lastGame
         ]);
 
-        console.log(`✅ Season histórica ${seasonId} salva: ${rating} pontos`);
+        console.log(`✅ Season histórica ${seasonId} salva: ${playerData.name} - ${rating} pontos`);
         return true;
 
     } catch (error) {
-        console.error(`💥 Erro ao salvar season histórica ${seasonData.id}:`, error.message);
+        console.error(`💥 Erro ao salvar season histórica ${seasonData.id} para ${playerData.name}:`, error.message);
         return false;
     }
 }
 
-// ✅ FUNÇÃO CORRIGIDA: Novos jogadores buscam histórico completo, atualizações focam na Season 12
+// ✅ FUNÇÃO CORRIGIDA: Garantir que novos jogadores busquem seasons históricas
 async function updatePlayerCache(playerId, isNewPlayer = false) {
     try {
         console.log(`🔄 ${isNewPlayer ? 'NOVO JOGADOR' : 'ATUALIZAÇÃO'} ${playerId} - ${isNewPlayer ? 'BUSCANDO HISTÓRICO COMPLETO' : 'ATUALIZANDO SEASON 12'}...`);
@@ -664,12 +666,6 @@ async function updatePlayerCache(playerId, isNewPlayer = false) {
 
         if (!response.ok) {
             console.log(`❌ Erro API: ${response.status} - ${response.statusText}`);
-            return false;
-        }
-
-        const contentType = response.headers.get('content-type');
-        if (!contentType || !contentType.includes('application/json')) {
-            console.log(`❌ Resposta não é JSON: ${contentType}`);
             return false;
         }
 
@@ -708,42 +704,51 @@ async function updatePlayerCache(playerId, isNewPlayer = false) {
 
         // ✅ APENAS PARA JOGADORES NOVOS: Buscar seasons anteriores
         if (isNewPlayer) {
-            console.log(`📊 NOVO JOGADOR - Buscando histórico completo de seasons anteriores...`);
+            console.log(`📊 [NOVO JOGADOR] Buscando histórico completo de seasons para ${playerData.name}...`);
 
-            const seasonsResponse = await fetch(`https://aoe4world.com/api/v0/players/${playerId}/game_mode_ratings?game_mode=rm_solo`, {
-                headers: { 'User-Agent': 'Aoe4BrasilBot/1.0' }
-            });
+            try {
+                const seasonsResponse = await fetch(`https://aoe4world.com/api/v0/players/${playerId}/game_mode_ratings?game_mode=rm_solo`, {
+                    headers: { 'User-Agent': 'Aoe4BrasilBot/1.0' }
+                });
 
-            if (seasonsResponse.ok) {
-                const seasonsContent = await seasonsResponse.json();
-                if (seasonsContent && Array.isArray(seasonsContent.seasons)) {
-                    console.log(`📊 ${playerData.name}: ${seasonsContent.seasons.length} seasons disponíveis na API`);
+                if (seasonsResponse.ok) {
+                    const seasonsContent = await seasonsResponse.json();
 
-                    let historicalSeasonsAdded = 0;
+                    if (seasonsContent && Array.isArray(seasonsContent.seasons)) {
+                        console.log(`📊 ${playerData.name}: ${seasonsContent.seasons.length} seasons disponíveis na API`);
 
-                    // Salvar seasons anteriores (exceto a 12 que já salvamos)
-                    for (const season of seasonsContent.seasons) {
-                        if (season.id !== 12) {
-                            const seasonSuccess = await updateHistoricalSeasonData(
-                                userId, playerId, playerData, season
-                            );
-                            if (seasonSuccess) {
-                                historicalSeasonsAdded++;
-                                totalSeasonsUpdated++;
+                        let historicalSeasonsAdded = 0;
+
+                        // ✅ CORREÇÃO: Processar TODAS as seasons, incluindo a 12 (para garantir dados completos)
+                        for (const season of seasonsContent.seasons) {
+                            // Para seasons históricas (não-12), usar a função de histórico
+                            if (season.id !== 12) {
+                                const seasonSuccess = await updateHistoricalSeasonData(
+                                    userId, playerId, playerData, season
+                                );
+                                if (seasonSuccess) {
+                                    historicalSeasonsAdded++;
+                                    totalSeasonsUpdated++;
+                                }
                             }
+                            // A season 12 já foi processada acima com dados completos
                         }
-                    }
 
-                    console.log(`✅ ${playerData.name}: ${historicalSeasonsAdded} seasons históricas adicionadas`);
+                        console.log(`✅ ${playerData.name}: ${historicalSeasonsAdded} seasons históricas adicionadas + Season 12 atual`);
+                    } else {
+                        console.log(`⚠️ ${playerData.name}: Nenhuma season encontrada na API`);
+                    }
+                } else {
+                    console.log(`⚠️ ${playerData.name}: Não foi possível buscar seasons históricas (HTTP ${seasonsResponse.status})`);
                 }
-            } else {
-                console.log(`⚠️ ${playerData.name}: Não foi possível buscar seasons históricas`);
+            } catch (seasonError) {
+                console.error(`💥 Erro ao buscar seasons históricas de ${playerData.name}:`, seasonError.message);
             }
         } else {
             console.log(`🎯 ${playerData.name}: Jogador existente - focado apenas na Season 12`);
         }
 
-        console.log(`✅ ${playerData.name}: ${totalSeasonsUpdated} seasons processadas`);
+        console.log(`✅ ${playerData.name}: ${totalSeasonsUpdated} seasons processadas no total`);
         return totalSeasonsUpdated > 0;
 
     } catch (error) {
@@ -751,6 +756,197 @@ async function updatePlayerCache(playerId, isNewPlayer = false) {
         return false;
     }
 }
+
+// ROTA: Debug detalhado de um jogador específico
+app.get('/api/debug/player-seasons-debug/:playerId', async (req, res) => {
+    try {
+        const playerId = req.params.playerId;
+
+        console.log(`🔍 Debug detalhado das seasons do jogador ${playerId}...`);
+
+        // 1. Verificar seasons no banco
+        const dbSeasons = await pool.query(`
+            SELECT season_id, name, rm_solo_points, cached_at
+            FROM leaderboard_cache 
+            WHERE aoe4_world_id = $1
+            ORDER BY season_id DESC
+        `, [playerId]);
+
+        // 2. Buscar seasons disponíveis na API
+        let apiSeasons = [];
+        try {
+            const apiResponse = await fetch(`https://aoe4world.com/api/v0/players/${playerId}/game_mode_ratings?game_mode=rm_solo`, {
+                headers: { 'User-Agent': 'Aoe4BrasilBot/1.0' }
+            });
+
+            if (apiResponse.ok) {
+                const apiData = await apiResponse.json();
+                apiSeasons = apiData.seasons || [];
+            }
+        } catch (apiError) {
+            console.error('Erro na API:', apiError.message);
+        }
+
+        // 3. Comparar
+        const dbSeasonIds = dbSeasons.rows.map(r => r.season_id);
+        const apiSeasonIds = apiSeasons.map(s => s.id);
+        const missingSeasons = apiSeasonIds.filter(id => !dbSeasonIds.includes(id));
+        const extraSeasons = dbSeasonIds.filter(id => !apiSeasonIds.includes(id));
+
+        res.json({
+            success: true,
+            player_id: playerId,
+            database: {
+                total_seasons: dbSeasons.rows.length,
+                seasons: dbSeasons.rows
+            },
+            api: {
+                total_seasons: apiSeasons.length,
+                seasons: apiSeasons
+            },
+            comparison: {
+                missing_in_db: missingSeasons,
+                extra_in_db: extraSeasons,
+                status: missingSeasons.length > 0 ? 'INCOMPLETE' : 'COMPLETE'
+            }
+        });
+
+    } catch (error) {
+        console.error('❌ Erro no debug:', error);
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+});
+
+// ROTA SIMPLES: Forçar sincronização completa de um jogador
+app.post('/api/admin/force-sync-player/:playerId', async (req, res) => {
+    try {
+        const playerId = req.params.playerId;
+
+        console.log(`🚀 FORÇANDO SINCRONIZAÇÃO COMPLETA do jogador ${playerId}...`);
+
+        // ✅ FORÇAR como NOVO JOGADOR para buscar histórico completo
+        const success = await updatePlayerCache(playerId, true);
+
+        if (success) {
+            // Verificar resultado
+            const updatedSeasons = await pool.query(`
+                SELECT COUNT(*) as total_seasons 
+                FROM leaderboard_cache 
+                WHERE aoe4_world_id = $1
+            `, [playerId]);
+
+            res.json({
+                success: true,
+                message: `Sincronização forçada concluída com sucesso!`,
+                player_id: playerId,
+                total_seasons_after_sync: parseInt(updatedSeasons.rows[0].total_seasons)
+            });
+        } else {
+            res.status(500).json({
+                success: false,
+                error: 'Falha na sincronização forçada'
+            });
+        }
+
+    } catch (error) {
+        console.error('❌ Erro na sincronização forçada:', error);
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+});
+
+// ROTA: Sincronização manual direta
+app.post('/api/admin/direct-sync/:playerId', async (req, res) => {
+    try {
+        const playerId = req.params.playerId;
+
+        console.log(`🔧 SINCRONIZAÇÃO MANUAL DIRETA para ${playerId}...`);
+
+        // 1. Buscar dados do jogador
+        const playerResponse = await fetch(`https://aoe4world.com/api/v0/players/${playerId}`, {
+            headers: { 'User-Agent': 'Aoe4BrasilBot/1.0' }
+        });
+
+        if (!playerResponse.ok) {
+            throw new Error(`API jogador: ${playerResponse.status}`);
+        }
+
+        const playerData = await playerResponse.json();
+        console.log(`✅ Jogador: ${playerData.name}`);
+
+        // 2. Buscar seasons
+        const seasonsResponse = await fetch(`https://aoe4world.com/api/v0/players/${playerId}/game_mode_ratings?game_mode=rm_solo`, {
+            headers: { 'User-Agent': 'Aoe4BrasilBot/1.0' }
+        });
+
+        if (!seasonsResponse.ok) {
+            throw new Error(`API seasons: ${seasonsResponse.status}`);
+        }
+
+        const seasonsData = await seasonsResponse.json();
+        const seasons = seasonsData.seasons || [];
+        console.log(`📊 Seasons encontradas: ${seasons.length}`);
+
+        // 3. Buscar/gerar user_id
+        const existingUser = await pool.query(`
+            SELECT user_id FROM leaderboard_cache WHERE aoe4_world_id = $1 LIMIT 1
+        `, [playerId]);
+
+        let userId;
+        if (existingUser.rows.length > 0) {
+            userId = existingUser.rows[0].user_id;
+        } else {
+            const maxUser = await pool.query(`SELECT COALESCE(MAX(user_id), 0) as max_id FROM leaderboard_cache`);
+            userId = parseInt(maxUser.rows[0].max_id) + 1;
+        }
+
+        // 4. Processar cada season
+        let savedCount = 0;
+        for (const season of seasons) {
+            try {
+                const query = `
+                    INSERT INTO leaderboard_cache 
+                    (user_id, aoe4_world_id, name, rm_solo_points, rm_solo_elo, rm_solo_wins, rm_solo_total_matches, level, season_id, cached_at)
+                    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW())
+                    ON CONFLICT (aoe4_world_id, season_id) DO NOTHING
+                `;
+
+                await pool.query(query, [
+                    userId, playerId, playerData.name,
+                    season.rating || 0, season.rating || 0, season.wins_count || 0, season.games_count || 0,
+                    pointsToClass(season.rating || 0),
+                    season.id
+                ]);
+
+                savedCount++;
+                console.log(`✅ Season ${season.id} salva`);
+
+            } catch (seasonError) {
+                console.error(`❌ Season ${season.id}:`, seasonError.message);
+            }
+        }
+
+        res.json({
+            success: true,
+            message: `Sincronização manual concluída: ${savedCount}/${seasons.length} seasons salvas`,
+            player: playerData.name,
+            total_seasons: seasons.length,
+            saved: savedCount
+        });
+
+    } catch (error) {
+        console.error('❌ Erro na sincronização manual:', error);
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+});
 
 // FUNÇÃO: Buscar players APENAS do banco local - COM ELO 1v1 CORRETO
 async function getPlayersFromDatabase(limit, offset, mode, seasonId = 12) {

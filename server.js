@@ -186,49 +186,24 @@ async function syncPlayerAvatar(playerId, playerName) {
     }
 }
 
-// ✅ FUNÇÃO CORRIGIDA: Atualizar cache SEMPRE com Season 12
-async function updatePlayerCache(playerId) {
+// ✅ FUNÇÃO AUXILIAR: Atualizar dados da season atual
+async function updatePlayerSeasonData(userId, playerId, playerData, seasonId, soloData, teamData) {
     try {
-        console.log(`🔄 Atualizando CACHE COMPLETO para ${playerId} (Season 12)...`);
+        const soloDataToUse = soloData || {};
+        const teamDataToUse = teamData || {};
 
-        const response = await fetch(`https://aoe4world.com/api/v0/players/${playerId}`, {
-            headers: { 'User-Agent': 'Aoe4BrasilBot/1.0' }
-        });
+        // Extrair dados
+        const pointsSolo = soloDataToUse.rating || 0;
+        const winsSolo = soloDataToUse.wins_count || 0;
+        const gamesSolo = soloDataToUse.games_count || 0;
+        const lastSoloGame = soloDataToUse.last_game_at;
 
-        if (!response.ok) {
-            console.log(`❌ Erro API: ${response.status} - ${response.statusText}`);
-            return false;
-        }
+        const pointsTeam = teamDataToUse.rating || 0;
+        const winsTeam = teamDataToUse.wins_count || 0;
+        const gamesTeam = teamDataToUse.games_count || 0;
+        const lastTeamGame = teamDataToUse.last_game_at;
 
-        const contentType = response.headers.get('content-type');
-        if (!contentType || !contentType.includes('application/json')) {
-            console.log(`❌ Resposta não é JSON: ${contentType}`);
-            return false;
-        }
-
-        const playerData = await response.json();
-
-        if (!playerData || !playerData.name) {
-            console.log('❌ Dados inválidos da API');
-            return false;
-        }
-
-        console.log(`✅ Dados encontrados: ${playerData.name}`);
-
-        // ✅ EXTRAIR DADOS (código existente...)
-        const soloData = playerData.modes?.rm_solo || {};
-        const pointsSolo = soloData.rating || 0;
-        const winsSolo = soloData.wins_count || 0;
-        const gamesSolo = soloData.games_count || 0;
-        const lastSoloGame = soloData.last_game_at;
-
-        const teamData = playerData.modes?.rm_team || {};
-        const pointsTeam = teamData.rating || 0;
-        const winsTeam = teamData.wins_count || 0;
-        const gamesTeam = teamData.games_count || 0;
-        const lastTeamGame = teamData.last_game_at;
-
-        // ✅ ELO 1v1 CORRETO (código existente...)
+        // ELO 1v1
         let elo1v1 = 0;
         if (playerData.modes?.rm_1v1_elo?.rating) {
             elo1v1 = playerData.modes.rm_1v1_elo.rating;
@@ -238,48 +213,29 @@ async function updatePlayerCache(playerId) {
             elo1v1 = playerData.modes.rm_solo.rating;
         }
 
-        const eloTeam = teamData.rating || 0;
-        // Buscar clan tag do AOE4 World API E do nosso banco
-        let clanTag = playerData.clan?.tag || '';
+        const eloTeam = teamDataToUse.rating || 0;
 
-        // Se não encontrou na API, buscar do nosso banco
+        // Clan tag
+        let clanTag = playerData.clan?.tag || '';
         if (!clanTag) {
             const clanFromDB = await pool.query(`
-        SELECT c.tag 
-        FROM clan_members cm
-        JOIN clans c ON cm.clan_id = c.id
-        JOIN users u ON cm.discord_user_id = u.discord_user_id
-        WHERE u.aoe4_world_id = $1
-        LIMIT 1
-    `, [playerId]);
-
+                SELECT c.tag 
+                FROM clan_members cm
+                JOIN clans c ON cm.clan_id = c.id
+                JOIN users u ON cm.discord_user_id = u.discord_user_id
+                WHERE u.aoe4_world_id = $1
+                LIMIT 1
+            `, [playerId]);
             if (clanFromDB.rows.length > 0) {
                 clanTag = clanFromDB.rows[0].tag;
-                console.log(`✅ Clan encontrado no banco: ${clanTag}`);
             }
         }
+
         const region = playerData.region || '';
         const civilization = playerData.civilization || '';
         const avatarUrl = playerData.avatars?.small || null;
 
-        console.log(`🎯 Dados Season 12 - Solo: ${pointsSolo}pts (${winsSolo}/${gamesSolo}), Team: ${pointsTeam}pts, ELO: ${elo1v1}`);
-
-        // Buscar/gerar user_id (código existente...)
-        const existingUser = await pool.query(`
-            SELECT user_id FROM leaderboard_cache 
-            WHERE aoe4_world_id = $1 
-            LIMIT 1
-        `, [playerId]);
-
-        let userId;
-        if (existingUser.rows.length > 0) {
-            userId = existingUser.rows[0].user_id;
-        } else {
-            const maxUser = await pool.query(`SELECT COALESCE(MAX(user_id), 0) as max_id FROM leaderboard_cache`);
-            userId = parseInt(maxUser.rows[0].max_id) + 1;
-        }
-
-        // ✅✅✅ ATUALIZAÇÃO CORRIGIDA: SEMPRE Season 12, SEMPRE substituir dados antigos
+        // Inserir/atualizar dados
         await pool.query(`
             INSERT INTO leaderboard_cache 
             (
@@ -315,16 +271,154 @@ async function updatePlayerCache(playerId) {
             pointsSolo, elo1v1, winsSolo, gamesSolo,
             pointsTeam, eloTeam, winsTeam, gamesTeam,
             pointsToClass(pointsSolo),
-            12,  // ✅ SEMPRE Season 12
+            seasonId,
             avatarUrl, clanTag, region, civilization,
             lastSoloGame, lastTeamGame
         ]);
 
-        console.log(`✅ CACHE ATUALIZADO Season 12: ${playerData.name}`);
-        console.log(`   🎯 Solo: ${pointsSolo}pts (${winsSolo}/${gamesSolo}) | Team: ${pointsTeam}pts (${winsTeam}/${gamesTeam})`);
-        console.log(`   🏷️  Clan: ${clanTag} | ELO: ${elo1v1}`);
-
+        console.log(`✅ Season ${seasonId} atualizada: ${playerData.name}`);
         return true;
+
+    } catch (error) {
+        console.error(`💥 Erro ao atualizar season ${seasonId} para ${playerData.name}:`, error.message);
+        return false;
+    }
+}
+
+// ✅ FUNÇÃO AUXILIAR: Atualizar dados de seasons históricas
+async function updateHistoricalSeasonData(userId, playerId, playerData, seasonData) {
+    try {
+        const seasonId = seasonData.id;
+        const rating = seasonData.rating || 0;
+        const wins = seasonData.wins_count || 0;
+        const games = seasonData.games_count || 0;
+        const lastGame = seasonData.last_game_at;
+
+        // Para seasons históricas, usamos dados básicos
+        await pool.query(`
+            INSERT INTO leaderboard_cache 
+            (
+                user_id, aoe4_world_id, name, 
+                rm_solo_points, rm_solo_elo, rm_solo_wins, rm_solo_total_matches,
+                level, season_id, avatar_url, clan_tag, region, civilization,
+                last_solo_game, cached_at
+            )
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, NOW())
+            ON CONFLICT (aoe4_world_id, season_id) 
+            DO UPDATE SET
+                rm_solo_points = EXCLUDED.rm_solo_points,
+                rm_solo_elo = EXCLUDED.rm_solo_elo,
+                rm_solo_wins = EXCLUDED.rm_solo_wins,
+                rm_solo_total_matches = EXCLUDED.rm_solo_total_matches,
+                level = EXCLUDED.level,
+                last_solo_game = EXCLUDED.last_solo_game,
+                cached_at = NOW()
+        `, [
+            userId, playerId, playerData.name,
+            rating, rating, wins, games, // Para seasons antigas, ELO = pontos
+            pointsToClass(rating),
+            seasonId,
+            playerData.avatars?.small || null,
+            playerData.clan?.tag || '',
+            playerData.region || '',
+            playerData.civilization || '',
+            lastGame
+        ]);
+
+        console.log(`✅ Season histórica ${seasonId} salva: ${rating} pontos`);
+        return true;
+
+    } catch (error) {
+        console.error(`💥 Erro ao salvar season histórica ${seasonData.id}:`, error.message);
+        return false;
+    }
+}
+
+// ✅ FUNÇÃO CORRIGIDA: Atualizar cache - Season 12 para atualizações, todas seasons para novos
+async function updatePlayerCache(playerId, isNewPlayer = false) {
+    try {
+        console.log(`🔄 ${isNewPlayer ? 'REGISTRANDO NOVO JOGADOR' : 'ATUALIZANDO JOGADOR'} ${playerId}...`);
+
+        const response = await fetch(`https://aoe4world.com/api/v0/players/${playerId}`, {
+            headers: { 'User-Agent': 'Aoe4BrasilBot/1.0' }
+        });
+
+        if (!response.ok) {
+            console.log(`❌ Erro API: ${response.status} - ${response.statusText}`);
+            return false;
+        }
+
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+            console.log(`❌ Resposta não é JSON: ${contentType}`);
+            return false;
+        }
+
+        const playerData = await response.json();
+
+        if (!playerData || !playerData.name) {
+            console.log('❌ Dados inválidos da API');
+            return false;
+        }
+
+        console.log(`✅ Dados encontrados: ${playerData.name}`);
+
+        // Buscar/gerar user_id
+        const existingUser = await pool.query(`
+            SELECT user_id FROM leaderboard_cache 
+            WHERE aoe4_world_id = $1 
+            LIMIT 1
+        `, [playerId]);
+
+        let userId;
+        if (existingUser.rows.length > 0) {
+            userId = existingUser.rows[0].user_id;
+        } else {
+            const maxUser = await pool.query(`SELECT COALESCE(MAX(user_id), 0) as max_id FROM leaderboard_cache`);
+            userId = parseInt(maxUser.rows[0].max_id) + 1;
+        }
+
+        let totalSeasonsUpdated = 0;
+
+        // ✅ SEMPRE ATUALIZAR SEASON 12 (dados atuais)
+        const successCurrent = await updatePlayerSeasonData(
+            userId, playerId, playerData, 12,
+            playerData.modes?.rm_solo, playerData.modes?.rm_team
+        );
+        if (successCurrent) totalSeasonsUpdated++;
+
+        // ✅ APENAS PARA JOGADORES NOVOS: Buscar seasons anteriores
+        if (isNewPlayer) {
+            console.log(`📊 Buscando histórico de seasons anteriores para NOVO jogador...`);
+
+            const seasonsResponse = await fetch(`https://aoe4world.com/api/v0/players/${playerId}/game_mode_ratings?game_mode=rm_solo`, {
+                headers: { 'User-Agent': 'Aoe4BrasilBot/1.0' }
+            });
+
+            if (seasonsResponse.ok) {
+                const seasonsContent = await seasonsResponse.json();
+                if (seasonsContent && Array.isArray(seasonsContent.seasons)) {
+                    console.log(`📊 Encontradas ${seasonsContent.seasons.length} seasons para ${playerData.name}`);
+
+                    // Salvar seasons anteriores (exceto a 12 que já salvamos)
+                    for (const season of seasonsContent.seasons) {
+                        if (season.id !== 12) {
+                            const seasonSuccess = await updateHistoricalSeasonData(
+                                userId, playerId, playerData, season
+                            );
+                            if (seasonSuccess) totalSeasonsUpdated++;
+                        }
+                    }
+                }
+            } else {
+                console.log(`⚠️ Não foi possível buscar seasons históricas para ${playerData.name}`);
+            }
+        } else {
+            console.log(`🎯 Jogador existente - atualizando apenas Season 12`);
+        }
+
+        console.log(`✅ CACHE ATUALIZADO: ${totalSeasonsUpdated} seasons para ${playerData.name}`);
+        return totalSeasonsUpdated > 0;
 
     } catch (error) {
         console.error(`💥 Erro ao atualizar cache de ${playerId}:`, error.message);
@@ -697,7 +791,7 @@ async function syncNewPlayersFromClans() {
             try {
                 console.log(`🔄 [${i + 1}/${newPlayers.rows.length}] Sincronizando jogador do clan: ${player.aoe4_world_id} (${player.clan_name})`);
 
-                const success = await updatePlayerCache(player.aoe4_world_id);
+                const success = await updatePlayerCache(player.aoe4_world_id, true);
 
                 if (success) {
                     syncedCount++;
@@ -911,7 +1005,7 @@ async function performCacheUpdate() {
                 console.log(`🔄 [${i + 1}/${playersToUpdate.rows.length}] Atualizando ${player.name}...`);
 
                 // ✅ USAR A NOVA FUNÇÃO DE ATUALIZAÇÃO COMPLETA
-                const success = await updatePlayerCache(player.aoe4_world_id);
+                const success = await updatePlayerCache(player.aoe4_world_id, false);
 
                 if (success) {
                     successCount++;
@@ -1080,7 +1174,7 @@ async function syncNewUsersToCache() {
             try {
                 console.log(`🔄 [${i + 1}/${newUsers.rows.length}] Sincronizando user: ${user.aoe4_world_id} (Discord: ${user.discord_user_id})`);
 
-                const success = await updatePlayerCache(user.aoe4_world_id);
+                const success = await updatePlayerCache(user.aoe4_world_id, true);
 
                 if (success) {
                     syncedCount++;
@@ -1231,7 +1325,7 @@ app.post('/api/players/update-all-elo', async (req, res) => {
                 console.log(`🔄 [${i + 1}/${playersToUpdate.rows.length}] Atualizando ${player.name}...`);
 
                 // ✅ USAR A NOVA FUNÇÃO DE ATUALIZAÇÃO COMPLETA
-                const success = await updatePlayerCache(player.aoe4_world_id);
+                const success = await updatePlayerCache(player.aoe4_world_id, false);
 
                 if (success) {
                     successCount++;

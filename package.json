@@ -5,6 +5,7 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
+    "fix-players": "node fix-existing-players.js",
     "dev": "node server.js"
   },
   "keywords": [],

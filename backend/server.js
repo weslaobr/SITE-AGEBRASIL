@@ -1,17 +1,6 @@
 import express from 'express';
 import cors from 'cors';
 import pkg from 'pg';
-const PORT = process.env.PORT || 8080;
-
-import { fileURLToPath } from 'url';
-import { dirname, join } from 'path';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
-const { Pool } = pkg;
-
-const app = express();
 
 // CONFIGURAÇÃO DE ATUALIZAÇÃO AUTOMÁTICA - TESTES
 const AUTO_UPDATE_CONFIG = {
@@ -19,18 +8,16 @@ const AUTO_UPDATE_CONFIG = {
   interval: 15 * 60 * 1000, // ⚡ 5 minutos para testes (depois volta para 30)
   playersPerBatch: 10, // Menos jogadores por lote
   delayBetweenRequests: 2000, // Mais delay entre requests
-  maxPlayersPerUpdate: 10 // Menos jogadores por atualização
+  maxPlayersPerUpdate: 30 // Menos jogadores por atualização
 };
 
+const { Pool } = pkg;
+
+const app = express();
+const PORT = 3001;
+
 // Middleware
-app.use(cors({
-  origin: [
-    'https://ageivbrasil.up.railway.app',
-    'https://aoe4.com.br',
-    'http://localhost:8080'
-  ],
-  credentials: true
-}));
+app.use(cors());
 app.use(express.json());
 
 const DATABASE_URL = "postgresql://postgres:ljPQHCOBFkYKHSAnZshLkQDmSWDZqBqW@mainline.proxy.rlwy.net:27194/railway";
@@ -2070,69 +2057,8 @@ app.get('/api/game-modes', (req, res) => {
   });
 });
 
-
-// Rota raiz explícita
-app.get('/', (req, res) => {
-  res.send(`
-    <!DOCTYPE html>
-    <html>
-    <head>
-        <title>AOE4 Brasil</title>
-        <meta http-equiv="refresh" content="0; url=/index.html">
-    </head>
-    <body>
-        <p>Redirecionando para o site...</p>
-    </body>
-    </html>
-  `);
-});
-
-// ========== CONFIGURAÇÃO ULTRA-SIMPLES ==========
-import fs from 'fs';
-import path from 'path';
-
-// Rota básica para teste
-app.get('/', (req, res) => {
-  // Tenta vários caminhos possíveis
-  const possibleIndexPaths = [
-    path.join(process.cwd(), 'frontend', 'index.html'),
-    path.join(process.cwd(), 'backend', 'frontend', 'index.html'),
-    path.join(process.cwd(), 'index.html')
-  ];
-  
-  for (const indexPath of possibleIndexPaths) {
-    if (fs.existsSync(indexPath)) {
-      console.log('✅ Servindo index.html de:', indexPath);
-      return res.sendFile(indexPath);
-    }
-  }
-  
-  // Se não encontrar, mostra mensagem de debug
-  res.send(`
-    <!DOCTYPE html>
-    <html>
-    <head><title>AOE4 Brasil - Debug</title></head>
-    <body>
-      <h1>🔧 Configurando Frontend</h1>
-      <p><strong>Current Directory:</strong> ${process.cwd()}</p>
-      <p><strong>Arquivos no diretório atual:</strong></p>
-      <ul>
-        ${fs.readdirSync(process.cwd()).map(file => `<li>${file}</li>`).join('')}
-      </ul>
-      <a href="/fix-structure">Tentar corrigir estrutura</a> | 
-      <a href="/debug-simple">Debug Detalhado</a>
-    </body>
-    </html>
-  `);
-});
-
-// Servir arquivos estáticos de múltiplos locais
-app.use(express.static(path.join(process.cwd(), 'frontend')));
-app.use(express.static(path.join(process.cwd(), 'backend', 'frontend')));
-app.use(express.static(process.cwd()));
-
 // Inicialização do servidor
-app.listen(PORT, '0.0.0.0', async () => {
+app.listen(PORT, async () => {
     console.log(`🚀 Backend AOE4 rodando na porta ${PORT}`);
     console.log(`🎯🎯🎯 CONFIGURAÇÃO: EXCLUSIVAMENTE BANCO DE DADOS LOCAL 🎯🎯🎯`);
     console.log(`🎮 Sistema de Seasons: ATIVADO`);
@@ -2141,8 +2067,6 @@ app.listen(PORT, '0.0.0.0', async () => {
     console.log(`🏥 Health: http://localhost:${PORT}/health`);
     console.log(`🎮 Players: http://localhost:${PORT}/api/players`);
     console.log(`🏰 Clans: http://localhost:${PORT}/api/clans/featured`);
-     console.log(`🚀 Servidor rodando na porta ${PORT}`);
-    console.log(`🌐 URL: http://0.0.0.0:${PORT}`);
     
     // Testar conexão
     await testConnection();

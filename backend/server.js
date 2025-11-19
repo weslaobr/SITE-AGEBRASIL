@@ -1,12 +1,6 @@
 import express from 'express';
 import cors from 'cors';
 import pkg from 'pg';
-import path from 'path';
-import { fileURLToPath } from 'url';
-
-// Configurar __dirname para ES modules
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 // CONFIGURAÇÃO DE ATUALIZAÇÃO AUTOMÁTICA - TESTES
 const AUTO_UPDATE_CONFIG = {
@@ -26,7 +20,7 @@ const PORT = 3001;
 app.use(cors());
 app.use(express.json());
 
-const DATABASE_URL = "postgresql://postgres:ljPQHCOBFkYKHSAnZshLkQDmSWDZqBqW@mainline.proxy.rlwy.net:27194/railway";
+const DATABASE_URL = DATABASE_URL,
 
 // Configuração do PostgreSQL
 const pool = new Pool({
@@ -37,31 +31,6 @@ const pool = new Pool({
   connectionTimeoutMillis: 10000,
   idleTimeoutMillis: 30000,
   max: 20
-});
-
-// Servir arquivos estáticos do frontend
-app.use(express.static(path.join(__dirname, '../frontend')));
-
-// Rota para servir o index.html
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, '../frontend/index.html'));
-});
-
-// Rotas para outras páginas HTML
-app.get('/leaderboard.html', (req, res) => {
-    res.sendFile(path.join(__dirname, '../frontend/leaderboard.html'));
-});
-
-app.get('/clan.html', (req, res) => {
-    res.sendFile(path.join(__dirname, '../frontend/clan.html'));
-});
-
-app.get('/torneios.html', (req, res) => {
-    res.sendFile(path.join(__dirname, '../frontend/torneios.html'));
-});
-
-app.get('/admin.html', (req, res) => {
-    res.sendFile(path.join(__dirname, '../frontend/admin.html'));
 });
 
 // Função para converter pontos em classe/rank

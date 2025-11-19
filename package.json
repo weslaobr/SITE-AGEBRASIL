@@ -1,13 +1,21 @@
 {
   "name": "site-agebrasil",
   "version": "1.0.0",
+  "description": "Site AGE Brasil",
+  "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "install": "npm install" // REMOVA esta linha ou deixe apenas isso
+    "dev": "node server.js"
   },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
   "dependencies": {
     "express": "^4.18.0",
     "cors": "^2.8.5",
     "dotenv": "^16.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   }
 }

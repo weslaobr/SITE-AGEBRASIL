@@ -2087,6 +2087,26 @@ app.get('/', (req, res) => {
   `);
 });
 
+// Debug - verifica se arquivos existem
+app.get('/debug-files', (req, res) => {
+  const fs = require('fs');
+  const path = require('path');
+  
+  const files = {
+    currentDir: process.cwd(),
+    frontendExists: fs.existsSync(path.join(process.cwd(), 'frontend')),
+    indexExists: fs.existsSync(path.join(process.cwd(), 'frontend', 'index.html')),
+    filesInFrontend: fs.readdirSync(path.join(process.cwd(), 'frontend'))
+  };
+  
+  res.json(files);
+});
+
+// Health check
+app.get('/health', (req, res) => {
+  res.json({ status: 'OK', message: 'Backend funcionando' });
+});
+
 // OU simplesmente sirva o index.html diretamente
 app.get('/', (req, res) => {
   res.sendFile(process.cwd() + '/frontend/index.html');

@@ -50,44 +50,44 @@ app.get('/admin.html', (req, res) => {
 
 // CONFIGURAÇÃO DE ATUALIZAÇÃO AUTOMÁTICA
 const AUTO_UPDATE_CONFIG = {
-  enabled: true,
-  interval: 15 * 60 * 1000,
-  playersPerBatch: 10,
-  delayBetweenRequests: 2000,
-  maxPlayersPerUpdate: 30
+    enabled: true,
+    interval: 15 * 60 * 1000,
+    playersPerBatch: 10,
+    delayBetweenRequests: 2000,
+    maxPlayersPerUpdate: 30
 };
 
 // Configuração do PostgreSQL - CORRIGIDA
 const poolConfig = {
-  connectionString: process.env.DATABASE_URL,
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
-  connectionTimeoutMillis: 30000,
-  idleTimeoutMillis: 60000,
-  max: 20
+    connectionString: process.env.DATABASE_URL,
+    ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+    connectionTimeoutMillis: 30000,
+    idleTimeoutMillis: 60000,
+    max: 20
 };
 
 // Verificar se a connection string é válida
 if (!process.env.DATABASE_URL) {
-  console.error('❌ DATABASE_URL não encontrada! Verifique o arquivo .env');
+    console.error('❌ DATABASE_URL não encontrada! Verifique o arquivo .env');
 } else {
-  console.log('✅ DATABASE_URL carregada do ambiente');
+    console.log('✅ DATABASE_URL carregada do ambiente');
 }
 
 const pool = new Pool(poolConfig);
 
 // Adicionar handler de erro global
 pool.on('error', (err, client) => {
-  console.error('💥 Erro inesperado no pool PostgreSQL:', err);
+    console.error('💥 Erro inesperado no pool PostgreSQL:', err);
 });
 
 // ROTA: Debug da conexão com o banco
 app.get('/api/debug/database-connection', async (req, res) => {
-  try {
-    // Testar conexão
-    const dbTest = await pool.query('SELECT NOW() as time, current_database() as db_name');
-    
-    // Verificar dados
-    const dataCheck = await pool.query(`
+    try {
+        // Testar conexão
+        const dbTest = await pool.query('SELECT NOW() as time, current_database() as db_name');
+
+        // Verificar dados
+        const dataCheck = await pool.query(`
       SELECT 
         COUNT(*) as total_players,
         COUNT(CASE WHEN rm_solo_points > 0 THEN 1 END) as players_with_points,
@@ -95,81 +95,81 @@ app.get('/api/debug/database-connection', async (req, res) => {
       FROM leaderboard_cache 
       WHERE name IS NOT NULL AND name != ''
     `);
-    
-    res.json({
-      success: true,
-      connection: {
-        connected: true,
-        database: dbTest.rows[0].db_name,
-        time: dbTest.rows[0].time,
-        connection_string: process.env.DATABASE_URL ? '✅ Configurada' : '❌ Não configurada'
-      },
-      data: dataCheck.rows[0],
-      environment: {
-        node_env: process.env.NODE_ENV,
-        railway_environment: true
-      }
-    });
-    
-  } catch (error) {
-    res.json({
-      success: false,
-      error: error.message,
-      connection: {
-        connected: false,
-        connection_string: process.env.DATABASE_URL ? '✅ Configurada' : '❌ Não configurada',
-        error: error.message
-      },
-      environment: {
-        node_env: process.env.NODE_ENV,
-        railway_environment: true
-      }
-    });
-  }
+
+        res.json({
+            success: true,
+            connection: {
+                connected: true,
+                database: dbTest.rows[0].db_name,
+                time: dbTest.rows[0].time,
+                connection_string: process.env.DATABASE_URL ? '✅ Configurada' : '❌ Não configurada'
+            },
+            data: dataCheck.rows[0],
+            environment: {
+                node_env: process.env.NODE_ENV,
+                railway_environment: true
+            }
+        });
+
+    } catch (error) {
+        res.json({
+            success: false,
+            error: error.message,
+            connection: {
+                connected: false,
+                connection_string: process.env.DATABASE_URL ? '✅ Configurada' : '❌ Não configurada',
+                error: error.message
+            },
+            environment: {
+                node_env: process.env.NODE_ENV,
+                railway_environment: true
+            }
+        });
+    }
 });
 
 // Função para converter pontos em classe/rank
 function pointsToClass(points) {
-  const value = points || 0;
-  
-  if (value >= 1600) return 'Conquer 3';
-  if (value >= 1500) return 'Conquer 2';
-  if (value >= 1400) return 'Conquer 1';
-  if (value >= 1350) return 'Diamante 3';
-  if (value >= 1300) return 'Diamante 2';   
-  if (value >= 1200) return 'Diamante 1';
-  if (value >= 1150) return 'Platina 3';
-  if (value >= 1100) return 'Platina 2';
-  if (value >= 1000) return 'Platina 1';    
-  if (value >= 900) return 'Ouro 3';
-  if (value >= 800) return 'Ouro 2';
-  if (value >= 700) return 'Ouro 1';
-  if (value >= 600) return 'Prata 3';
-  if (value >= 550) return 'Prata 2';    
-  if (value >= 500) return 'Prata 1';
-  if (value >= 450) return 'Bronze 3';
-  if (value >= 400) return 'Bronze 2';
-  return 'Bronze 1';
+    const value = points || 0;
+
+    if (value >= 1600) return 'Conquer 3';
+    if (value >= 1500) return 'Conquer 2';
+    if (value >= 1400) return 'Conquer 1';
+    if (value >= 1350) return 'Diamante 3';
+    if (value >= 1300) return 'Diamante 2';
+    if (value >= 1200) return 'Diamante 1';
+    if (value >= 1150) return 'Platina 3';
+    if (value >= 1100) return 'Platina 2';
+    if (value >= 1000) return 'Platina 1';
+    if (value >= 900) return 'Ouro 3';
+    if (value >= 800) return 'Ouro 2';
+    if (value >= 700) return 'Ouro 1';
+    if (value >= 600) return 'Prata 3';
+    if (value >= 550) return 'Prata 2';
+    if (value >= 500) return 'Prata 1';
+    if (value >= 450) return 'Bronze 3';
+    if (value >= 400) return 'Bronze 2';
+    return 'Bronze 1';
 }
 
 // FUNÇÃO: Sincronizar avatar individual
 async function syncPlayerAvatar(playerId, playerName) {
     try {
         console.log(`🔄 Sincronizando avatar de ${playerName}...`);
-        
+
         const response = await fetch(`https://aoe4world.com/api/v0/players/${playerId}`, {
             headers: { 'User-Agent': 'Aoe4BrasilBot/1.0' }
         });
-        
+
         if (response.ok) {
             const playerData = await response.json();
-            
+
             if (playerData.avatars && playerData.avatars.small) {
                 await pool.query(
                     'UPDATE leaderboard_cache SET avatar_url = $1, cached_at = NOW() WHERE aoe4_world_id = $2',
                     [playerData.avatars.small, playerId]
                 );
-                
+
                 console.log(`✅ Avatar sincronizado: ${playerData.avatars.small}`);
                 return playerData.avatars.small;
             } else {
@@ -178,7 +178,7 @@ async function syncPlayerAvatar(playerId, playerName) {
         } else {
             console.log(`❌ HTTP ${response.status} para ${playerName}`);
         }
-        
+
         return null;
     } catch (error) {
         console.error(`💥 Erro ao sincronizar avatar de ${playerName}:`, error.message);
@@ -190,44 +190,44 @@ async function syncPlayerAvatar(playerId, playerName) {
 async function updatePlayerCache(playerId) {
     try {
         console.log(`🔄 Atualizando CACHE COMPLETO para ${playerId} (Season 12)...`);
-        
+
         const response = await fetch(`https://aoe4world.com/api/v0/players/${playerId}`, {
             headers: { 'User-Agent': 'Aoe4BrasilBot/1.0' }
         });
-        
+
         if (!response.ok) {
             console.log(`❌ Erro API: ${response.status} - ${response.statusText}`);
             return false;
         }
-        
+
         const contentType = response.headers.get('content-type');
         if (!contentType || !contentType.includes('application/json')) {
             console.log(`❌ Resposta não é JSON: ${contentType}`);
             return false;
         }
-        
+
         const playerData = await response.json();
-        
+
         if (!playerData || !playerData.name) {
             console.log('❌ Dados inválidos da API');
             return false;
         }
-        
+
         console.log(`✅ Dados encontrados: ${playerData.name}`);
-        
+
         // ✅ EXTRAIR DADOS (código existente...)
         const soloData = playerData.modes?.rm_solo || {};
         const pointsSolo = soloData.rating || 0;
         const winsSolo = soloData.wins_count || 0;
         const gamesSolo = soloData.games_count || 0;
         const lastSoloGame = soloData.last_game_at;
-        
+
         const teamData = playerData.modes?.rm_team || {};
         const pointsTeam = teamData.rating || 0;
         const winsTeam = teamData.wins_count || 0;
         const gamesTeam = teamData.games_count || 0;
         const lastTeamGame = teamData.last_game_at;
-        
+
         // ✅ ELO 1v1 CORRETO (código existente...)
         let elo1v1 = 0;
         if (playerData.modes?.rm_1v1_elo?.rating) {
@@ -237,14 +237,14 @@ async function updatePlayerCache(playerId) {
         } else if (playerData.modes?.rm_solo?.rating) {
             elo1v1 = playerData.modes.rm_solo.rating;
         }
-        
-        const eloTeam = teamData.rating || 0;
-// Buscar clan tag do AOE4 World API E do nosso banco
-let clanTag = playerData.clan?.tag || '';
 
-// Se não encontrou na API, buscar do nosso banco
-if (!clanTag) {
-    const clanFromDB = await pool.query(`
+        const eloTeam = teamData.rating || 0;
+        // Buscar clan tag do AOE4 World API E do nosso banco
+        let clanTag = playerData.clan?.tag || '';
+
+        // Se não encontrou na API, buscar do nosso banco
+        if (!clanTag) {
+            const clanFromDB = await pool.query(`
         SELECT c.tag 
         FROM clan_members cm
         JOIN clans c ON cm.clan_id = c.id
@@ -252,25 +252,25 @@ if (!clanTag) {
         WHERE u.aoe4_world_id = $1
         LIMIT 1
     `, [playerId]);
-    
-    if (clanFromDB.rows.length > 0) {
-        clanTag = clanFromDB.rows[0].tag;
-        console.log(`✅ Clan encontrado no banco: ${clanTag}`);
-    }
-}
+
+            if (clanFromDB.rows.length > 0) {
+                clanTag = clanFromDB.rows[0].tag;
+                console.log(`✅ Clan encontrado no banco: ${clanTag}`);
+            }
+        }
         const region = playerData.region || '';
         const civilization = playerData.civilization || '';
         const avatarUrl = playerData.avatars?.small || null;
-        
+
         console.log(`🎯 Dados Season 12 - Solo: ${pointsSolo}pts (${winsSolo}/${gamesSolo}), Team: ${pointsTeam}pts, ELO: ${elo1v1}`);
-        
+
         // Buscar/gerar user_id (código existente...)
         const existingUser = await pool.query(`
             SELECT user_id FROM leaderboard_cache 
             WHERE aoe4_world_id = $1 
             LIMIT 1
         `, [playerId]);
-        
+
         let userId;
         if (existingUser.rows.length > 0) {
             userId = existingUser.rows[0].user_id;
@@ -278,7 +278,7 @@ if (!clanTag) {
             const maxUser = await pool.query(`SELECT COALESCE(MAX(user_id), 0) as max_id FROM leaderboard_cache`);
             userId = parseInt(maxUser.rows[0].max_id) + 1;
         }
-        
+
         // ✅✅✅ ATUALIZAÇÃO CORRIGIDA: SEMPRE Season 12, SEMPRE substituir dados antigos
         await pool.query(`
             INSERT INTO leaderboard_cache 
@@ -314,18 +314,18 @@ if (!clanTag) {
             userId, playerId, playerData.name,
             pointsSolo, elo1v1, winsSolo, gamesSolo,
             pointsTeam, eloTeam, winsTeam, gamesTeam,
-            pointsToClass(pointsSolo), 
+            pointsToClass(pointsSolo),
             12,  // ✅ SEMPRE Season 12
             avatarUrl, clanTag, region, civilization,
             lastSoloGame, lastTeamGame
         ]);
-        
+
         console.log(`✅ CACHE ATUALIZADO Season 12: ${playerData.name}`);
         console.log(`   🎯 Solo: ${pointsSolo}pts (${winsSolo}/${gamesSolo}) | Team: ${pointsTeam}pts (${winsTeam}/${gamesTeam})`);
         console.log(`   🏷️  Clan: ${clanTag} | ELO: ${elo1v1}`);
-        
+
         return true;
-        
+
     } catch (error) {
         console.error(`💥 Erro ao atualizar cache de ${playerId}:`, error.message);
         return false;
@@ -336,9 +336,9 @@ if (!clanTag) {
 async function getPlayersFromDatabase(limit, offset, mode, seasonId = 12) {
     try {
         console.log(`💾 Buscando ${limit} players do BANCO LOCAL (season: ${seasonId}, modo: ${mode}, offset: ${offset})...`);
-        
+
         let pointsColumn, winsColumn, totalMatchesColumn, eloColumn, lastGameColumn;
-        
+
         // Definir colunas baseadas no modo
         if (mode === 'rm_team') {
             pointsColumn = 'rm_team_points';
@@ -434,9 +434,9 @@ async function getPlayersFromDatabase(limit, offset, mode, seasonId = 12) {
 `;
 
         const result = await pool.query(query, [seasonId, limit, offset]);
-        
+
         console.log(`✅ ENCONTRADOS ${result.rows.length} PLAYERS NO BANCO LOCAL`);
-        
+
         // Debug detalhado - CORRIGIDO
         if (result.rows.length > 0) {
             console.log(`🔍 Debug ELO/Pontos (primeiros 3 players):`);
@@ -444,7 +444,7 @@ async function getPlayersFromDatabase(limit, offset, mode, seasonId = 12) {
                 console.log(`   ${row.name}: Points=${row.points}, ELO=${row.elo}, LastGame=${row.last_game}`);
             });
         }
-        
+
         // Converter para o formato esperado
         const players = result.rows.map((row, index) => ({
             ...row,
@@ -459,7 +459,7 @@ async function getPlayersFromDatabase(limit, offset, mode, seasonId = 12) {
         }));
 
         return players;
-        
+
     } catch (error) {
         console.error('💥 Erro ao buscar players do banco:', error);
         return [];
@@ -470,7 +470,7 @@ async function getPlayersFromDatabase(limit, offset, mode, seasonId = 12) {
 app.post('/api/admin/update-clan-tags', async (req, res) => {
     try {
         console.log('🔄 Atualizando clan tags no cache...');
-        
+
         const result = await pool.query(`
             UPDATE leaderboard_cache lc
             SET clan_tag = subquery.clan_tag
@@ -488,15 +488,15 @@ app.post('/api/admin/update-clan-tags', async (req, res) => {
             WHERE lc.aoe4_world_id = subquery.aoe4_world_id
             AND (lc.clan_tag IS NULL OR lc.clan_tag = '')
         `);
-        
+
         console.log(`✅ Clan tags atualizadas: ${result.rowCount} registros`);
-        
+
         res.json({
             success: true,
             message: `Clan tags atualizadas: ${result.rowCount} registros`,
             updated: result.rowCount
         });
-        
+
     } catch (error) {
         console.error('❌ Erro ao atualizar clan tags:', error);
         res.status(500).json({ success: false, error: error.message });
@@ -507,7 +507,7 @@ app.post('/api/admin/update-clan-tags', async (req, res) => {
 async function getLeaderboardStats(seasonId = 12) {
     try {
         console.log(`📊 Gerando estatísticas da leaderboard - Season ${seasonId}...`);
-        
+
         // Buscar estatísticas da leaderboard_cache
         const stats = await pool.query(`
             SELECT 
@@ -551,43 +551,43 @@ async function getLeaderboardStats(seasonId = 12) {
         `, [seasonId]);
 
         console.log('📊 Resultado da query de estatísticas:', stats.rows[0]);
-        
+
         // Buscar número REAL de clans da tabela clans
         const clanStats = await pool.query(`
             SELECT COUNT(*) as total_clans
             FROM clans 
             WHERE name IS NOT NULL AND name != ''
         `);
-        
+
         const row = stats.rows[0];
         const totalRealClans = parseInt(clanStats.rows[0].total_clans);
-        
+
         const result = {
             // Estatísticas básicas
             total_players: parseInt(row.total_players) || 0,
             total_clans: totalRealClans, // ✅ AGORA USANDO CLANS REAIS
             players_with_clan: parseInt(row.players_with_clan) || 0,
             players_with_clan_tag: parseInt(row.players_with_clan_tag) || 0, // Para debug
-            
+
             // Modos de jogo
             players_with_solo: parseInt(row.players_with_solo) || 0,
             players_with_team: parseInt(row.players_with_team) || 0,
-            
+
             // Total de jogos
             total_solo_games: parseInt(row.total_solo_games) || 0,
             total_team_games: parseInt(row.total_team_games) || 0,
             total_games: (parseInt(row.total_solo_games) || 0) + (parseInt(row.total_team_games) || 0),
-            
+
             // Médias
             avg_solo_points: parseInt(row.avg_solo_points) || 0,
             avg_team_points: parseInt(row.avg_team_points) || 0,
             avg_solo_elo: parseInt(row.avg_solo_elo) || 0,
             avg_team_elo: parseInt(row.avg_team_elo) || 0,
-            
+
             // Top scores
             max_solo_points: parseInt(row.max_solo_points) || 0,
             max_team_points: parseInt(row.max_team_points) || 0,
-            
+
             // Distribuição por tier
             tier_distribution: {
                 conquer: parseInt(row.conquer_players) || 0,
@@ -597,17 +597,17 @@ async function getLeaderboardStats(seasonId = 12) {
                 low_elo: parseInt(row.low_elo_players) || 0
             }
         };
-        
+
         // Calcular percentuais
         result.solo_coverage = ((result.players_with_solo / result.total_players) * 100).toFixed(1);
         result.team_coverage = ((result.players_with_team / result.total_players) * 100).toFixed(1);
         result.clan_coverage = ((result.players_with_clan / result.total_players) * 100).toFixed(1);
-        
+
         console.log('📊 Estatísticas calculadas:', result);
         console.log(`🏰 Clans reais no banco: ${totalRealClans}`);
-        
+
         return result;
-        
+
     } catch (error) {
         console.error('❌ Erro ao gerar estatísticas:', error);
         return null;
@@ -619,25 +619,25 @@ app.get('/api/stats/leaderboard', async (req, res) => {
     try {
         const season = req.query.season || 'current';
         const seasonId = season === 'current' ? 12 : parseInt(season);
-        
+
         console.log(`📊 Buscando estatísticas - Season ${seasonId}`);
-        
+
         const stats = await getLeaderboardStats(seasonId);
-        
+
         if (!stats) {
             return res.status(500).json({
                 success: false,
                 error: 'Erro ao gerar estatísticas'
             });
         }
-        
+
         res.json({
             success: true,
             season: seasonId,
             stats: stats,
             last_updated: new Date().toISOString()
         });
-        
+
     } catch (error) {
         console.error('❌ Erro na rota de estatísticas:', error);
         res.status(500).json({
@@ -667,7 +667,7 @@ async function getTotalPlayersCount(mode, seasonId = 12) {
 async function syncNewPlayersFromClans() {
     try {
         console.log('🔄 Sincronizando NOVOS jogadores dos clans...');
-        
+
         let syncedCount = 0;
         let errorCount = 0;
         const results = [];
@@ -693,12 +693,12 @@ async function syncNewPlayersFromClans() {
         // Sincronizar cada novo jogador
         for (let i = 0; i < newPlayers.rows.length; i++) {
             const player = newPlayers.rows[i];
-            
+
             try {
                 console.log(`🔄 [${i + 1}/${newPlayers.rows.length}] Sincronizando jogador do clan: ${player.aoe4_world_id} (${player.clan_name})`);
-                
+
                 const success = await updatePlayerCache(player.aoe4_world_id);
-                
+
                 if (success) {
                     syncedCount++;
                     results.push({
@@ -723,7 +723,7 @@ async function syncNewPlayersFromClans() {
                 if (AUTO_UPDATE_CONFIG.delayBetweenRequests > 0 && i < newPlayers.rows.length - 1) {
                     await new Promise(resolve => setTimeout(resolve, AUTO_UPDATE_CONFIG.delayBetweenRequests));
                 }
-                
+
             } catch (error) {
                 errorCount++;
                 results.push({
@@ -739,7 +739,7 @@ async function syncNewPlayersFromClans() {
 
         console.log(`✅ Sincronização de jogadores de clans concluída: ${syncedCount} sincronizados, ${errorCount} erros`);
         return { success: syncedCount, errors: errorCount, results };
-        
+
     } catch (error) {
         console.error('💥 Erro na sincronização de jogadores de clans:', error);
         return { success: 0, errors: 1, results: [] };
@@ -748,39 +748,39 @@ async function syncNewPlayersFromClans() {
 
 // FUNÇÃO ATUALIZADA: Atualização automática completa
 async function startAutoCacheUpdate() {
-  if (!AUTO_UPDATE_CONFIG.enabled) {
-    console.log('⏸️ Atualização automática desativada');
-    return;
-  }
+    if (!AUTO_UPDATE_CONFIG.enabled) {
+        console.log('⏸️ Atualização automática desativada');
+        return;
+    }
 
-  try {
-    console.log('🔄 INICIANDO ATUALIZAÇÃO AUTOMÁTICA COMPLETA...');
-    
-    // 1. PRIMEIRO: Sincronizar NOVOS USERS (do bot Discord)
-    console.log('🎯 FASE 1: Sincronizando NOVOS USERS do bot Discord...');
-    const newUsersStats = await syncNewUsersToCache();
-    
-    // 2. SEGUNDO: Sincronizar novos jogadores dos clans
-    console.log('🎯 FASE 2: Sincronizando novos jogadores dos CLANS...');
-    const newPlayersStats = await syncNewPlayersFromClans();
-    
-    // 3. TERCEIRO: Atualizar cache existente
-    console.log('🎯 FASE 3: Atualizando cache EXISTENTE...');
-    const updateStats = await performCacheUpdate();
-    
-    console.log(`✅ ATUALIZAÇÃO AUTOMÁTICA CONCLUÍDA:`);
-    console.log(`   👤 ${newUsersStats.success} NOVOS users sincronizados`);
-    console.log(`   🎮 ${newPlayersStats.success} novos jogadores de clans`);
-    console.log(`   🔄 ${updateStats.success} caches atualizados`);
-    console.log(`   ❌ ${newUsersStats.errors + newPlayersStats.errors + updateStats.errors} erros totais`);
-    console.log(`⏰ Próxima atualização em ${AUTO_UPDATE_CONFIG.interval / 60000} minutos`);
-    
-  } catch (error) {
-    console.error('❌ ERRO NA ATUALIZAÇÃO AUTOMÁTICA:', error);
-  } finally {
-    // Agendar próxima atualização
-    setTimeout(startAutoCacheUpdate, AUTO_UPDATE_CONFIG.interval);
-  }
+    try {
+        console.log('🔄 INICIANDO ATUALIZAÇÃO AUTOMÁTICA COMPLETA...');
+
+        // 1. PRIMEIRO: Sincronizar NOVOS USERS (do bot Discord)
+        console.log('🎯 FASE 1: Sincronizando NOVOS USERS do bot Discord...');
+        const newUsersStats = await syncNewUsersToCache();
+
+        // 2. SEGUNDO: Sincronizar novos jogadores dos clans
+        console.log('🎯 FASE 2: Sincronizando novos jogadores dos CLANS...');
+        const newPlayersStats = await syncNewPlayersFromClans();
+
+        // 3. TERCEIRO: Atualizar cache existente
+        console.log('🎯 FASE 3: Atualizando cache EXISTENTE...');
+        const updateStats = await performCacheUpdate();
+
+        console.log(`✅ ATUALIZAÇÃO AUTOMÁTICA CONCLUÍDA:`);
+        console.log(`   👤 ${newUsersStats.success} NOVOS users sincronizados`);
+        console.log(`   🎮 ${newPlayersStats.success} novos jogadores de clans`);
+        console.log(`   🔄 ${updateStats.success} caches atualizados`);
+        console.log(`   ❌ ${newUsersStats.errors + newPlayersStats.errors + updateStats.errors} erros totais`);
+        console.log(`⏰ Próxima atualização em ${AUTO_UPDATE_CONFIG.interval / 60000} minutos`);
+
+    } catch (error) {
+        console.error('❌ ERRO NA ATUALIZAÇÃO AUTOMÁTICA:', error);
+    } finally {
+        // Agendar próxima atualização
+        setTimeout(startAutoCacheUpdate, AUTO_UPDATE_CONFIG.interval);
+    }
 }
 
 // ROTA: Verificar users que precisam de sincronização INICIAL
@@ -807,13 +807,13 @@ app.get('/api/debug/users-needing-initial-sync', async (req, res) => {
             ORDER BY u.created_at DESC
             LIMIT 100
         `);
-        
+
         res.json({
             success: true,
             users_needing_sync: users.rows.length,
             users: users.rows
         });
-        
+
     } catch (error) {
         console.error('❌ Erro ao listar users:', error);
         res.status(500).json({
@@ -827,15 +827,15 @@ app.get('/api/debug/users-needing-initial-sync', async (req, res) => {
 app.post('/api/admin/sync-new-users', async (req, res) => {
     try {
         console.log('🚀 Sincronização manual de NOVOS users acionada...');
-        
+
         const syncStats = await syncNewUsersToCache();
-        
+
         res.json({
             success: true,
             message: `Sincronização de novos users concluída: ${syncStats.success} sincronizados, ${syncStats.errors} erros`,
             stats: syncStats
         });
-        
+
     } catch (error) {
         console.error('❌ Erro na sincronização manual:', error);
         res.status(500).json({
@@ -847,13 +847,13 @@ app.post('/api/admin/sync-new-users', async (req, res) => {
 
 // FUNÇÃO: Executar atualização do cache
 async function performCacheUpdate() {
-  let successCount = 0;
-  let errorCount = 0;
-  const results = [];
+    let successCount = 0;
+    let errorCount = 0;
+    const results = [];
 
-  try {
-    // Buscar jogadores que precisam de atualização (CRITÉRIOS EXPANDIDOS)
-    const playersToUpdate = await pool.query(`
+    try {
+        // Buscar jogadores que precisam de atualização (CRITÉRIOS EXPANDIDOS)
+        const playersToUpdate = await pool.query(`
       SELECT 
         aoe4_world_id, 
         name, 
@@ -901,63 +901,63 @@ async function performCacheUpdate() {
       LIMIT $1
     `, [AUTO_UPDATE_CONFIG.maxPlayersPerUpdate]);
 
-    console.log(`📊 ${playersToUpdate.rows.length} jogadores precisam de atualização`);
+        console.log(`📊 ${playersToUpdate.rows.length} jogadores precisam de atualização`);
 
-    // Atualizar em lotes menores
-    for (let i = 0; i < playersToUpdate.rows.length; i++) {
-      const player = playersToUpdate.rows[i];
-      
-      try {
-        console.log(`🔄 [${i + 1}/${playersToUpdate.rows.length}] Atualizando ${player.name}...`);
-        
-        // ✅ USAR A NOVA FUNÇÃO DE ATUALIZAÇÃO COMPLETA
-        const success = await updatePlayerCache(player.aoe4_world_id);
-        
-        if (success) {
-          successCount++;
-          results.push({
-            name: player.name,
-            aoe4_world_id: player.aoe4_world_id,
-            status: 'success'
-          });
-        } else {
-          errorCount++;
-          results.push({
-            name: player.name,
-            aoe4_world_id: player.aoe4_world_id,
-            status: 'error'
-          });
+        // Atualizar em lotes menores
+        for (let i = 0; i < playersToUpdate.rows.length; i++) {
+            const player = playersToUpdate.rows[i];
+
+            try {
+                console.log(`🔄 [${i + 1}/${playersToUpdate.rows.length}] Atualizando ${player.name}...`);
+
+                // ✅ USAR A NOVA FUNÇÃO DE ATUALIZAÇÃO COMPLETA
+                const success = await updatePlayerCache(player.aoe4_world_id);
+
+                if (success) {
+                    successCount++;
+                    results.push({
+                        name: player.name,
+                        aoe4_world_id: player.aoe4_world_id,
+                        status: 'success'
+                    });
+                } else {
+                    errorCount++;
+                    results.push({
+                        name: player.name,
+                        aoe4_world_id: player.aoe4_world_id,
+                        status: 'error'
+                    });
+                }
+
+                // Delay para não sobrecarregar a API
+                if (AUTO_UPDATE_CONFIG.delayBetweenRequests > 0 && i < playersToUpdate.rows.length - 1) {
+                    await new Promise(resolve => setTimeout(resolve, AUTO_UPDATE_CONFIG.delayBetweenRequests));
+                }
+
+            } catch (error) {
+                errorCount++;
+                results.push({
+                    name: player.name,
+                    aoe4_world_id: player.aoe4_world_id,
+                    status: 'error',
+                    error: error.message
+                });
+                console.error(`💥 Erro em ${player.name}:`, error.message);
+            }
         }
 
-        // Delay para não sobrecarregar a API
-        if (AUTO_UPDATE_CONFIG.delayBetweenRequests > 0 && i < playersToUpdate.rows.length - 1) {
-          await new Promise(resolve => setTimeout(resolve, AUTO_UPDATE_CONFIG.delayBetweenRequests));
-        }
-        
-      } catch (error) {
-        errorCount++;
-        results.push({
-          name: player.name,
-          aoe4_world_id: player.aoe4_world_id,
-          status: 'error',
-          error: error.message
-        });
-        console.error(`💥 Erro em ${player.name}:`, error.message);
-      }
+        return { success: successCount, errors: errorCount, results };
+
+    } catch (error) {
+        console.error('💥 Erro na execução da atualização:', error);
+        return { success: 0, errors: 1, results: [] };
     }
-
-    return { success: successCount, errors: errorCount, results };
-    
-  } catch (error) {
-    console.error('💥 Erro na execução da atualização:', error);
-    return { success: 0, errors: 1, results: [] };
-  }
 }
 
 // FUNÇÃO: Verificar status do cache
 async function getCacheStatus() {
-  try {
-    const status = await pool.query(`
+    try {
+        const status = await pool.query(`
       SELECT 
         COUNT(*) as total_players,
         COUNT(CASE WHEN cached_at > NOW() - INTERVAL '1 hour' THEN 1 END) as fresh_players,
@@ -972,84 +972,84 @@ async function getCacheStatus() {
       AND season_id = 12
     `);
 
-    const stats = status.rows[0];
-    
-    return {
-      total_players: parseInt(stats.total_players),
-      fresh_players: parseInt(stats.fresh_players),
-      needs_refresh: parseInt(stats.needs_refresh),
-      missing_elo: parseInt(stats.missing_elo),
-      wrong_elo: parseInt(stats.wrong_elo),
-      missing_avatar: parseInt(stats.missing_avatar),
-      missing_clan: parseInt(stats.missing_clan),
-      avg_cache_age_seconds: Math.round(stats.avg_cache_age_seconds || 0),
-      cache_health: ((parseInt(stats.fresh_players) / parseInt(stats.total_players)) * 100).toFixed(1) + '%'
-    };
-    
-  } catch (error) {
-    console.error('❌ Erro ao verificar status do cache:', error);
-    return null;
-  }
+        const stats = status.rows[0];
+
+        return {
+            total_players: parseInt(stats.total_players),
+            fresh_players: parseInt(stats.fresh_players),
+            needs_refresh: parseInt(stats.needs_refresh),
+            missing_elo: parseInt(stats.missing_elo),
+            wrong_elo: parseInt(stats.wrong_elo),
+            missing_avatar: parseInt(stats.missing_avatar),
+            missing_clan: parseInt(stats.missing_clan),
+            avg_cache_age_seconds: Math.round(stats.avg_cache_age_seconds || 0),
+            cache_health: ((parseInt(stats.fresh_players) / parseInt(stats.total_players)) * 100).toFixed(1) + '%'
+        };
+
+    } catch (error) {
+        console.error('❌ Erro ao verificar status do cache:', error);
+        return null;
+    }
 }
 
 // ROTA: Status da atualização automática
 app.get('/api/admin/auto-update/status', async (req, res) => {
-  try {
-    const cacheStatus = await getCacheStatus();
-    
-    res.json({
-      success: true,
-      auto_update: {
-        enabled: AUTO_UPDATE_CONFIG.enabled,
-        interval_minutes: AUTO_UPDATE_CONFIG.interval / 60000,
-        next_update: new Date(Date.now() + AUTO_UPDATE_CONFIG.interval).toISOString(),
-        config: AUTO_UPDATE_CONFIG
-      },
-      cache_status: cacheStatus
-    });
-    
-  } catch (error) {
-    console.error('❌ Erro no status da atualização:', error);
-    res.status(500).json({
-      success: false,
-      error: error.message
-    });
-  }
+    try {
+        const cacheStatus = await getCacheStatus();
+
+        res.json({
+            success: true,
+            auto_update: {
+                enabled: AUTO_UPDATE_CONFIG.enabled,
+                interval_minutes: AUTO_UPDATE_CONFIG.interval / 60000,
+                next_update: new Date(Date.now() + AUTO_UPDATE_CONFIG.interval).toISOString(),
+                config: AUTO_UPDATE_CONFIG
+            },
+            cache_status: cacheStatus
+        });
+
+    } catch (error) {
+        console.error('❌ Erro no status da atualização:', error);
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
 });
 
 // ROTA: Configurar atualização automática
 app.post('/api/admin/auto-update/config', async (req, res) => {
-  try {
-    const { enabled, interval_minutes, players_per_batch, delay_between_requests } = req.body;
-    
-    if (enabled !== undefined) AUTO_UPDATE_CONFIG.enabled = enabled;
-    if (interval_minutes) AUTO_UPDATE_CONFIG.interval = interval_minutes * 60 * 1000;
-    if (players_per_batch) AUTO_UPDATE_CONFIG.playersPerBatch = players_per_batch;
-    if (delay_between_requests) AUTO_UPDATE_CONFIG.delayBetweenRequests = delay_between_requests;
-    
-    console.log('⚙️ Configuração de atualização automática atualizada:', AUTO_UPDATE_CONFIG);
-    
-    res.json({
-      success: true,
-      message: 'Configuração de atualização automática atualizada',
-      config: AUTO_UPDATE_CONFIG,
-      next_update: new Date(Date.now() + AUTO_UPDATE_CONFIG.interval).toISOString()
-    });
-    
-  } catch (error) {
-    console.error('❌ Erro ao configurar atualização:', error);
-    res.status(500).json({
-      success: false,
-      error: error.message
-    });
-  }
+    try {
+        const { enabled, interval_minutes, players_per_batch, delay_between_requests } = req.body;
+
+        if (enabled !== undefined) AUTO_UPDATE_CONFIG.enabled = enabled;
+        if (interval_minutes) AUTO_UPDATE_CONFIG.interval = interval_minutes * 60 * 1000;
+        if (players_per_batch) AUTO_UPDATE_CONFIG.playersPerBatch = players_per_batch;
+        if (delay_between_requests) AUTO_UPDATE_CONFIG.delayBetweenRequests = delay_between_requests;
+
+        console.log('⚙️ Configuração de atualização automática atualizada:', AUTO_UPDATE_CONFIG);
+
+        res.json({
+            success: true,
+            message: 'Configuração de atualização automática atualizada',
+            config: AUTO_UPDATE_CONFIG,
+            next_update: new Date(Date.now() + AUTO_UPDATE_CONFIG.interval).toISOString()
+        });
+
+    } catch (error) {
+        console.error('❌ Erro ao configurar atualização:', error);
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
 });
 
 // ✅ FUNÇÃO: Sincronizar users NOVOS que nunca foram para o cache
 async function syncNewUsersToCache() {
     try {
         console.log('🔄 Sincronizando USERS NOVOS para o cache...');
-        
+
         let syncedCount = 0;
         let errorCount = 0;
         const results = [];
@@ -1076,12 +1076,12 @@ async function syncNewUsersToCache() {
         // Sincronizar cada novo user
         for (let i = 0; i < newUsers.rows.length; i++) {
             const user = newUsers.rows[i];
-            
+
             try {
                 console.log(`🔄 [${i + 1}/${newUsers.rows.length}] Sincronizando user: ${user.aoe4_world_id} (Discord: ${user.discord_user_id})`);
-                
+
                 const success = await updatePlayerCache(user.aoe4_world_id);
-                
+
                 if (success) {
                     syncedCount++;
                     results.push({
@@ -1106,7 +1106,7 @@ async function syncNewUsersToCache() {
                 if (AUTO_UPDATE_CONFIG.delayBetweenRequests > 0 && i < newUsers.rows.length - 1) {
                     await new Promise(resolve => setTimeout(resolve, AUTO_UPDATE_CONFIG.delayBetweenRequests));
                 }
-                
+
             } catch (error) {
                 errorCount++;
                 results.push({
@@ -1125,7 +1125,7 @@ async function syncNewUsersToCache() {
         console.log(`   ❌ ${errorCount} erros`);
 
         return { success: syncedCount, errors: errorCount, results };
-        
+
     } catch (error) {
         console.error('💥 Erro na sincronização de novos users:', error);
         return { success: 0, errors: 1, results: [] };
@@ -1134,34 +1134,34 @@ async function syncNewUsersToCache() {
 
 // ROTA: Forçar atualização imediata
 app.post('/api/admin/auto-update/trigger', async (req, res) => {
-  try {
-    console.log('🚀 Atualização manual acionada via API...');
-    
-    const updateStats = await performCacheUpdate();
-    
-    res.json({
-      success: true,
-      message: `Atualização manual concluída: ${updateStats.success} sucessos, ${updateStats.errors} erros`,
-      stats: updateStats,
-      cache_status: await getCacheStatus()
-    });
-    
-  } catch (error) {
-    console.error('❌ Erro na atualização manual:', error);
-    res.status(500).json({
-      success: false,
-      error: error.message
-    });
-  }
+    try {
+        console.log('🚀 Atualização manual acionada via API...');
+
+        const updateStats = await performCacheUpdate();
+
+        res.json({
+            success: true,
+            message: `Atualização manual concluída: ${updateStats.success} sucessos, ${updateStats.errors} erros`,
+            stats: updateStats,
+            cache_status: await getCacheStatus()
+        });
+
+    } catch (error) {
+        console.error('❌ Erro na atualização manual:', error);
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
 });
 
 // ROTA: Verificar dados completos de um player no cache
 app.get('/api/debug/player-cache/:playerId', async (req, res) => {
     try {
         const playerId = req.params.playerId;
-        
+
         console.log(`🔍 Verificando cache do player ${playerId}...`);
-        
+
         // Buscar dados atuais do cache
         const cacheData = await pool.query(`
             SELECT 
@@ -1175,23 +1175,23 @@ app.get('/api/debug/player-cache/:playerId', async (req, res) => {
             WHERE aoe4_world_id = $1
             AND season_id = 12
         `, [playerId]);
-        
+
         if (cacheData.rows.length === 0) {
             return res.json({
                 success: false,
                 message: 'Player não encontrado no cache'
             });
         }
-        
+
         const playerCache = cacheData.rows[0];
-        
+
         res.json({
             success: true,
             cache_data: playerCache,
             last_updated: playerCache.cached_at,
             cache_age: Math.round((new Date() - new Date(playerCache.cached_at)) / (1000 * 60)) + ' minutos'
         });
-        
+
     } catch (error) {
         console.error('❌ Erro ao verificar cache:', error);
         res.status(500).json({
@@ -1205,10 +1205,10 @@ app.get('/api/debug/player-cache/:playerId', async (req, res) => {
 app.post('/api/players/update-all-elo', async (req, res) => {
     try {
         const limit = parseInt(req.body.limit) || 10;
-        const delay = parseInt(req.body.delay) || 1500; 
-        
+        const delay = parseInt(req.body.delay) || 1500;
+
         console.log(`🚀 Iniciando atualização COMPLETA do cache para ${limit} jogadores...`);
-        
+
         const playersToUpdate = await pool.query(`
             SELECT DISTINCT aoe4_world_id, name, rm_solo_points
             FROM leaderboard_cache 
@@ -1218,21 +1218,21 @@ app.post('/api/players/update-all-elo', async (req, res) => {
             ORDER BY rm_solo_points DESC NULLS LAST
             LIMIT $1
         `, [limit]);
-        
+
         console.log(`📊 ${playersToUpdate.rows.length} jogadores para atualizar`);
-        
+
         const results = [];
         let successCount = 0;
         let errorCount = 0;
-        
+
         for (let i = 0; i < playersToUpdate.rows.length; i++) {
             const player = playersToUpdate.rows[i];
             try {
                 console.log(`🔄 [${i + 1}/${playersToUpdate.rows.length}] Atualizando ${player.name}...`);
-                
+
                 // ✅ USAR A NOVA FUNÇÃO DE ATUALIZAÇÃO COMPLETA
                 const success = await updatePlayerCache(player.aoe4_world_id);
-                
+
                 if (success) {
                     successCount++;
                     results.push({
@@ -1250,13 +1250,13 @@ app.post('/api/players/update-all-elo', async (req, res) => {
                     });
                     console.log(`❌ ${player.name} - Erro na atualização`);
                 }
-                
+
                 // Delay para não sobrecarregar a API
                 if (delay > 0 && i < playersToUpdate.rows.length - 1) {
                     console.log(`⏳ Aguardando ${delay}ms...`);
                     await new Promise(resolve => setTimeout(resolve, delay));
                 }
-                
+
             } catch (error) {
                 errorCount++;
                 results.push({
@@ -1268,11 +1268,11 @@ app.post('/api/players/update-all-elo', async (req, res) => {
                 console.error(`💥 Erro em ${player.name}:`, error.message);
             }
         }
-        
+
         console.log(`✅✅✅ Atualização do cache concluída!`);
         console.log(`   ✅ ${successCount} atualizados com sucesso`);
         console.log(`   ❌ ${errorCount} erros`);
-        
+
         res.json({
             success: true,
             message: `Atualização do cache concluída: ${successCount}/${playersToUpdate.rows.length} jogadores`,
@@ -1284,7 +1284,7 @@ app.post('/api/players/update-all-elo', async (req, res) => {
             },
             results: results.slice(0, 20)
         });
-        
+
     } catch (error) {
         console.error('❌ Erro na atualização em lote:', error);
         res.status(500).json({
@@ -1300,9 +1300,9 @@ app.post('/api/players/update-all-elo', async (req, res) => {
 app.get('/api/debug/players-without-data', async (req, res) => {
     try {
         const clanId = req.query.clanId; // Opcional: filtrar por clan específico
-        
+
         console.log(`🔍 Buscando jogadores sem dados${clanId ? ` no clan ${clanId}` : ''}...`);
-        
+
         let query = `
             SELECT 
                 cm.discord_user_id,
@@ -1326,19 +1326,19 @@ app.get('/api/debug/players-without-data', async (req, res) => {
                OR (lc.rm_solo_points IS NULL OR lc.rm_solo_points = 0)
                OR (u.aoe4_world_id IS NULL OR u.aoe4_world_id = '')
         `;
-        
+
         const params = [];
         if (clanId) {
             query += ` AND cm.clan_id = $1`;
             params.push(clanId);
         }
-        
+
         query += ` ORDER BY c.name, cm.discord_user_id`;
-        
+
         const result = await pool.query(query, params);
-        
+
         console.log(`📊 Encontrados ${result.rows.length} jogadores sem dados`);
-        
+
         // Agrupar por clan para melhor visualização
         const groupedByClan = {};
         result.rows.forEach(player => {
@@ -1347,14 +1347,14 @@ app.get('/api/debug/players-without-data', async (req, res) => {
             }
             groupedByClan[player.clan_name].push(player);
         });
-        
+
         res.json({
             success: true,
             total_players_without_data: result.rows.length,
             players_by_clan: groupedByClan,
             all_players: result.rows
         });
-        
+
     } catch (error) {
         console.error('❌ Erro ao buscar jogadores sem dados:', error);
         res.status(500).json({
@@ -1368,9 +1368,9 @@ app.get('/api/debug/players-without-data', async (req, res) => {
 app.get('/api/debug/player-details/:discordUserId', async (req, res) => {
     try {
         const discordUserId = req.params.discordUserId;
-        
+
         console.log(`🔍 Verificando dados do jogador: ${discordUserId}`);
-        
+
         const result = await pool.query(`
             SELECT 
                 -- Dados do clan_members
@@ -1410,16 +1410,16 @@ app.get('/api/debug/player-details/:discordUserId', async (req, res) => {
             LEFT JOIN leaderboard_cache lc ON u.aoe4_world_id = lc.aoe4_world_id
             WHERE cm.discord_user_id = $1
         `, [discordUserId]);
-        
+
         if (result.rows.length === 0) {
             return res.json({
                 success: false,
                 message: 'Jogador não encontrado no clan_members'
             });
         }
-        
+
         const playerData = result.rows[0];
-        
+
         // Determinar status dos dados
         const dataStatus = {
             has_user_entry: !!playerData.aoe4_world_id,
@@ -1427,11 +1427,11 @@ app.get('/api/debug/player-details/:discordUserId', async (req, res) => {
             has_solo_data: !!(playerData.rm_solo_points && playerData.rm_solo_points > 0),
             has_team_data: !!(playerData.rm_team_points && playerData.rm_team_points > 0),
             is_owner: playerData.is_owner,
-            data_age: playerData.cached_at ? 
-                Math.round((new Date() - new Date(playerData.cached_at)) / (1000 * 60 * 60)) + ' horas' : 
+            data_age: playerData.cached_at ?
+                Math.round((new Date() - new Date(playerData.cached_at)) / (1000 * 60 * 60)) + ' horas' :
                 'Nunca atualizado'
         };
-        
+
         res.json({
             success: true,
             player_data: playerData,
@@ -1443,7 +1443,7 @@ app.get('/api/debug/player-details/:discordUserId', async (req, res) => {
                 missing_team_data: !dataStatus.has_team_data
             }
         });
-        
+
     } catch (error) {
         console.error('❌ Erro ao verificar jogador:', error);
         res.status(500).json({
@@ -1457,7 +1457,7 @@ app.get('/api/debug/player-details/:discordUserId', async (req, res) => {
 async function getClansFromDatabase(limit = 10) {
     try {
         console.log(`🏰 Buscando top ${limit} clans do banco...`);
-        
+
         const query = `
             SELECT 
                 c.id as clan_id,
@@ -1493,12 +1493,12 @@ async function getClansFromDatabase(limit = 10) {
                 max_solo_points DESC NULLS LAST
             LIMIT $1
         `;
-        
+
         const result = await pool.query(query, [limit]);
         console.log(`✅ ${result.rows.length} clans encontrados`);
-        
+
         return result.rows;
-        
+
     } catch (error) {
         console.error('❌ Erro ao buscar clans:', error);
         return [];
@@ -1509,9 +1509,9 @@ async function getClansFromDatabase(limit = 10) {
 app.get('/api/debug/player-detailed-stats/:aoe4WorldId', async (req, res) => {
     try {
         const aoe4WorldId = req.params.aoe4WorldId;
-        
+
         console.log(`🔍 Debug detalhado do jogador ${aoe4WorldId}...`);
-        
+
         // Buscar dados de TODAS as seasons
         const allSeasons = await pool.query(`
             SELECT 
@@ -1532,7 +1532,7 @@ app.get('/api/debug/player-detailed-stats/:aoe4WorldId', async (req, res) => {
             WHERE aoe4_world_id = $1
             ORDER BY season_id DESC, cached_at DESC
         `, [aoe4WorldId]);
-        
+
         // Buscar dados do user e clan
         const userClanData = await pool.query(`
             SELECT 
@@ -1546,7 +1546,7 @@ app.get('/api/debug/player-detailed-stats/:aoe4WorldId', async (req, res) => {
             LEFT JOIN clans c ON cm.clan_id = c.id
             WHERE u.aoe4_world_id = $1
         `, [aoe4WorldId]);
-        
+
         res.json({
             success: true,
             aoe4_world_id: aoe4WorldId,
@@ -1558,7 +1558,7 @@ app.get('/api/debug/player-detailed-stats/:aoe4WorldId', async (req, res) => {
                 latest_data: allSeasons.rows[0]
             }
         });
-        
+
     } catch (error) {
         console.error('❌ Erro no debug detalhado:', error);
         res.status(500).json({
@@ -1572,7 +1572,7 @@ app.get('/api/debug/player-detailed-stats/:aoe4WorldId', async (req, res) => {
 async function getPopularClans(limit = 6) {
     try {
         console.log(`👥 Buscando ${limit} clans populares (Season 12)...`);
-        
+
         const query = `
             SELECT 
                 c.id as clan_id,
@@ -1604,12 +1604,12 @@ async function getPopularClans(limit = 6) {
                 avg_solo_points DESC NULLS LAST
             LIMIT $1
         `;
-        
+
         const result = await pool.query(query, [limit]);
         console.log(`✅ ${result.rows.length} clans populares encontrados (Season 12)`);
-        
+
         return result.rows;
-        
+
     } catch (error) {
         console.error('❌ Erro ao buscar clans populares:', error);
         return [];
@@ -1620,7 +1620,7 @@ async function getPopularClans(limit = 6) {
 async function getClanMembersFixed(clanId, limit = 50) {
     try {
         console.log(`🔍 Buscando membros do clan ${clanId} (Season 12)...`);
-        
+
         const query = `
             SELECT DISTINCT ON (cm.discord_user_id)
                 -- Dados básicos do member
@@ -1682,12 +1682,12 @@ async function getClanMembersFixed(clanId, limit = 50) {
             ORDER BY cm.discord_user_id, cm.is_owner DESC, COALESCE(lc.rm_solo_points, 0) DESC
             LIMIT $2
         `;
-        
+
         const result = await pool.query(query, [clanId, limit]);
         console.log(`✅ Encontrados ${result.rows.length} membros únicos para o clan ${clanId} (Season 12)`);
-        
+
         return result.rows;
-        
+
     } catch (error) {
         console.error('❌ Erro ao buscar membros do clan:', error);
         return [];
@@ -1728,10 +1728,10 @@ async function getClanDetails(clanId) {
             WHERE c.id = $1
             GROUP BY c.id
         `;
-        
+
         const result = await pool.query(query, [clanId]);
         return result.rows[0] || null;
-        
+
     } catch (error) {
         console.error('❌ Erro ao buscar detalhes do clan:', error);
         return null;
@@ -1765,10 +1765,10 @@ async function getClanStats() {
             ) as clan_stats
             WHERE c.name IS NOT NULL
         `;
-        
+
         const result = await pool.query(query);
         return result.rows[0] || null;
-        
+
     } catch (error) {
         console.error('❌ Erro ao buscar estatísticas de clans:', error);
         return null;
@@ -1781,15 +1781,15 @@ async function getClanStats() {
 app.get('/api/clans/featured', async (req, res) => {
     try {
         const limit = parseInt(req.query.limit) || 6;
-        
+
         const featuredClans = await getPopularClans(limit);
-        
+
         res.json({
             success: true,
             clans: featuredClans,
             featured_count: featuredClans.length
         });
-        
+
     } catch (error) {
         console.error('❌ Erro na rota /api/clans/featured:', error);
         res.status(500).json({
@@ -1805,13 +1805,13 @@ app.get('/api/clans', async (req, res) => {
         const limit = parseInt(req.query.limit) || 12;
         const page = parseInt(req.query.page) || 1;
         const offset = (page - 1) * limit;
-        
+
         const clans = await getClansFromDatabase(limit);
-        
+
         // Contar total de clans
         const totalQuery = await pool.query('SELECT COUNT(*) as count FROM clans WHERE name IS NOT NULL AND name != \'\'');
         const totalClans = parseInt(totalQuery.rows[0].count);
-        
+
         res.json({
             success: true,
             clans: clans,
@@ -1822,7 +1822,7 @@ app.get('/api/clans', async (req, res) => {
                 total_pages: Math.ceil(totalClans / limit)
             }
         });
-        
+
     } catch (error) {
         console.error('❌ Erro na rota /api/clans:', error);
         res.status(500).json({
@@ -1836,17 +1836,17 @@ app.get('/api/clans', async (req, res) => {
 app.get('/api/clans/:clanId', async (req, res) => {
     try {
         const clanId = parseInt(req.params.clanId);
-        
+
         const clanDetails = await getClanDetails(clanId);
         const clanMembers = await getClanMembersFixed(clanId);
-        
+
         if (!clanDetails) {
             return res.status(404).json({
                 success: false,
                 error: 'Clan não encontrado'
             });
         }
-        
+
         res.json({
             success: true,
             clan: clanDetails,
@@ -1854,7 +1854,7 @@ app.get('/api/clans/:clanId', async (req, res) => {
             stats: {
                 total_members: clanDetails.total_members || 0,
                 players_with_data: clanDetails.players_with_data || 0,
-                data_coverage: clanDetails.total_members > 0 ? 
+                data_coverage: clanDetails.total_members > 0 ?
                     Math.round((clanDetails.players_with_data / clanDetails.total_members) * 100) : 0,
                 avg_solo_points: Math.round(clanDetails.avg_solo_points || 0),
                 avg_team_points: Math.round(clanDetails.avg_team_points || 0),
@@ -1864,7 +1864,7 @@ app.get('/api/clans/:clanId', async (req, res) => {
                 platinum_gold_players: clanDetails.platinum_gold_players || 0
             }
         });
-        
+
     } catch (error) {
         console.error('❌ Erro na rota /api/clans/:clanId:', error);
         res.status(500).json({
@@ -1878,12 +1878,12 @@ app.get('/api/clans/:clanId', async (req, res) => {
 app.get('/api/clans/stats/overview', async (req, res) => {
     try {
         const clanStats = await getClanStats();
-        
+
         res.json({
             success: true,
             stats: clanStats
         });
-        
+
     } catch (error) {
         console.error('❌ Erro na rota /api/clans/stats/overview:', error);
         res.status(500).json({
@@ -1907,7 +1907,7 @@ app.get('/api/debug/system-status', async (req, res) => {
                 (SELECT COUNT(*) FROM leaderboard_cache) as total_cached_players,
                 (SELECT COUNT(DISTINCT aoe4_world_id) FROM leaderboard_cache WHERE aoe4_world_id IS NOT NULL) as unique_cached_players
         `);
-        
+
         // 2. Conexões entre tabelas
         const connectionStats = await pool.query(`
             SELECT 
@@ -1920,7 +1920,7 @@ app.get('/api/debug/system-status', async (req, res) => {
             LEFT JOIN users u ON cm.discord_user_id = u.discord_user_id
             LEFT JOIN leaderboard_cache lc ON u.aoe4_world_id = lc.aoe4_world_id
         `);
-        
+
         // 3. Clans com mais dados
         const topClans = await pool.query(`
             SELECT 
@@ -1938,7 +1938,7 @@ app.get('/api/debug/system-status', async (req, res) => {
             ORDER BY members_with_data DESC
             LIMIT 10
         `);
-        
+
         res.json({
             success: true,
             system_status: {
@@ -1947,7 +1947,7 @@ app.get('/api/debug/system-status', async (req, res) => {
                 top_clans: topClans.rows
             }
         });
-        
+
     } catch (error) {
         console.error('❌ Erro no diagnóstico:', error);
         res.status(500).json({
@@ -1961,18 +1961,18 @@ app.get('/api/debug/system-status', async (req, res) => {
 app.get('/api/debug/clan-link-diagnosis/:clanId', async (req, res) => {
     try {
         const clanId = parseInt(req.params.clanId);
-        
+
         console.log(`🔍 Diagnóstico completo para clan ${clanId}`);
-        
+
         // 1. Clan básico
         const clan = await pool.query('SELECT * FROM clans WHERE id = $1', [clanId]);
-        
+
         // 2. Membros no clan_members
         const clanMembers = await pool.query(
-            'SELECT * FROM clan_members WHERE clan_id = $1', 
+            'SELECT * FROM clan_members WHERE clan_id = $1',
             [clanId]
         );
-        
+
         // 3. Vínculos com users
         const userLinks = await pool.query(`
             SELECT 
@@ -1983,7 +1983,7 @@ app.get('/api/debug/clan-link-diagnosis/:clanId', async (req, res) => {
             LEFT JOIN users u ON cm.discord_user_id = u.discord_user_id
             WHERE cm.clan_id = $1
         `, [clanId]);
-        
+
         // 4. Dados completos via leaderboard_cache
         const fullData = await pool.query(`
             SELECT 
@@ -1997,7 +1997,7 @@ app.get('/api/debug/clan-link-diagnosis/:clanId', async (req, res) => {
             LEFT JOIN leaderboard_cache lc ON u.aoe4_world_id = lc.aoe4_world_id
             WHERE cm.clan_id = $1
         `, [clanId]);
-        
+
         res.json({
             success: true,
             diagnosis: {
@@ -2023,7 +2023,7 @@ app.get('/api/debug/clan-link-diagnosis/:clanId', async (req, res) => {
                 }
             }
         });
-        
+
     } catch (error) {
         console.error('❌ Erro no diagnóstico:', error);
         res.status(500).json({
@@ -2037,50 +2037,50 @@ app.get('/api/debug/clan-link-diagnosis/:clanId', async (req, res) => {
 
 // ROTA: Health check
 app.get('/health', (req, res) => {
-  res.json({ 
-    status: 'OK', 
-    message: 'Backend AOE4 Rankings está funcionando',
-    timestamp: new Date().toISOString(),
-    data_source: 'DATABASE_EXCLUSIVE',
-    features: {
-      seasons: true,
-      local_players: true,
-      multiple_seasons: true,
-      auto_cache_update: AUTO_UPDATE_CONFIG.enabled,
-      clans: true
-    }
-  });
+    res.json({
+        status: 'OK',
+        message: 'Backend AOE4 Rankings está funcionando',
+        timestamp: new Date().toISOString(),
+        data_source: 'DATABASE_EXCLUSIVE',
+        features: {
+            seasons: true,
+            local_players: true,
+            multiple_seasons: true,
+            auto_cache_update: AUTO_UPDATE_CONFIG.enabled,
+            clans: true
+        }
+    });
 });
 
 // FUNÇÃO PRINCIPAL: APENAS BANCO LOCAL
 async function getPlayersWithModeFilter(limit = 25, offset = 0, mode = 'rm_solo', season = '12') {
     try {
         const seasonId = season === 'current' ? 12 : parseInt(season);
-        
+
         // Validar se a season existe (1-12)
         if (seasonId < 1 || seasonId > 12) {
             console.log(`❌ Season ${seasonId} inválida. Usando season 12.`);
             seasonId = 12;
         }
-        
+
         console.log(`🎯 Buscando players - Season: ${seasonId}, Modo: ${mode}, Limit: ${limit}, Offset: ${offset}`);
-        
+
         const dbPlayers = await getPlayersFromDatabase(limit, offset, mode, seasonId);
-        
+
         if (dbPlayers.length > 0) {
             const total = await getTotalPlayersCount(mode, seasonId);
             console.log(`✅ ${dbPlayers.length} players da season ${seasonId}`);
-            
+
             return {
                 players: dbPlayers,
                 total: total,
                 _source: 'database'
             };
         }
-        
+
         console.log('💥 Nenhum player encontrado para esta season');
         return { players: [], total: 0 };
-        
+
     } catch (error) {
         console.error('💥 Erro crítico:', error);
         return { players: [], total: 0 };
@@ -2094,15 +2094,15 @@ app.get('/api/players', async (req, res) => {
         const limit = parseInt(req.query.limit) || 25;
         const season = req.query.season || 'current';
         const mode = req.query.mode || 'rm_solo';
-        
+
         const offset = (page - 1) * limit;
-        
+
         console.log(`📄 Requisição: season ${season}, página ${page}, limite ${limit}, modo ${mode}`);
-        
+
         const { players, total } = await getPlayersWithModeFilter(limit, offset, mode, season);
-        
+
         const totalPages = Math.ceil(total / limit);
-        
+
         res.json({
             success: true,
             players: players,
@@ -2120,7 +2120,7 @@ app.get('/api/players', async (req, res) => {
             },
             data_source: 'database'
         });
-        
+
     } catch (error) {
         console.error('❌ Erro na rota /api/players:', error);
         res.status(500).json({
@@ -2132,24 +2132,24 @@ app.get('/api/players', async (req, res) => {
 
 // ROTA: Seasons
 app.get('/api/seasons', async (req, res) => {
-  try {
-    const seasons = await getSeasonsFromAoe4World();
-    res.json({ success: true, seasons: seasons });
-  } catch (error) {
-    console.error('❌ Erro na rota /api/seasons:', error);
-    res.status(500).json({ success: false, error: 'Erro ao carregar temporadas' });
-  }
+    try {
+        const seasons = await getSeasonsFromAoe4World();
+        res.json({ success: true, seasons: seasons });
+    } catch (error) {
+        console.error('❌ Erro na rota /api/seasons:', error);
+        res.status(500).json({ success: false, error: 'Erro ao carregar temporadas' });
+    }
 });
 
 // ROTA: Game modes
 app.get('/api/game-modes', (req, res) => {
-  res.json({
-    success: true,
-    game_modes: [
-      { id: 'rm_solo', name: 'Classificação solo', description: 'Ranked 1v1' },
-      { id: 'rm_team', name: 'Classificação em equipe', description: 'Ranked em equipe' }
-    ]
-  });
+    res.json({
+        success: true,
+        game_modes: [
+            { id: 'rm_solo', name: 'Classificação solo', description: 'Ranked 1v1' },
+            { id: 'rm_team', name: 'Classificação em equipe', description: 'Ranked em equipe' }
+        ]
+    });
 });
 
 // Inicialização do servidor
@@ -2162,21 +2162,21 @@ app.listen(PORT, async () => {
     console.log(`🏥 Health: http://localhost:${PORT}/health`);
     console.log(`🎮 Players: http://localhost:${PORT}/api/players`);
     console.log(`🏰 Clans: http://localhost:${PORT}/api/clans/featured`);
-    
+
     // Testar conexão
     await testConnection();
-    
+
     // Iniciar atualização automática
     if (AUTO_UPDATE_CONFIG.enabled) {
         console.log(`🔄 ATUALIZAÇÃO AUTOMÁTICA ATIVADA: ${AUTO_UPDATE_CONFIG.interval / 60000} minutos`);
         console.log(`⏰ Primeira atualização em 1 minuto...`);
-        
+
         // Primeira execução em 1 minuto, depois a cada 30 minutos
         setTimeout(() => {
             startAutoCacheUpdate();
         }, 60000);
     }
-    
+
     console.log('\n✅✅✅ Sistema configurado para usar APENAS BANCO DE DADOS LOCAL ✅✅✅');
     console.log('🎮 Sistema de Seasons totalmente funcional!');
     console.log('🏰 Sistema de Clans totalmente funcional!');
@@ -2185,40 +2185,40 @@ app.listen(PORT, async () => {
 
 // Testar conexão com o banco
 async function testConnection() {
-  try {
-    const result = await pool.query('SELECT NOW() as current_time');
-    console.log('✅ Conectado ao PostgreSQL:', result.rows[0].current_time);
-    
-    // Verificar quantos players temos no banco
-    const countResult = await pool.query('SELECT COUNT(*) as count FROM leaderboard_cache WHERE name IS NOT NULL');
-    console.log(`📊 Banco possui ${countResult.rows[0].count} players no total`);
-    
-    // Verificar por seasons
-    const seasonsCount = await pool.query('SELECT season_id, COUNT(*) as count FROM leaderboard_cache WHERE name IS NOT NULL GROUP BY season_id ORDER BY season_id DESC');
-    console.log('📊 Distribuição por seasons:');
-    seasonsCount.rows.forEach(row => {
-        console.log(`   Season ${row.season_id}: ${row.count} players`);
-    });
-    
-    // Verificar clans
-    const clansCount = await pool.query('SELECT COUNT(*) as count FROM clans WHERE name IS NOT NULL AND name != \'\'');
-    console.log(`🏰 Banco possui ${clansCount.rows[0].count} clans`);
-    
-    const clanMembersCount = await pool.query('SELECT COUNT(*) as count FROM clan_members');
-    console.log(`👥 Banco possui ${clanMembersCount.rows[0].count} membros de clans`);
-    
-    return true;
-  } catch (error) {
-    console.error('❌ Erro ao conectar com PostgreSQL:', error.message);
-    return false;
-  }
+    try {
+        const result = await pool.query('SELECT NOW() as current_time');
+        console.log('✅ Conectado ao PostgreSQL:', result.rows[0].current_time);
+
+        // Verificar quantos players temos no banco
+        const countResult = await pool.query('SELECT COUNT(*) as count FROM leaderboard_cache WHERE name IS NOT NULL');
+        console.log(`📊 Banco possui ${countResult.rows[0].count} players no total`);
+
+        // Verificar por seasons
+        const seasonsCount = await pool.query('SELECT season_id, COUNT(*) as count FROM leaderboard_cache WHERE name IS NOT NULL GROUP BY season_id ORDER BY season_id DESC');
+        console.log('📊 Distribuição por seasons:');
+        seasonsCount.rows.forEach(row => {
+            console.log(`   Season ${row.season_id}: ${row.count} players`);
+        });
+
+        // Verificar clans
+        const clansCount = await pool.query('SELECT COUNT(*) as count FROM clans WHERE name IS NOT NULL AND name != \'\'');
+        console.log(`🏰 Banco possui ${clansCount.rows[0].count} clans`);
+
+        const clanMembersCount = await pool.query('SELECT COUNT(*) as count FROM clan_members');
+        console.log(`👥 Banco possui ${clanMembersCount.rows[0].count} membros de clans`);
+
+        return true;
+    } catch (error) {
+        console.error('❌ Erro ao conectar com PostgreSQL:', error.message);
+        return false;
+    }
 }
 
 // Função para buscar temporadas
 async function getSeasonsFromAoe4World() {
     try {
         console.log('🔄 Buscando temporadas do AOE4 World...');
-        
+
         return [
             { id: 12, name: 'Temporada 12', kind: 'ranked', status: 'ongoing' },
             { id: 11, name: 'Temporada 11', kind: 'ranked', status: 'finished' },
@@ -2233,7 +2233,7 @@ async function getSeasonsFromAoe4World() {
             { id: 2, name: 'Temporada 2', kind: 'ranked', status: 'finished' },
             { id: 1, name: 'Temporada 1', kind: 'ranked', status: 'finished' }
         ];
-        
+
     } catch (error) {
         console.error('💥 Erro ao buscar temporadas:', error);
         return [

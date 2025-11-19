@@ -6,15 +6,7 @@
   "type": "commonjs",
   "scripts": {
     "start": "node server.js",
-    "dev": "node server.js",
-    "migrate-local": "node migrate-local-players.js",
-    "debug-db": "node find-players.js",
-    "discover": "node discover-tables.js",
-    "criar-tabelas": "node criar-tabelas.js",
-    "create-tables": "node criar-tabelas.js",
-    "update-db": "node update-database.js",
-    "migrate-data": "node migrate-data.js",
-    "check-data": "node check-data.js"
+    "dev": "node server.js"
   },
   "engines": {
     "node": ">=18.0.0"

@@ -1,36 +1,132 @@
+// SUBSTITUA o início do arquivo por:
 import express from 'express';
 import cors from 'cors';
 import pkg from 'pg';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import dotenv from 'dotenv';
 
-// CONFIGURAÇÃO DE ATUALIZAÇÃO AUTOMÁTICA - TESTES
+// Configurar __dirname para ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// 🔥 CARREGAR VARIÁVEIS DE AMBIENTE
+dotenv.config();
+
+// DEBUG das variáveis de ambiente
+console.log('=== ENVIRONMENT VARIABLES ===');
+console.log('DATABASE_URL:', process.env.DATABASE_URL ? '✅ CONFIGURADA' : '❌ NÃO CONFIGURADA');
+console.log('NODE_ENV:', process.env.NODE_ENV || 'undefined');
+console.log('PORT:', process.env.PORT || 'undefined');
+console.log('==============================');
+
+// CONFIGURAÇÃO DE ATUALIZAÇÃO AUTOMÁTICA
 const AUTO_UPDATE_CONFIG = {
   enabled: true,
-  interval: 15 * 60 * 1000, // ⚡ 5 minutos para testes (depois volta para 30)
-  playersPerBatch: 10, // Menos jogadores por lote
-  delayBetweenRequests: 2000, // Mais delay entre requests
-  maxPlayersPerUpdate: 30 // Menos jogadores por atualização
+  interval: 15 * 60 * 1000,
+  playersPerBatch: 10,
+  delayBetweenRequests: 2000,
+  maxPlayersPerUpdate: 30
 };
 
 const { Pool } = pkg;
 
 const app = express();
-const PORT = 3001;
+const PORT = process.env.PORT || 3001;
 
 // Middleware
 app.use(cors());
 app.use(express.json());
 
-const DATABASE_URL = "postgresql://postgres:ljPQHCOBFkYKHSAnZshLkQDmSWDZqBqW@mainline.proxy.rlwy.net:27194/railway";
+// Servir arquivos estáticos do frontend
+app.use(express.static(path.join(__dirname, '../frontend')));
 
-// Configuração do PostgreSQL
-const pool = new Pool({
-  connectionString: DATABASE_URL,
-  ssl: {
-    rejectUnauthorized: false
-  },
-  connectionTimeoutMillis: 10000,
-  idleTimeoutMillis: 30000,
+// Rotas para páginas HTML
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, '../frontend/index.html'));
+});
+
+app.get('/leaderboard.html', (req, res) => {
+    res.sendFile(path.join(__dirname, '../frontend/leaderboard.html'));
+});
+
+app.get('/clan.html', (req, res) => {
+    res.sendFile(path.join(__dirname, '../frontend/clan.html'));
+});
+
+app.get('/torneios.html', (req, res) => {
+    res.sendFile(path.join(__dirname, '../frontend/torneios.html'));
+});
+
+app.get('/admin.html', (req, res) => {
+    res.sendFile(path.join(__dirname, '../frontend/admin.html'));
+});
+
+// Configuração do PostgreSQL - CORRIGIDA
+const poolConfig = {
+  connectionString: process.env.DATABASE_URL,
+  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+  connectionTimeoutMillis: 30000,
+  idleTimeoutMillis: 60000,
   max: 20
+};
+
+// Verificar se a connection string é válida
+if (!process.env.DATABASE_URL) {
+  console.error('❌ DATABASE_URL não encontrada! Verifique o arquivo .env');
+} else {
+  console.log('✅ DATABASE_URL carregada do ambiente');
+}
+
+const pool = new Pool(poolConfig);
+
+
+// ROTA: Debug da conexão com o banco
+app.get('/api/debug/database-connection', async (req, res) => {
+  try {
+    // Testar conexão
+    const dbTest = await pool.query('SELECT NOW() as time, current_database() as db_name');
+    
+    // Verificar dados
+    const dataCheck = await pool.query(`
+      SELECT 
+        COUNT(*) as total_players,
+        COUNT(CASE WHEN rm_solo_points > 0 THEN 1 END) as players_with_points,
+        COUNT(CASE WHEN clan_tag IS NOT NULL AND clan_tag != '' THEN 1 END) as players_with_clan
+      FROM leaderboard_cache 
+      WHERE name IS NOT NULL AND name != ''
+    `);
+    
+    res.json({
+      success: true,
+      connection: {
+        connected: true,
+        database: dbTest.rows[0].db_name,
+        time: dbTest.rows[0].time,
+        connection_string: process.env.DATABASE_URL ? '✅ Configurada' : '❌ Não configurada'
+      },
+      data: dataCheck.rows[0],
+      environment: {
+        node_env: process.env.NODE_ENV,
+        railway_environment: true
+      }
+    });
+    
+  } catch (error) {
+    res.json({
+      success: false,
+      error: error.message,
+      connection: {
+        connected: false,
+        connection_string: process.env.DATABASE_URL ? '✅ Configurada' : '❌ Não configurada',
+        error: error.message
+      },
+      environment: {
+        node_env: process.env.NODE_ENV,
+        railway_environment: true
+      }
+    });
+  }
 });
 
 // Função para converter pontos em classe/rank

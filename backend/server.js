@@ -2087,93 +2087,49 @@ app.get('/', (req, res) => {
   `);
 });
 
-// Debug - verifica se arquivos existem
-app.get('/debug-path', (req, res) => {
-  const fs = require('fs');
-  const path = require('path');
-  
-  const checks = {
-    currentDir: process.cwd(),
-    backendExists: fs.existsSync(path.join(process.cwd(), 'backend')),
-    frontendExists: fs.existsSync(path.join(process.cwd(), 'backend', 'frontend')),
-    indexExists: fs.existsSync(path.join(process.cwd(), 'backend', 'frontend', 'index.html')),
-    filesInBackend: fs.readdirSync(path.join(process.cwd(), 'backend'))
-  };
-  
-  res.json(checks);
-});
-
-// Health check
-app.get('/health', (req, res) => {
-  res.json({ status: 'OK', message: 'Backend funcionando' });
-});
-
-// OU simplesmente sirva o index.html diretamente
-app.get('/', (req, res) => {
-  res.sendFile(process.cwd() + '/frontend/index.html');
-});
-
-app.use(express.static('backend/frontend'));
-
-
-// ========== CONFIGURAÇÃO FRONTEND CORRETA ==========
+// ========== CONFIGURAÇÃO ULTRA-SIMPLES ==========
 import fs from 'fs';
+import path from 'path';
 
-// Debug para verificar arquivos
-app.get('/debug-files', (req, res) => {
-  const paths = {
-    currentDir: process.cwd(),
-    backendExists: fs.existsSync(process.cwd() + '/backend'),
-    frontendExists: fs.existsSync(process.cwd() + '/backend/frontend'),
-    indexExists: fs.existsSync(process.cwd() + '/backend/frontend/index.html'),
-    filesInBackend: fs.existsSync(process.cwd() + '/backend') ? 
-      fs.readdirSync(process.cwd() + '/backend') : []
-  };
-  res.json(paths);
-});
-
-// Servir arquivos estáticos do frontend
-app.use(express.static(process.cwd() + '/backend/frontend'));
-
-// Rota raiz - serve o index.html
+// Rota básica para teste
 app.get('/', (req, res) => {
-  const indexPath = process.cwd() + '/backend/frontend/index.html';
-  if (fs.existsSync(indexPath)) {
-    res.sendFile(indexPath);
-  } else {
-    res.send(`
-      <!DOCTYPE html>
-      <html>
-      <head><title>AOE4 Brasil</title></head>
-      <body>
-        <h1>🚀 Backend AOE4 Funcionando!</h1>
-        <p>Frontend em configuração.</p>
-        <a href="/debug-files">Ver arquivos</a> | 
-        <a href="/health">Health Check</a> |
-        <a href="/api/players">API Players</a>
-      </body>
-      </html>
-    `);
+  // Tenta vários caminhos possíveis
+  const possibleIndexPaths = [
+    path.join(process.cwd(), 'frontend', 'index.html'),
+    path.join(process.cwd(), 'backend', 'frontend', 'index.html'),
+    path.join(process.cwd(), 'index.html')
+  ];
+  
+  for (const indexPath of possibleIndexPaths) {
+    if (fs.existsSync(indexPath)) {
+      console.log('✅ Servindo index.html de:', indexPath);
+      return res.sendFile(indexPath);
+    }
   }
+  
+  // Se não encontrar, mostra mensagem de debug
+  res.send(`
+    <!DOCTYPE html>
+    <html>
+    <head><title>AOE4 Brasil - Debug</title></head>
+    <body>
+      <h1>🔧 Configurando Frontend</h1>
+      <p><strong>Current Directory:</strong> ${process.cwd()}</p>
+      <p><strong>Arquivos no diretório atual:</strong></p>
+      <ul>
+        ${fs.readdirSync(process.cwd()).map(file => `<li>${file}</li>`).join('')}
+      </ul>
+      <a href="/fix-structure">Tentar corrigir estrutura</a> | 
+      <a href="/debug-simple">Debug Detalhado</a>
+    </body>
+    </html>
+  `);
 });
 
-// Rotas para outras páginas HTML
-app.get('/leaderboard', (req, res) => {
-  res.sendFile(process.cwd() + '/backend/frontend/leaderboard.html');
-});
-
-app.get('/torneios', (req, res) => {
-  res.sendFile(process.cwd() + '/backend/frontend/torneios.html');
-});
-
-app.get('/about', (req, res) => {
-  res.sendFile(process.cwd() + '/backend/frontend/about.html');
-});
-
-// Fallback para SPA (Single Page Application)
-app.get('*', (req, res) => {
-  res.sendFile(process.cwd() + '/backend/frontend/index.html');
-});
+// Servir arquivos estáticos de múltiplos locais
+app.use(express.static(path.join(process.cwd(), 'frontend')));
+app.use(express.static(path.join(process.cwd(), 'backend', 'frontend')));
+app.use(express.static(process.cwd()));
 
 // Inicialização do servidor
 app.listen(PORT, '0.0.0.0', async () => {

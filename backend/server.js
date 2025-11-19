@@ -2078,6 +2078,10 @@ app.use(express.static('.'));
 app.use(express.static('backend/frontend'));
 
 // E as rotas:
+// Servir arquivos estáticos
+app.use(express.static(join(__dirname, 'frontend')));
+
+// Rotas para páginas HTML
 app.get('/', (req, res) => {
   res.sendFile(join(__dirname, 'frontend', 'index.html'));
 });
@@ -2093,7 +2097,6 @@ app.get('/torneios', (req, res) => {
 app.get('/about', (req, res) => {
   res.sendFile(join(__dirname, 'frontend', 'about.html'));
 });
-
 // Servir arquivos estáticos
 app.use(express.static('.'));
 

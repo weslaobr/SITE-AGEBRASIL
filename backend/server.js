@@ -2116,6 +2116,65 @@ app.get('/', (req, res) => {
 app.use(express.static('backend/frontend'));
 
 
+// ========== CONFIGURAÇÃO FRONTEND CORRETA ==========
+import fs from 'fs';
+
+// Debug para verificar arquivos
+app.get('/debug-files', (req, res) => {
+  const paths = {
+    currentDir: process.cwd(),
+    backendExists: fs.existsSync(process.cwd() + '/backend'),
+    frontendExists: fs.existsSync(process.cwd() + '/backend/frontend'),
+    indexExists: fs.existsSync(process.cwd() + '/backend/frontend/index.html'),
+    filesInBackend: fs.existsSync(process.cwd() + '/backend') ? 
+      fs.readdirSync(process.cwd() + '/backend') : []
+  };
+  res.json(paths);
+});
+
+// Servir arquivos estáticos do frontend
+app.use(express.static(process.cwd() + '/backend/frontend'));
+
+// Rota raiz - serve o index.html
+app.get('/', (req, res) => {
+  const indexPath = process.cwd() + '/backend/frontend/index.html';
+  if (fs.existsSync(indexPath)) {
+    res.sendFile(indexPath);
+  } else {
+    res.send(`
+      <!DOCTYPE html>
+      <html>
+      <head><title>AOE4 Brasil</title></head>
+      <body>
+        <h1>🚀 Backend AOE4 Funcionando!</h1>
+        <p>Frontend em configuração.</p>
+        <a href="/debug-files">Ver arquivos</a> | 
+        <a href="/health">Health Check</a> |
+        <a href="/api/players">API Players</a>
+      </body>
+      </html>
+    `);
+  }
+});
+
+// Rotas para outras páginas HTML
+app.get('/leaderboard', (req, res) => {
+  res.sendFile(process.cwd() + '/backend/frontend/leaderboard.html');
+});
+
+app.get('/torneios', (req, res) => {
+  res.sendFile(process.cwd() + '/backend/frontend/torneios.html');
+});
+
+app.get('/about', (req, res) => {
+  res.sendFile(process.cwd() + '/backend/frontend/about.html');
+});
+
+// Fallback para SPA (Single Page Application)
+app.get('*', (req, res) => {
+  res.sendFile(process.cwd() + '/backend/frontend/index.html');
+});
+
 // Inicialização do servidor
 app.listen(PORT, '0.0.0.0', async () => {
     console.log(`🚀 Backend AOE4 rodando na porta ${PORT}`);

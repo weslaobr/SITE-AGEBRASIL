@@ -1,7 +1,7 @@
 // Serviço para comunicação com a API
 class ApiService {
     constructor() {
-        this.baseURL = 'http://localhost:8080/api';
+        this.baseURL = 'http://localhost:3001/api';
         this.currentPage = 1;
         this.playersPerPage = 25;
         this.currentSeason = 'current';

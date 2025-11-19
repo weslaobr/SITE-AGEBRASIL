@@ -14,14 +14,6 @@ console.log('NODE_ENV:', process.env.NODE_ENV || 'undefined');
 console.log('PORT:', process.env.PORT || 'undefined');
 console.log('==============================');
 
-// CONFIGURAÇÃO DE ATUALIZAÇÃO AUTOMÁTICA
-const AUTO_UPDATE_CONFIG = {
-  enabled: true,
-  interval: 15 * 60 * 1000,
-  playersPerBatch: 10,
-  delayBetweenRequests: 2000,
-  maxPlayersPerUpdate: 30
-};
 
 const { Pool } = pkg;
 
@@ -55,6 +47,15 @@ app.get('/torneios.html', (req, res) => {
 app.get('/admin.html', (req, res) => {
     res.sendFile(path.join(__dirname, '../frontend/admin.html'));
 });
+
+// CONFIGURAÇÃO DE ATUALIZAÇÃO AUTOMÁTICA
+const AUTO_UPDATE_CONFIG = {
+  enabled: true,
+  interval: 15 * 60 * 1000,
+  playersPerBatch: 10,
+  delayBetweenRequests: 2000,
+  maxPlayersPerUpdate: 30
+};
 
 // Configuração do PostgreSQL - CORRIGIDA
 const poolConfig = {

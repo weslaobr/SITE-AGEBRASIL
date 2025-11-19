@@ -1,12 +1,15 @@
 // Serviço para comunicação com a API
 class ApiService {
     constructor() {
-        this.baseURL = 'http://localhost:3001/api';
-        this.currentPage = 1;
-        this.playersPerPage = 25;
-        this.currentSeason = 'current';
-        this.currentMode = 'rm_solo';
-    }
+    // No Railway, frontend e backend estão no mesmo domínio
+    this.baseURL = window.location.origin + '/api';
+    // Ou use este fallback:
+    // this.baseURL = '/api';
+    this.currentPage = 1;
+    this.playersPerPage = 25;
+    this.currentSeason = 'current';
+    this.currentMode = 'rm_solo';
+}
 
     async getPlayers(page = 1, limit = 25, season = 'current', mode = 'rm_solo') {
         try {

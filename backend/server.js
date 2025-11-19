@@ -1,14 +1,8 @@
-// SUBSTITUA o início do arquivo por:
-import express from 'express';
-import cors from 'cors';
-import pkg from 'pg';
-import path from 'path';
-import { fileURLToPath } from 'url';
-import dotenv from 'dotenv';
-
-// Configurar __dirname para ES modules
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const express = require('express');
+const cors = require('cors');
+const pkg = require('pg');
+const path = require('path');
+const dotenv = require('dotenv');
 
 // 🔥 CARREGAR VARIÁVEIS DE AMBIENTE
 dotenv.config();
@@ -80,6 +74,10 @@ if (!process.env.DATABASE_URL) {
 
 const pool = new Pool(poolConfig);
 
+// Adicionar handler de erro global
+pool.on('error', (err, client) => {
+  console.error('💥 Erro inesperado no pool PostgreSQL:', err);
+});
 
 // ROTA: Debug da conexão com o banco
 app.get('/api/debug/database-connection', async (req, res) => {
@@ -2254,4 +2252,4 @@ async function getSeasonsFromAoe4World() {
     }
 }
 
-export default app;
+module.exports = app;

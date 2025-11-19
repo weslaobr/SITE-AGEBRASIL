@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "Backend para o site AOE4",
   "main": "server.js",
+  "type": "commonjs",
   "scripts": {
     "start": "node server.js",
     "dev": "node server.js",

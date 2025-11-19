@@ -1,27 +1,27 @@
 // Sistema da página inicial com dados reais - COMPLETO
 console.log('🏠 Inicializando página home...');
 
-const API_BASE = 'http://localhost:3001/api';
+const API_BASE = '/api';
 
 async function loadHomeData() {
     try {
         console.log('📊 Carregando dados da home...');
-        
+
         // Carregar estatísticas gerais
         await loadHeroStats();
-        
+
         // Carregar top players
         await loadTopPlayers();
-        
+
         // Carregar estatísticas da comunidade
         await loadCommunityStats();
-        
+
         // Carregar clans (AGORA COM DADOS REAIS)
         await loadTopClans();
-        
+
         // Carregar atividade recente
         await loadRecentActivity();
-        
+
     } catch (error) {
         console.error('❌ Erro ao carregar dados da home:', error);
         showErrorState();
@@ -35,7 +35,7 @@ async function getClanStatsForHero() {
         if (!response.ok) {
             throw new Error(`HTTP ${response.status}`);
         }
-        
+
         const data = await response.json();
         if (data.success && data.stats) {
             return data.stats.total_clans || 0;
@@ -43,7 +43,7 @@ async function getClanStatsForHero() {
     } catch (error) {
         console.error('❌ Erro ao buscar estatísticas de clans:', error);
     }
-    
+
     // Fallback: contar clans diretamente da API de clans
     try {
         const response = await fetch(`${API_BASE}/clans/featured?limit=50`);
@@ -54,7 +54,7 @@ async function getClanStatsForHero() {
     } catch (error) {
         console.error('❌ Erro ao contar clans:', error);
     }
-    
+
     return 0; // Valor padrão se tudo falhar
 }
 
@@ -63,14 +63,14 @@ async function loadHeroStats() {
     try {
         console.log('🔍 Buscando estatísticas do hero...');
         const response = await fetch(`${API_BASE}/stats/leaderboard`);
-        
+
         if (!response.ok) {
             throw new Error(`HTTP ${response.status}`);
         }
-        
+
         const data = await response.json();
         console.log('📊 Dados recebidos:', data);
-        
+
         if (data.success) {
             // Buscar número real de clans
             const realClanCount = await getClanStatsForHero();
@@ -78,7 +78,7 @@ async function loadHeroStats() {
                 ...data.stats,
                 total_clans: realClanCount > 0 ? realClanCount : data.stats.total_clans
             };
-            
+
             renderHeroStats(statsWithRealClans);
         } else {
             throw new Error(data.error || 'Erro na API');
@@ -89,16 +89,16 @@ async function loadHeroStats() {
         const mockStats = getMockStats();
         const realClanCount = await getClanStatsForHero();
         mockStats.total_clans = realClanCount > 0 ? realClanCount : mockStats.total_clans;
-        
+
         renderHeroStats(mockStats);
     }
 }
 
 function renderHeroStats(stats) {
     const container = document.getElementById('hero-stats');
-    
+
     console.log('🎯 Renderizando hero stats:', stats);
-    
+
     container.innerHTML = `
         <div class="hero-stat">
             <span class="number">${stats.total_players.toLocaleString()}</span>
@@ -124,13 +124,13 @@ async function loadTopPlayers() {
     try {
         console.log('🔍 Buscando top players...');
         const response = await fetch(`${API_BASE}/players?page=1&limit=5&mode=rm_solo`);
-        
+
         if (!response.ok) {
             throw new Error(`HTTP ${response.status}`);
         }
-        
+
         const data = await response.json();
-        
+
         if (data.success && data.players.length > 0) {
             renderTopPlayers(data.players);
         } else {
@@ -145,17 +145,17 @@ async function loadTopPlayers() {
 
 function renderTopPlayers(players) {
     const container = document.getElementById('top-players');
-    
+
     const playersHTML = players.map(player => `
         <div class="player-card">
             <div class="player-header">
                 <div class="player-rank">#${player.rank}</div>
                 <div class="player-avatar">
-                    ${player.avatar_url ? 
-                        `<img src="${player.avatar_url}" alt="${player.name}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                         <div class="avatar-fallback" style="display: none;"><i class="fas fa-user"></i></div>` : 
-                        `<div class="avatar-fallback"><i class="fas fa-user"></i></div>`
-                    }
+                    ${player.avatar_url ?
+            `<img src="${player.avatar_url}" alt="${player.name}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                         <div class="avatar-fallback" style="display: none;"><i class="fas fa-user"></i></div>` :
+            `<div class="avatar-fallback"><i class="fas fa-user"></i></div>`
+        }
                 </div>
                 <div class="player-name">
                     <a href="https://aoe4world.com/players/${player.aoe4world_id}" target="_blank">
@@ -192,7 +192,7 @@ function renderTopPlayers(players) {
             </div>
         </div>
     `).join('');
-    
+
     container.innerHTML = playersHTML;
 }
 
@@ -201,13 +201,13 @@ async function loadCommunityStats() {
     try {
         console.log('🔍 Buscando estatísticas da comunidade...');
         const response = await fetch(`${API_BASE}/stats/leaderboard`);
-        
+
         if (!response.ok) {
             throw new Error(`HTTP ${response.status}`);
         }
-        
+
         const data = await response.json();
-        
+
         if (data.success) {
             renderCommunityStats(data.stats);
         } else {
@@ -222,18 +222,18 @@ async function loadCommunityStats() {
 
 function renderCommunityStats(stats) {
     const container = document.getElementById('community-stats');
-    
+
     // Calcular distribuição percentual
-    const totalWithData = stats.tier_distribution.conquer + stats.tier_distribution.diamond + 
-                         stats.tier_distribution.platinum_gold + stats.tier_distribution.silver_bronze + 
-                         stats.tier_distribution.low_elo;
-    
+    const totalWithData = stats.tier_distribution.conquer + stats.tier_distribution.diamond +
+        stats.tier_distribution.platinum_gold + stats.tier_distribution.silver_bronze +
+        stats.tier_distribution.low_elo;
+
     const conquerPercent = totalWithData > 0 ? ((stats.tier_distribution.conquer / totalWithData) * 100).toFixed(1) : 0;
     const diamondPercent = totalWithData > 0 ? ((stats.tier_distribution.diamond / totalWithData) * 100).toFixed(1) : 0;
     const platinumGoldPercent = totalWithData > 0 ? ((stats.tier_distribution.platinum_gold / totalWithData) * 100).toFixed(1) : 0;
     const silverBronzePercent = totalWithData > 0 ? ((stats.tier_distribution.silver_bronze / totalWithData) * 100).toFixed(1) : 0;
     const lowEloPercent = totalWithData > 0 ? ((stats.tier_distribution.low_elo / totalWithData) * 100).toFixed(1) : 0;
-    
+
     container.innerHTML = `
         <div class="quick-stat-card">
             <i class="fas fa-gamepad"></i>
@@ -278,13 +278,13 @@ async function loadTopClans() {
     try {
         console.log('🔍 Buscando clans do banco...');
         const response = await fetch(`${API_BASE}/clans/featured?limit=6`);
-        
+
         if (!response.ok) {
             throw new Error(`HTTP ${response.status}`);
         }
-        
+
         const data = await response.json();
-        
+
         if (data.success && data.clans.length > 0) {
             console.log(`✅ ${data.clans.length} clans carregados do banco`);
             renderTopClans(data.clans);
@@ -300,7 +300,7 @@ async function loadTopClans() {
 
 function renderTopClans(clans) {
     const container = document.getElementById('top-clans');
-    
+
     if (!clans || clans.length === 0) {
         container.innerHTML = `
             <div class="no-clans-message">
@@ -311,18 +311,18 @@ function renderTopClans(clans) {
         `;
         return;
     }
-    
+
     const clansHTML = clans.map(clan => {
         const memberText = clan.member_count === 1 ? 'membro' : 'membros';
         const avgPoints = Math.round(clan.avg_solo_points || 0);
         const clanInitials = clan.tag ? clan.tag.substring(0, 3).toUpperCase() : clan.name.substring(0, 3).toUpperCase();
-        const dataCoverage = clan.member_count > 0 ? 
+        const dataCoverage = clan.member_count > 0 ?
             Math.round((clan.players_with_data / clan.member_count) * 100) : 0;
-        
+
         // Extrair o primeiro player da lista de membros (se disponível)
         const topPlayer = clan.member_names ? clan.member_names.split(', ')[0] : '';
         const topPlayerDisplay = topPlayer ? topPlayer.split(' (')[0] : 'N/A';
-        
+
         return `
             <div class="clan-card" onclick="viewClanDetails(${clan.clan_id})" style="cursor: pointer;">
                 <div class="clan-badge-large">${clanInitials}</div>
@@ -346,7 +346,7 @@ function renderTopClans(clans) {
             </div>
         `;
     }).join('');
-    
+
     container.innerHTML = clansHTML;
 }
 
@@ -354,7 +354,7 @@ function renderTopClans(clans) {
 async function viewClanDetails(clanId) {
     try {
         console.log('🏰 Carregando detalhes do clan:', clanId);
-        
+
         // Mostrar loading na modal
         showClanModal(`
             <div class="modal-loading">
@@ -362,11 +362,11 @@ async function viewClanDetails(clanId) {
                 <p>Carregando membros do clan...</p>
             </div>
         `);
-        
+
         // Buscar detalhes do clan e membros
         const response = await fetch(`${API_BASE}/clans/${clanId}`);
         const data = await response.json();
-        
+
         if (data.success) {
             renderClanMembersModal(data);
         } else {
@@ -391,21 +391,21 @@ function showClanModal(content) {
     if (existingModal) {
         existingModal.remove();
     }
-    
+
     const modal = document.createElement('div');
     modal.id = 'clan-modal';
     modal.className = 'clan-modal';
     modal.innerHTML = content;
-    
+
     document.body.appendChild(modal);
-    
+
     // Fechar modal ao clicar fora
     modal.addEventListener('click', (e) => {
         if (e.target === modal) {
             closeClanModal();
         }
     });
-    
+
     // Fechar com ESC
     document.addEventListener('keydown', function escHandler(e) {
         if (e.key === 'Escape') {
@@ -426,7 +426,7 @@ function closeClanModal() {
 // Função para renderizar membros do clan na modal
 function renderClanMembersModal(data) {
     const { clan, members, stats } = data;
-    
+
     const modalContent = `
         <div class="clan-modal-content">
             <div class="clan-modal-header">
@@ -472,16 +472,16 @@ function renderClanMembersModal(data) {
             </div>
         </div>
     `;
-    
+
     showClanModal(modalContent);
 }
 
 // home.js - Função para carregar clans na home
 async function loadFeaturedClans() {
     try {
-        const response = await fetch('http://localhost:3001/api/clans/featured');
+        const response = await fetch('/api/clans/featured');
         const data = await response.json();
-        
+
         if (data.success && data.clans.length > 0) {
             const clansContainer = document.getElementById('top-clans');
             clansContainer.innerHTML = data.clans.map(clan => `
@@ -494,12 +494,12 @@ async function loadFeaturedClans() {
                         <span><i class="fas fa-trophy"></i> ${Math.round(clan.avg_solo_points || 0)} pts</span>
                     </div>
                     <div class="clan-members-preview">
-                        ${clan.member_names ? 
-                            clan.member_names.split(', ').slice(0, 3).map(name => 
-                                `<span class="member-tag">${name}</span>`
-                            ).join('') : 
-                            '<span class="no-members">Membros sem dados</span>'
-                        }
+                        ${clan.member_names ?
+                    clan.member_names.split(', ').slice(0, 3).map(name =>
+                        `<span class="member-tag">${name}</span>`
+                    ).join('') :
+                    '<span class="no-members">Membros sem dados</span>'
+                }
                     </div>
                 </div>
             `).join('');
@@ -533,7 +533,7 @@ function viewClanDetails(clanId) {
 // Função para formatar data de entrada no clan
 function formatJoinDate(joinDate) {
     if (!joinDate) return 'Data não disponível';
-    
+
     try {
         const date = new Date(joinDate);
         return date.toLocaleDateString('pt-BR');
@@ -547,13 +547,13 @@ async function loadRecentActivity() {
     try {
         console.log('🔍 Buscando atividade recente...');
         const response = await fetch(`${API_BASE}/players?page=1&limit=10&mode=rm_solo`);
-        
+
         if (!response.ok) {
             throw new Error(`HTTP ${response.status}`);
         }
-        
+
         const data = await response.json();
-        
+
         if (data.success) {
             renderRecentActivity(data.players);
         } else {
@@ -568,11 +568,11 @@ async function loadRecentActivity() {
 
 function renderRecentActivity(players) {
     const container = document.getElementById('recent-activity');
-    
+
     const activityHTML = players.slice(0, 6).map(player => {
         const activityType = getRandomActivity();
         const timeAgo = formatLastGameShort(player.last_game);
-        
+
         return `
             <div class="activity-item">
                 <div class="activity-icon">
@@ -587,7 +587,7 @@ function renderRecentActivity(players) {
             </div>
         `;
     }).join('');
-    
+
     container.innerHTML = activityHTML;
 }
 
@@ -713,7 +713,7 @@ function getMockClans() {
             member_names: "Sektor, Player2, Player3"
         },
         {
-            clan_id: 2, 
+            clan_id: 2,
             name: "Unity Gaming",
             tag: "UNITY",
             description: "International competitive team with players from multiple regions",
@@ -725,7 +725,7 @@ function getMockClans() {
         },
         {
             clan_id: 3,
-            name: "Brazilian Force", 
+            name: "Brazilian Force",
             tag: "BR",
             description: "Rising Brazilian talent in the competitive scene",
             member_count: 8,
@@ -752,18 +752,18 @@ function formatLastGameShort(lastGame) {
     if (!lastGame || lastGame === 'Sem dados' || lastGame === 'Invalid Date' || lastGame === 'Nunca') {
         return 'Nunca';
     }
-    
+
     if (lastGame.includes('há')) {
         return lastGame;
     }
-    
+
     try {
         const gameDate = new Date(lastGame);
         const now = new Date();
         const diffMs = now - gameDate;
         const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
         const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-        
+
         if (diffDays > 0) {
             return `há ${diffDays}d`;
         } else if (diffHours > 0) {
@@ -787,7 +787,7 @@ function getRandomActivity() {
         { icon: 'fa-medal', text: 'alcançou novo tier' },
         { icon: 'fa-fire', text: 'está em streak de vitórias' }
     ];
-    
+
     return activities[Math.floor(Math.random() * activities.length)];
 }
 
@@ -795,12 +795,12 @@ function getRandomActivity() {
 function showErrorState() {
     const containers = [
         'hero-stats',
-        'top-players', 
+        'top-players',
         'community-stats',
         'top-clans',
         'recent-activity'
     ];
-    
+
     containers.forEach(containerId => {
         const container = document.getElementById(containerId);
         if (container) {
@@ -1278,10 +1278,10 @@ if (!document.querySelector('#home-styles')) {
 // ========== INICIALIZAÇÃO ==========
 
 // Inicializar quando a página carregar
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     console.log('🚀 Iniciando carga de dados da home...');
     loadHomeData();
-    
+
     // Atualizar a cada 2 minutos
     setInterval(loadHomeData, 120000);
 });

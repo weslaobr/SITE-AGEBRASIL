@@ -1,7 +1,7 @@
 // Serviço para comunicação com a API
 class ApiService {
     constructor() {
-        this.baseURL = 'http://localhost:3001/api';
+        this.baseURL = '/api';
         this.currentPage = 1;
         this.playersPerPage = 25;
         this.currentSeason = 'current';
@@ -11,21 +11,21 @@ class ApiService {
     async getPlayers(page = 1, limit = 25, season = 'current', mode = 'rm_solo') {
         try {
             console.log(`🎮 [API] Buscando players - Página ${page}, Season: ${season}, Modo: ${mode}...`);
-            
+
             const url = `${this.baseURL}/players?page=${page}&limit=${limit}&season=${season}&mode=${mode}`;
             console.log(`🔗 URL: ${url}`);
-            
+
             const response = await fetch(url);
-            
+
             if (!response.ok) {
                 throw new Error(`Erro HTTP: ${response.status} - ${response.statusText}`);
             }
-            
+
             const data = await response.json();
-            
+
             if (data.success) {
                 console.log(`✅ [API] ${data.players.length} players carregados (Página ${data.pagination.current_page})`);
-                
+
                 this.currentPage = data.pagination.current_page;
                 this.currentSeason = season;
                 this.currentMode = mode;
@@ -33,7 +33,7 @@ class ApiService {
             } else {
                 throw new Error(data.error || 'Erro na API');
             }
-            
+
         } catch (error) {
             console.error('❌ [API] Erro ao carregar players:', error);
             console.log('🔄 [API] Usando dados mock como fallback...');
@@ -45,20 +45,20 @@ class ApiService {
         try {
             console.log('🔄 [API] Buscando temporadas...');
             const response = await fetch(`${this.baseURL}/seasons`);
-            
+
             if (!response.ok) {
                 throw new Error(`Erro HTTP: ${response.status}`);
             }
-            
+
             const data = await response.json();
-            
+
             if (data.success) {
                 console.log(`✅ [API] ${data.seasons.length} temporadas carregadas`);
                 return data.seasons;
             } else {
                 throw new Error(data.error || 'Erro ao carregar temporadas');
             }
-            
+
         } catch (error) {
             console.error('❌ [API] Erro ao carregar temporadas:', error);
             return this.getFallbackSeasons();
@@ -69,20 +69,20 @@ class ApiService {
         try {
             console.log('🔄 [API] Buscando modos de jogo...');
             const response = await fetch(`${this.baseURL}/game-modes`);
-            
+
             if (!response.ok) {
                 throw new Error(`Erro HTTP: ${response.status}`);
             }
-            
+
             const data = await response.json();
-            
+
             if (data.success) {
                 console.log(`✅ [API] ${data.game_modes.length} modos de jogo carregados`);
                 return data.game_modes;
             } else {
                 throw new Error(data.error || 'Erro ao carregar modos de jogo');
             }
-            
+
         } catch (error) {
             console.error('❌ [API] Erro ao carregar modos de jogo:', error);
             return this.getFallbackGameModes();
@@ -133,14 +133,14 @@ class ApiService {
         const mockPlayers = [];
         const names = ['Sektor', 'Erik', 'Hera', 'TheViper', 'Liereyy', 'MbL', 'DauT', 'Villese', 'TaToH'];
         const totalMockPlayers = 50;
-        
+
         for (let i = offset; i < offset + limit && i < totalMockPlayers; i++) {
             const nameIndex = i % names.length;
             const hasZeroPoints = i > 20 && Math.random() < 0.3;
             const basePoints = hasZeroPoints ? 0 : Math.max(0, 1700 - (i * 8));
             const games = hasZeroPoints ? 0 : 5 + (i * 2);
             const wins = hasZeroPoints ? 0 : Math.floor(games * (0.4 + (Math.random() * 0.3)));
-            
+
             // Função simples para converter pontos em classe
             function pointsToClass(points) {
                 if (points >= 1600) return 'Conquer 3';
@@ -162,7 +162,7 @@ class ApiService {
                 if (points >= 400) return 'Bronze 2';
                 return 'Bronze 1';
             }
-            
+
             mockPlayers.push({
                 id: i + 1,
                 name: i < names.length ? names[i] : `${names[nameIndex]}${Math.floor(i / names.length) + 1}`,
@@ -181,7 +181,7 @@ class ApiService {
                 season: 'current'
             });
         }
-        
+
         return {
             success: true,
             players: mockPlayers,
@@ -214,11 +214,11 @@ class LiquipediaAPI {
             if (liquipediaData && liquipediaData.length > 0) {
                 return liquipediaData;
             }
-            
+
             // Fallback para dados reais de exemplo
             console.log('Usando dados de exemplo reais...');
             return this.getRealTournamentsData();
-            
+
         } catch (error) {
             console.error('Erro ao buscar torneios:', error);
             return this.getRealTournamentsData();
@@ -237,19 +237,19 @@ class LiquipediaAPI {
             });
 
             const response = await fetch(`${this.baseURL}?${params}`);
-            
+
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             const data = await response.json();
-            
+
             if (data.error) {
                 throw new Error(data.error.info);
             }
-            
+
             return this.parseTournamentsFromHTML(data.parse.text['*']);
-            
+
         } catch (error) {
             console.warn('Não foi possível acessar a Liquipedia:', error);
             return null;
@@ -263,7 +263,7 @@ class LiquipediaAPI {
 
         // Procurar por tabelas de torneios
         const tables = tempDiv.querySelectorAll('table.wikitable, table.tournament-card');
-        
+
         tables.forEach(table => {
             const tournament = this.extractTournamentFromTable(table);
             if (tournament && tournament.name && tournament.name !== 'N/A') {
@@ -291,7 +291,7 @@ class LiquipediaAPI {
             if (rows.length < 2) return null;
 
             const cells = rows[1].querySelectorAll('td, th'); // Segunda linha geralmente tem dados
-            
+
             return {
                 name: this.cleanText(cells[0]?.textContent) || 'Torneio AOE IV',
                 date: this.cleanText(cells[1]?.textContent) || '2024',
@@ -407,20 +407,20 @@ class LiquipediaAPI {
 
     determineStatus(dateText) {
         if (!dateText) return 'upcoming';
-        
+
         const now = new Date();
         const currentYear = now.getFullYear();
-        
+
         if (dateText.toLowerCase().includes('present') || dateText.includes('Atual')) {
             return 'ongoing';
         }
-        
+
         if (dateText.includes('2024') && !dateText.includes('2023')) {
-            return dateText.includes('Jan') || dateText.includes('Feb') || dateText.includes('Mar') || 
-                   dateText.includes('Abr') || dateText.includes('Mai') || dateText.includes('Jun') ?
-                   (new Date().getMonth() <= 5 ? 'ongoing' : 'completed') : 'upcoming';
+            return dateText.includes('Jan') || dateText.includes('Feb') || dateText.includes('Mar') ||
+                dateText.includes('Abr') || dateText.includes('Mai') || dateText.includes('Jun') ?
+                (new Date().getMonth() <= 5 ? 'ongoing' : 'completed') : 'upcoming';
         }
-        
+
         return dateText.includes('2023') ? 'completed' : 'upcoming';
     }
 

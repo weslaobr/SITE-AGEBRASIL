@@ -16,6 +16,9 @@
     "migrate-data": "node migrate-data.js",
     "check-data": "node check-data.js"
   },
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "dependencies": {
     "axios": "^1.13.2",
     "cheerio": "^1.1.2",

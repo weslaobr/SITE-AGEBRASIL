@@ -5,7 +5,7 @@ import pkg from 'pg';
 // CONFIGURAÇÃO DE ATUALIZAÇÃO AUTOMÁTICA - TESTES
 const AUTO_UPDATE_CONFIG = {
   enabled: true,
-  interval: 15 * 60 * 1000, // ⚡ 5 minutos para testes (depois volta para 30)
+  interval: 30 * 60 * 1000, // ⚡ 5 minutos para testes (depois volta para 30)
   playersPerBatch: 10, // Menos jogadores por lote
   delayBetweenRequests: 2000, // Mais delay entre requests
   maxPlayersPerUpdate: 30 // Menos jogadores por atualização

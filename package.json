@@ -1,0 +1,18 @@
+{
+  "name": "aoe4-rankings-backend",
+  "type": "module",
+  "scripts": {
+    "dev": "node server.js",
+    "start": "node server.js",
+    "build": "echo 'No build step' && exit 0"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "pg": "^8.11.3",
+    "node-fetch": "^3.3.2"
+  },
+  "engines": {
+    "node": ">=18.x"
+  }
+}

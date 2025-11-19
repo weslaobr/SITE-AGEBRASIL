@@ -5,6 +5,7 @@ frontend>admin.html
 frontend>clan.html
 frontend>index.html
 frontend>leaderboard.html
+frontend>torneios.html
 frontend>js>api.js
 frontend>js>debug.js
 frontend>js>filters.js

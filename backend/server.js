@@ -2088,18 +2088,19 @@ app.get('/', (req, res) => {
 });
 
 // Debug - verifica se arquivos existem
-app.get('/debug-files', (req, res) => {
+app.get('/debug-path', (req, res) => {
   const fs = require('fs');
   const path = require('path');
   
-  const files = {
+  const checks = {
     currentDir: process.cwd(),
-    frontendExists: fs.existsSync(path.join(process.cwd(), 'frontend')),
-    indexExists: fs.existsSync(path.join(process.cwd(), 'frontend', 'index.html')),
-    filesInFrontend: fs.readdirSync(path.join(process.cwd(), 'frontend'))
+    backendExists: fs.existsSync(path.join(process.cwd(), 'backend')),
+    frontendExists: fs.existsSync(path.join(process.cwd(), 'backend', 'frontend')),
+    indexExists: fs.existsSync(path.join(process.cwd(), 'backend', 'frontend', 'index.html')),
+    filesInBackend: fs.readdirSync(path.join(process.cwd(), 'backend'))
   };
   
-  res.json(files);
+  res.json(checks);
 });
 
 // Health check
@@ -2112,7 +2113,7 @@ app.get('/', (req, res) => {
   res.sendFile(process.cwd() + '/frontend/index.html');
 });
 
-app.use(express.static('frontend'));
+app.use(express.static('backend/frontend'));
 
 
 // Inicialização do servidor

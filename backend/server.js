@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import pkg from 'pg';
+const PORT = process.env.PORT || 8080;
 
 // CONFIGURAÇÃO DE ATUALIZAÇÃO AUTOMÁTICA - TESTES
 const AUTO_UPDATE_CONFIG = {
@@ -14,10 +15,16 @@ const AUTO_UPDATE_CONFIG = {
 const { Pool } = pkg;
 
 const app = express();
-const PORT = 3001;
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: [
+    'https://aoe4.com.br',
+    'https://www.aoe4.com.br',
+    'http://localhost:3000'
+  ],
+  credentials: true
+}));
 app.use(express.json());
 
 const DATABASE_URL = "postgresql://postgres:ljPQHCOBFkYKHSAnZshLkQDmSWDZqBqW@mainline.proxy.rlwy.net:27194/railway";
@@ -2067,6 +2074,8 @@ app.listen(PORT, async () => {
     console.log(`🏥 Health: http://localhost:${PORT}/health`);
     console.log(`🎮 Players: http://localhost:${PORT}/api/players`);
     console.log(`🏰 Clans: http://localhost:${PORT}/api/clans/featured`);
+     console.log(`🚀 Servidor rodando na porta ${PORT}`);
+    console.log(`🌐 URL: http://0.0.0.0:${PORT}`);
     
     // Testar conexão
     await testConnection();

@@ -2071,6 +2071,27 @@ app.get('/api/game-modes', (req, res) => {
 });
 
 
+// Rota raiz explícita
+app.get('/', (req, res) => {
+  res.send(`
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>AOE4 Brasil</title>
+        <meta http-equiv="refresh" content="0; url=/index.html">
+    </head>
+    <body>
+        <p>Redirecionando para o site...</p>
+    </body>
+    </html>
+  `);
+});
+
+// OU simplesmente sirva o index.html diretamente
+app.get('/', (req, res) => {
+  res.sendFile(process.cwd() + '/frontend/index.html');
+});
+
 app.use(express.static('frontend'));
 
 

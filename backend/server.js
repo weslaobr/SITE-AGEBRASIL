@@ -19,8 +19,8 @@ const app = express();
 // Middleware
 app.use(cors({
   origin: [
+    'https://ageivbrasil.up.railway.app',
     'https://aoe4.com.br',
-    'https://www.aoe4.com.br',
     'http://localhost:3000'
   ],
   credentials: true

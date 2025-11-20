@@ -90,6 +90,10 @@ pool.on('error', (err, client) => {
 // 📝 ENDPOINTS DO FÓRUM - ADICIONE ESTE BLOCO
 // =============================================
 
+// =============================================
+// 📝 ENDPOINTS COMPLETOS DO FÓRUM
+// =============================================
+
 // 📂 GET CATEGORIAS
 app.get('/api/forum/categories', async (req, res) => {
     console.log('📥 Buscando categorias do fórum...');
@@ -105,6 +109,48 @@ app.get('/api/forum/categories', async (req, res) => {
 
     } catch (error) {
         console.error('❌ Erro ao buscar categorias:', error);
+        res.status(500).json({ error: 'Erro interno do servidor' });
+    } finally {
+        client.release();
+    }
+});
+
+// 📝 GET TÓPICOS POR CATEGORIA
+app.get('/api/forum/categories/:slug/topics', async (req, res) => {
+    const { slug } = req.params;
+    console.log(`📥 Buscando tópicos da categoria: ${slug}`);
+
+    const client = await pool.connect();
+
+    try {
+        // Primeiro encontrar o ID da categoria pelo slug
+        const categoryResult = await client.query(
+            'SELECT id FROM forum_categories WHERE slug = $1 AND is_active = true',
+            [slug]
+        );
+
+        if (categoryResult.rows.length === 0) {
+            return res.status(404).json({ error: 'Categoria não encontrada' });
+        }
+
+        const categoryId = categoryResult.rows[0].id;
+
+        // Buscar tópicos da categoria
+        const topicsResult = await client.query(
+            `SELECT t.*, c.name as category_name, c.slug as category_slug
+             FROM forum_topics t
+             LEFT JOIN forum_categories c ON t.category_id = c.id
+             WHERE t.category_id = $1
+             ORDER BY t.is_pinned DESC, t.updated_at DESC
+             LIMIT 50`,
+            [categoryId]
+        );
+
+        console.log(`✅ ${topicsResult.rows.length} tópicos encontrados`);
+        res.json(topicsResult.rows);
+
+    } catch (error) {
+        console.error('❌ Erro ao buscar tópicos:', error);
         res.status(500).json({ error: 'Erro interno do servidor' });
     } finally {
         client.release();
@@ -190,6 +236,158 @@ app.post('/api/forum/topics', async (req, res) => {
     }
 });
 
+// 🔍 GET TÓPICO POR ID
+app.get('/api/forum/topics/:id', async (req, res) => {
+    const { id } = req.params;
+    console.log(`📥 Buscando tópico ID: ${id}`);
+
+    const client = await pool.connect();
+
+    try {
+        const result = await client.query(
+            `SELECT t.*, c.name as category_name, c.slug as category_slug
+             FROM forum_topics t
+             LEFT JOIN forum_categories c ON t.category_id = c.id
+             WHERE t.id = $1`,
+            [id]
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'Tópico não encontrado' });
+        }
+
+        // Incrementar visualizações
+        await client.query(
+            'UPDATE forum_topics SET views = views + 1 WHERE id = $1',
+            [id]
+        );
+
+        const topic = result.rows[0];
+        console.log('✅ Tópico encontrado:', topic.title);
+        res.json(topic);
+
+    } catch (error) {
+        console.error('❌ Erro ao buscar tópico:', error);
+        res.status(500).json({ error: 'Erro interno do servidor' });
+    } finally {
+        client.release();
+    }
+});
+
+// 💬 GET RESPOSTAS DO TÓPICO
+app.get('/api/forum/topics/:id/replies', async (req, res) => {
+    const { id } = req.params;
+    console.log(`📥 Buscando respostas do tópico ID: ${id}`);
+
+    const client = await pool.connect();
+
+    try {
+        const result = await client.query(
+            `SELECT * FROM forum_replies 
+             WHERE topic_id = $1 
+             ORDER BY created_at ASC`,
+            [id]
+        );
+
+        console.log(`✅ ${result.rows.length} respostas encontradas`);
+        res.json(result.rows);
+
+    } catch (error) {
+        console.error('❌ Erro ao buscar respostas:', error);
+        res.status(500).json({ error: 'Erro interno do servidor' });
+    } finally {
+        client.release();
+    }
+});
+
+// 💬 CRIAR RESPOSTA
+app.post('/api/forum/replies', async (req, res) => {
+    console.log('📥 Recebendo requisição para criar resposta:', req.body);
+
+    const client = await pool.connect();
+
+    try {
+        const {
+            topic_id,
+            content,
+            author_discord_id,
+            author_name,
+            author_avatar
+        } = req.body;
+
+        // Validações
+        if (!topic_id || !content || !author_discord_id || !author_name) {
+            return res.status(400).json({
+                error: 'Dados incompletos',
+                required: ['topic_id', 'content', 'author_discord_id', 'author_name']
+            });
+        }
+
+        // Verificar se o tópico existe e não está bloqueado
+        const topicCheck = await client.query(
+            'SELECT id, is_locked FROM forum_topics WHERE id = $1',
+            [topic_id]
+        );
+
+        if (topicCheck.rows.length === 0) {
+            return res.status(404).json({ error: 'Tópico não encontrado' });
+        }
+
+        if (topicCheck.rows[0].is_locked) {
+            return res.status(403).json({ error: 'Tópico está bloqueado' });
+        }
+
+        // Inserir resposta
+        const result = await client.query(
+            `INSERT INTO forum_replies 
+             (topic_id, content, author_discord_id, author_name, author_avatar, 
+              likes, is_edited, created_at, updated_at) 
+             VALUES ($1, $2, $3, $4, $5, 0, false, NOW(), NOW()) 
+             RETURNING *`,
+            [topic_id, content.trim(), author_discord_id, author_name, author_avatar]
+        );
+
+        const newReply = result.rows[0];
+        console.log('✅ Resposta criada com ID:', newReply.id);
+
+        // Atualizar última resposta do tópico
+        await client.query(
+            'UPDATE forum_topics SET last_reply_at = NOW(), updated_at = NOW() WHERE id = $1',
+            [topic_id]
+        );
+
+        // Atualizar contagem de respostas na categoria
+        await client.query(
+            `UPDATE forum_categories 
+             SET reply_count = reply_count + 1, updated_at = NOW() 
+             WHERE id = (SELECT category_id FROM forum_topics WHERE id = $1)`,
+            [topic_id]
+        );
+
+        res.status(201).json({
+            id: newReply.id,
+            topic_id: newReply.topic_id,
+            content: newReply.content,
+            author_name: newReply.author_name,
+            author_discord_id: newReply.author_discord_id,
+            author_avatar: newReply.author_avatar,
+            likes: newReply.likes,
+            is_edited: newReply.is_edited,
+            created_at: newReply.created_at,
+            updated_at: newReply.updated_at
+        });
+
+    } catch (error) {
+        console.error('❌ Erro ao criar resposta:', error);
+        res.status(500).json({
+            error: 'Erro interno do servidor',
+            details: error.message
+        });
+    } finally {
+        client.release();
+    }
+});
+
 // 📊 ESTATÍSTICAS DO FÓRUM
 app.get('/api/forum/stats', async (req, res) => {
     console.log('📊 Buscando estatísticas do fórum...');
@@ -206,12 +404,12 @@ app.get('/api/forum/stats', async (req, res) => {
 
         // Contar membros únicos
         const membersResult = await client.query(
-            'SELECT COUNT(DISTINCT author_discord_id) as count FROM forum_topics UNION SELECT COUNT(DISTINCT author_discord_id) FROM forum_replies'
+            'SELECT COUNT(DISTINCT author_discord_id) as count FROM (SELECT author_discord_id FROM forum_topics UNION SELECT author_discord_id FROM forum_replies) as users'
         );
-        const totalMembers = membersResult.rows.length > 0 ? parseInt(membersResult.rows[0].count) : 0;
+        const totalMembers = parseInt(membersResult.rows[0].count);
 
-        // Online agora (simulação - poderia ser baseado em última atividade)
-        const onlineNow = Math.floor(Math.random() * 20) + 5; // Número fictício
+        // Online agora (simulação)
+        const onlineNow = Math.floor(Math.random() * 20) + 5;
 
         const stats = {
             totalTopics,
@@ -231,7 +429,6 @@ app.get('/api/forum/stats', async (req, res) => {
     }
 });
 
-// 🔄 Reinicie o servidor depois de adicionar estes endpoints
 console.log('✅ Endpoints do fórum carregados!');
 
 // =============================================

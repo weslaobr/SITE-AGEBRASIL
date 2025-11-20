@@ -1,0 +1,48 @@
+<!-- templates/header.html - TEMPLATE PADRONIZADO DO HEADER -->
+<header>
+    <div class="container">
+        <div class="header-content">
+            <div class="logo">
+                <img src="https://i.postimg.cc/rFNdr7FV/logo.png" alt="Age of Empires IV Brasil" class="logo-img">
+                <h1>Age of Empires IV Brasil</h1>
+            </div>
+
+            <nav>
+                <ul>
+                    <li><a href="index.html">Início</a></li>
+                    <li><a href="forum.html">Fórum</a></li>
+                    <li><a href="leaderboard.html">Tabela de classificação</a></li>
+                    <li><a href="torneios.html">Torneios</a></li>
+                    <li><a href="about.html">Sobre</a></li>
+                </ul>
+            </nav>
+
+            <!-- Controles de Autenticação Padronizados -->
+            <div class="user-actions">
+                <!-- Container do usuário logado -->
+                <div id="userInfo" data-auth-only class="user-info-container" style="display: none;">
+                    <div class="user-avatar">
+                        <!-- Avatar será carregado via JavaScript -->
+                    </div>
+                    <div class="user-name">
+                        <!-- Nome será carregado via JavaScript -->
+                    </div>
+                </div>
+
+                <!-- Container do botão de login (não logado) -->
+                <div id="loginContainer" data-no-auth class="user-info-container" style="display: none;">
+                    <i class="fab fa-discord" style="color: #5865F2;"></i>
+                    <button id="loginBtn" class="login-btn-header">
+                        Entrar com Discord
+                    </button>
+                </div>
+
+                <!-- Botão de logout -->
+                <button id="logoutBtn" data-auth-only style="display: none;" class="logout-btn">
+                    <i class="fas fa-sign-out-alt"></i>
+                    Sair
+                </button>
+            </div>
+        </div>
+    </div>
+</header>

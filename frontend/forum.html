@@ -9,20 +9,24 @@
     <link rel="stylesheet" href="css/style.css">
     <link rel="icon" type="image/png" href="https://i.postimg.cc/3JT4W3hz/favicon.png">
 
-    <style>
-        /* Pequeno ajuste para garantir padding igual ao restante do site */
-        main {
-            padding-top: 2rem;
-            padding-bottom: 2rem;
-        }
 
-        /* ESTILOS PARA HEADER CORRIGIDO */
-        .header-content {
+
+    <style>
+        /* HEADER COM DUAS LINHAS */
+        .header-top {
             display: flex;
             justify-content: space-between;
             align-items: center;
             flex-wrap: wrap;
             gap: 1rem;
+            padding-bottom: 1rem;
+            /*border-bottom: 1px solid var(--border-color);*/
+        }
+
+        .header-bottom {
+            display: flex;
+            justify-content: flex-end;
+            padding-top: 1rem;
         }
 
         .logo {
@@ -67,10 +71,8 @@
             display: flex;
             align-items: center;
             gap: 1rem;
-            margin-left: auto;
         }
 
-        /* CONTAINER PARA AMBOS OS ESTADOS */
         .user-info-container {
             display: flex;
             align-items: center;
@@ -94,7 +96,6 @@
             font-size: 0.9rem;
         }
 
-        /* BOTÃO DE LOGIN DENTRO DO CONTAINER */
         .login-btn-header {
             background: none;
             border: none;
@@ -113,7 +114,6 @@
             color: var(--accent-color);
         }
 
-        /* BOTÃO DE LOGOUT */
         .logout-btn {
             background: #4a5568;
             color: white;
@@ -134,13 +134,41 @@
             transform: translateY(-1px);
         }
 
-        /* REMOVA ESTES ESTILOS CONFLITANTES - ELES ESTÃO CRIANDO BOTÕES EXTRAS */
-        .login-container {
-            display: none;
+        .admin-badge {
+            background: var(--accent-color);
+            color: white;
+            padding: 0.2rem 0.6rem;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: 600;
         }
 
-        #loginBtn[data-no-auth] {
-            display: none;
+        @media (max-width: 768px) {
+            .header-top {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+            }
+
+            .header-bottom {
+                justify-content: center;
+            }
+
+            nav ul {
+                gap: 1rem;
+                flex-wrap: wrap;
+            }
+
+            .user-actions {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+
+        /* Pequeno ajuste para garantir padding igual ao restante do site */
+        main {
+            padding-top: 2rem;
+            padding-bottom: 2rem;
         }
 
         /* ESTADO SEM AUTENTICAÇÃO */
@@ -610,45 +638,8 @@
             }
         }
 
-        /* BOTÃO DE TESTE */
-        .test-button {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background: #48bb78;
-            color: white;
-            border: none;
-            padding: 12px 18px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: bold;
-            z-index: 10000;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-        }
-
-        .test-button:hover {
-            background: #38a169;
-            transform: translateY(-2px);
-        }
-
-        /* RESPONSIVIDADE - ATUALIZADA */
+        /* RESPONSIVIDADE */
         @media (max-width: 768px) {
-            .header-content {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 1rem;
-            }
-
-            .user-actions {
-                /* REMOVER margin-left: 0 e width: 100% se existir */
-                justify-content: center;
-            }
-
-            nav ul {
-                gap: 1rem;
-                flex-wrap: wrap;
-            }
-
             .forum-stats {
                 gap: 1rem;
             }
@@ -678,10 +669,11 @@
 </head>
 
 <body>
-    <!-- ======= HEADER SUBSTITUÍDO (PADRONIZADO) ======= -->
+    <!-- HEADER COM BOTÃO ABAIXO -->
     <header>
         <div class="container">
-            <div class="header-content">
+            <!-- Primeira linha: Logo e Navegação -->
+            <div class="header-top">
                 <div class="logo">
                     <img src="https://i.postimg.cc/rFNdr7FV/logo.png" alt="Age of Empires IV Brasil" class="logo-img">
                     <h1>Age of Empires IV Brasil</h1>
@@ -696,9 +688,10 @@
                         <li><a href="about.html">Sobre</a></li>
                     </ul>
                 </nav>
+            </div>
 
-                <!-- Controles de Autenticação (CORRIGIDO) -->
-                <!-- Controles de Autenticação (SIMPLIFICADO) -->
+            <!-- Segunda linha: Botão do Discord -->
+            <div class="header-bottom">
                 <div class="user-actions">
                     <!-- Container do usuário logado -->
                     <div id="userInfo" data-auth-only class="user-info-container" style="display: none;">
@@ -727,17 +720,14 @@
             </div>
         </div>
     </header>
-    <!-- ======= FIM HEADER ======= -->
 
     <main>
         <div class="container">
-            <!-- Mensagem para usuários não autenticados -->
             <!-- Mensagem para usuários não autenticados -->
             <div id="noAuthMessage" data-no-auth class="no-auth-message" style="display: none;">
                 <i class="fab fa-discord"></i>
                 <h3>Faça login para acessar o fórum</h3>
                 <p>Conecte-se com sua conta Discord para participar das discussões da comunidade</p>
-                <!-- REMOVI O BOTÃO DUPLICADO DAQUI -->
             </div>
 
             <!-- Conteúdo principal (visível apenas para usuários autenticados) -->
@@ -829,7 +819,7 @@
     </footer>
 
     <script>
-        // RENDERIZAÇÃO SIMPLIFICADA DO HEADER
+        // GERENCIADOR SIMPLIFICADO DO HEADER
         document.addEventListener('DOMContentLoaded', () => {
             const userInfo = document.getElementById('userInfo');
             const loginContainer = document.getElementById('loginContainer');
@@ -839,11 +829,116 @@
             const forumContent = document.getElementById('forumContent');
 
             function renderHeader() {
-                const user = window.discordAuth && typeof window.discordAuth.getCurrentUser === 'function'
-                    ? window.discordAuth.getCurrentUser()
-                    : (window.forumAPI && window.forumAPI.currentUser) || null;
+                // Tenta obter usuário de várias fontes
+                let user = null;
+                let isAdmin = false;
 
-                console.log('Usuário:', user); // Para debug
+                if (window.discordAuth && typeof window.discordAuth.getCurrentUser === 'function') {
+                    user = window.discordAuth.getCurrentUser();
+                } else if (window.forumAPI && window.forumAPI.currentUser) {
+                    user = window.forumAPI.currentUser;
+                } else {
+                    // Fallback: verifica localStorage
+                    try {
+                        const userData = localStorage.getItem('discord_user');
+                        user = userData ? JSON.parse(userData) : null;
+                    } catch (e) {
+                        user = null;
+                    }
+                }
+
+                // Verifica se é admin (exemplo - ajuste conforme sua lógica)
+                if (user && user.username === 'BRO.WESLAO') {
+                    isAdmin = true;
+                }
+
+                if (user) {
+                    // USUÁRIO LOGADO
+                    if (userInfo) {
+                        userInfo.style.display = 'flex';
+                        const avatar = user.avatar
+                            ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.webp?size=64`
+                            : `https://cdn.discordapp.com/embed/avatars/${user.discriminator % 5}.png`;
+
+                        userInfo.innerHTML = `
+                            <div class="user-avatar"><img src="${avatar}" alt="${user.username}"></div>
+                            <div class="user-name">${user.global_name || user.username}</div>
+                            ${isAdmin ? '<span class="admin-badge">ADMIN</span>' : ''}
+                        `;
+                    }
+                    if (loginContainer) loginContainer.style.display = 'none';
+                    if (logoutBtn) logoutBtn.style.display = 'flex';
+                    if (noAuthMessage) noAuthMessage.style.display = 'none';
+                    if (forumContent) forumContent.style.display = '';
+                } else {
+                    // USUÁRIO NÃO LOGADO
+                    if (userInfo) userInfo.style.display = 'none';
+                    if (loginContainer) loginContainer.style.display = 'flex';
+                    if (logoutBtn) logoutBtn.style.display = 'none';
+                    if (noAuthMessage) noAuthMessage.style.display = '';
+                    if (forumContent) forumContent.style.display = 'none';
+                }
+            }
+
+            // Event listeners
+            if (loginBtn) {
+                loginBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    if (window.discordAuth && typeof window.discordAuth.login === 'function') {
+                        window.discordAuth.login();
+                    } else {
+                        window.location.href = 'forum-auth.html';
+                    }
+                });
+            }
+
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    if (window.discordAuth && typeof window.discordAuth.logout === 'function') {
+                        window.discordAuth.logout();
+                    } else {
+                        localStorage.removeItem('discord_user');
+                        localStorage.removeItem('discord_access_token');
+                        setTimeout(() => location.reload(), 300);
+                    }
+                });
+            }
+
+            // Inicializar
+            renderHeader();
+            setTimeout(renderHeader, 500);
+            setTimeout(renderHeader, 1000);
+        });
+    </script>
+
+    <script>
+        // GERENCIADOR SIMPLIFICADO DO HEADER
+        document.addEventListener('DOMContentLoaded', () => {
+            const userInfo = document.getElementById('userInfo');
+            const loginContainer = document.getElementById('loginContainer');
+            const loginBtn = document.getElementById('loginBtn');
+            const logoutBtn = document.getElementById('logoutBtn');
+            const noAuthMessage = document.getElementById('noAuthMessage');
+            const forumContent = document.getElementById('forumContent');
+
+            function renderHeader() {
+                // Tenta obter usuário de várias fontes
+                let user = null;
+
+                if (window.discordAuth && typeof window.discordAuth.getCurrentUser === 'function') {
+                    user = window.discordAuth.getCurrentUser();
+                } else if (window.forumAPI && window.forumAPI.currentUser) {
+                    user = window.forumAPI.currentUser;
+                } else {
+                    // Fallback: verifica localStorage
+                    try {
+                        const userData = localStorage.getItem('discord_user');
+                        user = userData ? JSON.parse(userData) : null;
+                    } catch (e) {
+                        user = null;
+                    }
+                }
 
                 if (user) {
                     // USUÁRIO LOGADO
@@ -879,8 +974,6 @@
                     if (window.discordAuth && typeof window.discordAuth.login === 'function') {
                         window.discordAuth.login();
                     } else {
-                        console.warn('discordAuth.login não disponível');
-                        // Fallback
                         window.location.href = 'forum-auth.html';
                     }
                 });
@@ -909,66 +1002,6 @@
     <script src="js/discord-login.js"></script>
     <script src="js/forum-api.js"></script>
     <script src="js/forum.js"></script>
-
-    <script>
-        // Funções de debug
-        function updateDebugStatus() {
-            const user = window.discordAuth ? window.discordAuth.getCurrentUser() : null;
-            const statusElement = document.getElementById('debugStatus');
-
-            if (statusElement) {
-                if (user) {
-                    statusElement.innerHTML = `✅ Logado como: ${user.username}`;
-                    statusElement.style.color = '#48bb78';
-                } else {
-                    statusElement.innerHTML = '❌ Não logado';
-                    statusElement.style.color = '#e53e3e';
-                }
-            }
-        }
-
-        function testLogin() {
-            console.log('🧪 TESTE: Simulando login...');
-            const testUser = {
-                id: 'test_' + Date.now(),
-                username: 'UsuarioTeste',
-                global_name: 'Usuário Teste AOE4',
-                discriminator: '9999',
-                avatar: null,
-                email: 'teste@aoe4.com'
-            };
-
-            localStorage.setItem('discord_user', JSON.stringify(testUser));
-            localStorage.setItem('discord_access_token', 'test_token_' + Date.now());
-            console.log('✅ Login de teste realizado!');
-            updateDebugStatus();
-            setTimeout(() => window.location.reload(), 1000);
-        }
-
-        function clearAuth() {
-            console.log('🗑️ LIMPANDO autenticação...');
-            localStorage.removeItem('discord_user');
-            localStorage.removeItem('discord_access_token');
-            localStorage.removeItem('discord_refresh_token');
-            localStorage.removeItem('oauth_state');
-            console.log('✅ Dados removidos');
-            updateDebugStatus();
-            setTimeout(() => window.location.reload(), 500);
-        }
-
-        function checkLocalStorage() {
-            console.log('📦 CONTEÚDO DO LOCALSTORAGE:');
-            console.log('discord_user:', localStorage.getItem('discord_user'));
-            console.log('discord_access_token:', localStorage.getItem('discord_access_token'));
-            console.log('discord_refresh_token:', localStorage.getItem('discord_refresh_token'));
-            console.log('oauth_state:', localStorage.getItem('oauth_state'));
-            console.log('returnUrl:', localStorage.getItem('returnUrl'));
-        }
-
-        // Atualizar status a cada 2 segundos
-        setInterval(updateDebugStatus, 2000);
-        updateDebugStatus();
-    </script>
 </body>
 
 </html>

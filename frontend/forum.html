@@ -679,7 +679,20 @@
                     </ul>
                 </nav>
 
-
+                <!-- Controles de Autenticação (padronizado) -->
+                <div class="user-actions">
+                    <div id="userInfo" data-auth-only style="display: none;">
+                        <!-- Informações do usuário serão carregadas aqui -->
+                    </div>
+                    <button id="loginBtn" data-no-auth class="login-btn">
+                        <i class="fab fa-discord"></i>
+                        Entrar com Discord
+                    </button>
+                    <button id="logoutBtn" data-auth-only style="display: none;" class="logout-btn">
+                        <i class="fas fa-sign-out-alt"></i>
+                        Sair
+                    </button>
+                </div>
             </div>
         </div>
     </header>

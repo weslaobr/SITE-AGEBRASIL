@@ -6,7 +6,7 @@ const YOUTUBE_CHANNELS = [
         handle: '@caiofora'
     },
     {
-        id: 'UCXAmHA4lVgVY7ndp6lqaS7A',  // Gks AOE
+        id: 'UC68u_vTF3ynM1plO_kihJ0Q',  // Gks AOE
         name: 'Gks',
         handle: '@gks_aoe'
     },
@@ -16,7 +16,7 @@ const YOUTUBE_CHANNELS = [
         handle: '@vitorvicentin'
     },
     {
-        id: 'UCv6KZ6z8h0ZJ0ZJZJZJZJZJZ',  // Utinowns (preciso do ID correto)
+        id: 'UClTZTtes7vCnMNbU_PTWFcQ',  // Utinowns (preciso do ID correto)
         name: 'Utinowns',
         handle: '@utinowns9776'
     }

@@ -380,43 +380,65 @@ class CreatorsManager {
         grid.innerHTML = filteredCreators.map(creator => this.createCompactCard(creator)).join('');
     }
 
-    // Criar card compacto
+    // Criar card compacto - VERSÃO MELHORADA PARA YOUTUBE
     createCompactCard(creator) {
         const isLive = creator.platform === 'twitch' && creator.isLive;
         const isFallback = creator.isFallback;
+        const isYouTube = creator.platform === 'youtube';
 
-        // Informações específicas por plataforma
-        let statsText = '';
-        if (creator.platform === 'youtube') {
-            statsText = `${creator.subscribers} inscritos`;
-        } else {
-            statsText = isLive ? `${creator.stream.viewers} viewers` : 'Offline';
-        }
-
-        return `
-            <div class="creator-card-compact ${isLive ? 'live' : ''} ${isFallback ? 'fallback' : ''}">
+        // Card para YouTube (mais completo)
+        if (isYouTube) {
+            return `
+            <div class="creator-card-compact youtube ${isFallback ? 'fallback' : ''}">
                 <div class="creator-avatar-compact">
                     <img src="${creator.avatar}" alt="${creator.name}">
-                    ${isLive ? '<div class="live-indicator"></div>' : ''}
                     ${isFallback ? '<div class="fallback-indicator">⚠️</div>' : ''}
+                    <div class="platform-icon youtube">📺</div>
                 </div>
                 
                 <div class="creator-info-compact">
                     <h4 class="creator-name-compact">${creator.name}</h4>
                     <p class="creator-handle-compact">${creator.handle}</p>
                     <div class="creator-stats-compact">
-                        <span class="platform-badge ${creator.platform}">
-                            ${creator.platform === 'youtube' ? '📺 YouTube' : '🎮 Twitch'}
-                        </span>
-                        <span>${statsText}</span>
+                        <div class="youtube-stats">
+                            <span class="stat">${creator.subscribers} inscritos</span>
+                            <span class="stat">${creator.videos} vídeos</span>
+                        </div>
                     </div>
                 </div>
                 
-                <a href="${creator.url}" target="_blank" class="watch-btn-compact ${creator.platform} ${isLive ? 'live' : ''} ${isFallback ? 'fallback' : ''}">
-                    ${isLive ? '🔴 LIVE' : (isFallback ? 'Tentar Acessar' : (creator.platform === 'youtube' ? 'Ver Canal' : 'Ver Perfil'))}
+                <a href="${creator.url}" target="_blank" class="watch-btn-compact youtube ${isFallback ? 'fallback' : ''}">
+                    ${isFallback ? 'Tentar Acessar' : 'Ver Canal'}
                 </a>
             </div>
         `;
+        }
+
+        // Card para Twitch (mantém o original)
+        let statsText = isLive ? `${creator.stream.viewers} viewers` : 'Offline';
+
+        return `
+        <div class="creator-card-compact ${isLive ? 'live' : ''}">
+            <div class="creator-avatar-compact">
+                <img src="${creator.avatar}" alt="${creator.name}">
+                ${isLive ? '<div class="live-indicator"></div>' : ''}
+                <div class="platform-icon twitch">🎮</div>
+            </div>
+            
+            <div class="creator-info-compact">
+                <h4 class="creator-name-compact">${creator.name}</h4>
+                <p class="creator-handle-compact">${creator.handle}</p>
+                <div class="creator-stats-compact">
+                    <span class="platform-badge twitch">Twitch</span>
+                    <span>${statsText}</span>
+                </div>
+            </div>
+            
+            <a href="${creator.url}" target="_blank" class="watch-btn-compact twitch ${isLive ? 'live' : ''}">
+                ${isLive ? '🔴 LIVE' : 'Ver Perfil'}
+            </a>
+        </div>
+    `;
     }
 
     // Configurar event listeners para os filtros

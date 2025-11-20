@@ -1,36 +1,10 @@
-/* ===== LIVE STREAMS HIGHLIGHT ===== */
+/* streamers.css - ATUALIZADO */
 .live-streams-highlight {
     background: linear-gradient(135deg, var(--card-bg) 0%, rgba(229, 62, 62, 0.1) 100%);
     padding: 3rem 0;
     margin: 2rem 0;
     border-radius: 12px;
     border: 1px solid rgba(229, 62, 62, 0.2);
-}
-
-.live-pulse {
-    color: #48bb78;
-    animation: pulse 2s infinite;
-}
-
-@keyframes pulse {
-    0% {
-        opacity: 1;
-    }
-
-    50% {
-        opacity: 0.5;
-    }
-
-    100% {
-        opacity: 1;
-    }
-}
-
-.section-subtitle {
-    text-align: center;
-    color: #a0aec0;
-    margin-bottom: 2rem;
-    font-size: 1.1rem;
 }
 
 .live-streams-container {
@@ -71,8 +45,7 @@
     gap: 0.5rem;
 }
 
-.live-badge::before {
-    content: '';
+.live-badge .pulse {
     width: 8px;
     height: 8px;
     background: white;
@@ -80,11 +53,26 @@
     animation: pulse 2s infinite;
 }
 
+@keyframes pulse {
+    0% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.5;
+    }
+
+    100% {
+        opacity: 1;
+    }
+}
+
 .stream-preview {
     position: relative;
     width: 100%;
     height: 200px;
     overflow: hidden;
+    cursor: pointer;
 }
 
 .stream-preview img {
@@ -156,6 +144,7 @@
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
+    min-height: 2.8em;
 }
 
 .watch-live-btn {
@@ -179,20 +168,7 @@
     box-shadow: 0 4px 12px rgba(72, 187, 120, 0.3);
 }
 
-.no-live-streams {
-    grid-column: 1 / -1;
-    text-align: center;
-    padding: 3rem 2rem;
-    color: #a0aec0;
-}
-
-.no-live-streams i {
-    font-size: 3rem;
-    margin-bottom: 1rem;
-    color: #718096;
-}
-
-/* ===== ALL CREATORS SECTION ===== */
+/* All Creators Section */
 .all-creators-section {
     background: var(--card-bg);
     padding: 3rem 0;
@@ -241,42 +217,47 @@
 
 .all-creators-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 1rem;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
 }
 
-.creator-card-compact {
+.creator-card {
     background: rgba(255, 255, 255, 0.03);
-    padding: 1.2rem;
-    border-radius: 8px;
+    padding: 1.5rem;
+    border-radius: 12px;
     border: 1px solid var(--border-color);
     transition: all 0.3s ease;
-    display: flex;
-    align-items: center;
-    gap: 1rem;
+    position: relative;
 }
 
-.creator-card-compact:hover {
-    transform: translateY(-2px);
-    border-color: var(--accent-color);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-}
-
-.creator-card-compact.live {
+.creator-card.live {
     border-color: #48bb78;
     background: rgba(72, 187, 120, 0.05);
 }
 
-.creator-avatar-compact {
-    width: 50px;
-    height: 50px;
+.creator-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+    border-color: var(--accent-color);
+}
+
+.creator-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+}
+
+.creator-avatar {
+    width: 60px;
+    height: 60px;
     border-radius: 50%;
     overflow: hidden;
-    flex-shrink: 0;
+    border: 3px solid var(--accent-color);
     position: relative;
 }
 
-.creator-avatar-compact img {
+.creator-avatar img {
     width: 100%;
     height: 100%;
     object-fit: cover;
@@ -284,345 +265,199 @@
 
 .live-indicator {
     position: absolute;
-    bottom: -2px;
-    right: -2px;
-    width: 16px;
-    height: 16px;
+    bottom: 5px;
+    right: 5px;
+    width: 12px;
+    height: 12px;
     background: #48bb78;
-    border: 2px solid var(--card-bg);
+    border: 2px solid white;
     border-radius: 50%;
+    animation: pulse 2s infinite;
 }
 
-.creator-info-compact {
-    flex: 1;
-    min-width: 0;
+.platform-icons {
+    display: flex;
+    gap: 0.5rem;
 }
 
-.creator-name-compact {
-    color: var(--text-color);
-    margin: 0 0 0.2rem 0;
-    font-size: 1rem;
-    font-weight: 600;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.creator-handle-compact {
-    color: #a0aec0;
-    margin: 0 0 0.3rem 0;
+.platform-icon {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     font-size: 0.8rem;
+    background: rgba(255, 255, 255, 0.1);
 }
 
-.creator-stats-compact {
+.creator-info {
+    margin-bottom: 1.5rem;
+}
+
+.creator-name {
+    color: var(--text-color);
+    margin: 0 0 0.5rem 0;
+    font-size: 1.2rem;
+    font-weight: 700;
+}
+
+.creator-description {
+    color: #a0aec0;
+    margin: 0 0 1rem 0;
+    font-size: 0.9rem;
+    line-height: 1.4;
+}
+
+.specialty-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.tag {
+    background: rgba(66, 153, 225, 0.1);
+    color: #4299e1;
+    padding: 0.3rem 0.6rem;
+    border-radius: 15px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.creator-stats {
+    font-size: 0.85rem;
+    color: #a0aec0;
+}
+
+.live-stats {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.viewers {
+    font-weight: 600;
+    color: #48bb78;
+}
+
+.live-status {
+    color: #48bb78;
+    font-weight: 600;
+}
+
+.youtube-stats {
+    display: flex;
+    gap: 1rem;
+}
+
+.creator-actions {
     display: flex;
     gap: 0.8rem;
-    font-size: 0.75rem;
-    color: #a0aec0;
+    flex-wrap: wrap;
 }
 
-.platform-badge {
-    padding: 0.2rem 0.5rem;
-    border-radius: 12px;
-    font-size: 0.7rem;
-    font-weight: 600;
-}
-
-.platform-badge.youtube {
-    background: rgba(255, 0, 0, 0.1);
-    color: #FF0000;
-}
-
-.platform-badge.twitch {
-    background: rgba(145, 70, 255, 0.1);
-    color: #9146FF;
-}
-
-.watch-btn-compact {
-    padding: 0.5rem 0.8rem;
-    border: none;
-    border-radius: 6px;
-    font-size: 0.8rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s ease;
+.action-btn {
+    padding: 0.6rem 1rem;
+    border-radius: 8px;
     text-decoration: none;
+    font-weight: 600;
+    font-size: 0.85rem;
+    transition: all 0.3s ease;
+    border: 1px solid;
+    flex: 1;
+    text-align: center;
     white-space: nowrap;
 }
 
-.watch-btn-compact.youtube {
-    background: rgba(255, 0, 0, 0.1);
-    color: #FF0000;
-    border: 1px solid rgba(255, 0, 0, 0.2);
-}
-
-.watch-btn-compact.youtube:hover {
-    background: #FF0000;
-    color: white;
-}
-
-.watch-btn-compact.twitch {
+.action-btn.twitch {
     background: rgba(145, 70, 255, 0.1);
     color: #9146FF;
-    border: 1px solid rgba(145, 70, 255, 0.2);
+    border-color: rgba(145, 70, 255, 0.3);
 }
 
-.watch-btn-compact.twitch:hover {
+.action-btn.twitch:hover {
     background: #9146FF;
     color: white;
 }
 
-.watch-btn-compact.live {
-    background: rgba(72, 187, 120, 0.1);
-    color: #48bb78;
-    border: 1px solid rgba(72, 187, 120, 0.2);
-}
-
-.watch-btn-compact.live:hover {
+.action-btn.twitch.live {
     background: #48bb78;
     color: white;
+    border-color: #48bb78;
+}
+
+.action-btn.youtube {
+    background: rgba(255, 0, 0, 0.1);
+    color: #FF0000;
+    border-color: rgba(255, 0, 0, 0.3);
+}
+
+.action-btn.youtube:hover {
+    background: #FF0000;
+    color: white;
+}
+
+/* Estados de loading e vazio */
+.loading,
+.no-live-streams,
+.no-creators {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 3rem 2rem;
+    color: #a0aec0;
+}
+
+.loading i,
+.no-live-streams i,
+.no-creators i {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+    color: #718096;
 }
 
 /* Responsividade */
 @media (max-width: 768px) {
-    .creators-header {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-
-    .view-toggle {
-        align-self: stretch;
-        justify-content: center;
-    }
-
     .live-streams-container {
         grid-template-columns: 1fr;
     }
 
     .all-creators-grid {
-        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        grid-template-columns: 1fr;
     }
 
-    .creator-card-compact {
-        padding: 1rem;
+    .creators-header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .view-toggle {
+        justify-content: center;
+    }
+
+    .creator-actions {
+        flex-direction: column;
     }
 }
 
 @media (max-width: 480px) {
-    .all-creators-grid {
-        grid-template-columns: 1fr;
+    .live-stream-card {
+        margin: 0 0.5rem;
     }
 
-    .creator-card-compact {
+    .creator-card {
+        padding: 1rem;
+    }
+
+    .creator-header {
         flex-direction: column;
+        gap: 1rem;
+        align-items: center;
         text-align: center;
-        gap: 0.8rem;
     }
 
-    .creator-info-compact {
-        width: 100%;
+    .platform-icons {
+        align-self: center;
     }
-}
-
-.creator-card-compact.fallback {
-    opacity: 0.7;
-    border-color: #a0aec0;
-    background: rgba(160, 174, 192, 0.05);
-}
-
-.fallback-indicator {
-    position: absolute;
-    top: -5px;
-    right: -5px;
-    background: #ed8936;
-    color: white;
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.7rem;
-    border: 2px solid var(--card-bg);
-}
-
-.watch-btn-compact.fallback {
-    background: #4a5568;
-    color: #a0aec0;
-}
-
-.watch-btn-compact.fallback:hover {
-    background: #2d3748;
-    color: white;
-}
-
-/* Estilos específicos para cards do YouTube */
-.creator-card-compact.youtube {
-    border-left: 4px solid #FF0000;
-    background: rgba(255, 0, 0, 0.02);
-}
-
-.creator-card-compact.youtube:hover {
-    border-left-color: #CC0000;
-    background: rgba(255, 0, 0, 0.05);
-}
-
-.youtube-stats {
-    display: flex;
-    flex-direction: column;
-    gap: 0.2rem;
-    font-size: 0.75rem;
-}
-
-.youtube-stats .stat {
-    color: #a0aec0;
-    display: flex;
-    align-items: center;
-    gap: 0.3rem;
-}
-
-.youtube-stats .stat:first-child::before {
-    content: '👥 ';
-}
-
-.youtube-stats .stat:last-child::before {
-    content: '🎬 ';
-}
-
-.platform-icon {
-    position: absolute;
-    bottom: -5px;
-    right: -5px;
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.7rem;
-    border: 2px solid var(--card-bg);
-}
-
-.platform-icon.youtube {
-    background: #FF0000;
-    color: white;
-}
-
-.platform-icon.twitch {
-    background: #9146FF;
-    color: white;
-}
-
-/* Melhorar visual dos cards */
-.creator-card-compact {
-    position: relative;
-    transition: all 0.3s ease;
-}
-
-.creator-avatar-compact {
-    position: relative;
-}
-
-/* Estilos para os novos cards */
-.creator-card-compact.youtube {
-    border-left: 4px solid #FF0000;
-    background: rgba(255, 0, 0, 0.02);
-}
-
-.creator-card-compact.youtube:hover {
-    border-left-color: #CC0000;
-    background: rgba(255, 0, 0, 0.05);
-}
-
-.youtube-stats {
-    display: flex;
-    flex-direction: column;
-    gap: 0.2rem;
-    font-size: 0.75rem;
-}
-
-.youtube-stats .stat {
-    color: #a0aec0;
-    display: flex;
-    align-items: center;
-    gap: 0.3rem;
-}
-
-.youtube-stats .stat:first-child::before {
-    content: '👥 ';
-}
-
-.youtube-stats .stat:last-child::before {
-    content: '🎬 ';
-}
-
-.platform-icon {
-    position: absolute;
-    bottom: -5px;
-    right: -5px;
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.7rem;
-    border: 2px solid var(--card-bg);
-}
-
-.platform-icon.youtube {
-    background: #FF0000;
-    color: white;
-}
-
-.platform-icon.twitch {
-    background: #9146FF;
-    color: white;
-}
-
-.creator-avatar-compact {
-    position: relative;
-}
-
-.fallback-indicator {
-    position: absolute;
-    top: -5px;
-    left: -5px;
-    background: #ed8936;
-    color: white;
-    width: 18px;
-    height: 18px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.6rem;
-    border: 2px solid var(--card-bg);
-}
-
-.live-indicator {
-    position: absolute;
-    top: -5px;
-    left: -5px;
-    background: #48bb78;
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-    border: 2px solid var(--card-bg);
-    animation: pulse 2s infinite;
-}
-
-.creator-card-compact.fallback {
-    opacity: 0.7;
-    background: rgba(160, 174, 192, 0.05);
-}
-
-.watch-btn-compact.fallback {
-    background: #4a5568;
-    color: #a0aec0;
-}
-
-.watch-btn-compact.fallback:hover {
-    background: #2d3748;
-    color: white;
 }

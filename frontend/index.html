@@ -506,7 +506,7 @@
             </div>
         </section>
 
-        <!-- Seção de Streams Ao Vivo Destaque -->
+        <!-- Coloque esta seção no seu index.html -->
         <section class="live-streams-highlight">
             <div class="container">
                 <h2 class="section-title">🎥 <span class="live-pulse">●</span> TRANSMISSÕES AO VIVO</h2>
@@ -514,27 +514,29 @@
 
                 <div class="live-streams-container" id="live-streams-container">
                     <div class="loading">
-                        <i class="fas fa-spinner fa-spin"></i> Buscando streams ao vivo...
+                        <i class="fas fa-spinner fa-spin"></i>
+                        <p>Buscando streams ao vivo...</p>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- Seção de Criadores de Conteúdo (Abaixo) -->
         <section class="all-creators-section">
             <div class="container">
                 <div class="creators-header">
                     <h2 class="section-title">📺 Todos os Criadores</h2>
                     <div class="view-toggle">
                         <button class="toggle-btn active" data-view="all">Todos</button>
-                        <button class="toggle-btn" data-view="youtube">YouTube</button>
                         <button class="toggle-btn" data-view="twitch">Twitch</button>
+                        <button class="toggle-btn" data-view="youtube">YouTube</button>
+                        <button class="toggle-btn" data-view="live">Ao Vivo</button>
                     </div>
                 </div>
 
                 <div class="all-creators-grid" id="all-creators-grid">
                     <div class="loading">
-                        <i class="fas fa-spinner fa-spin"></i> Carregando criadores...
+                        <i class="fas fa-spinner fa-spin"></i>
+                        <p>Carregando criadores...</p>
                     </div>
                 </div>
             </div>
@@ -629,7 +631,8 @@
     </footer>
 
     <script src="js/api.js"></script>
-    <script src="js/creators.js"></script>
+    <script src="js/creators-data.js"></script>
+    <script src="js/streamers-api.js"></script>
     <script src="js/home.js"></script>
 
 </body>

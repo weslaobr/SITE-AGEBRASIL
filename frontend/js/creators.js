@@ -1,26 +1,28 @@
-// Configuração dos canais - COM 4 CANAIS
+// Configuração dos canais - COM IDs CORRETOS
 const YOUTUBE_CHANNELS = [
     {
-        id: 'UCd54zjiewBgbTQHV_jbmM-Q',  // CaioFora - CONFIRMADO
+        id: 'UCd54zjiewBgbTQHV_jbmM-Q',  // CaioFora
         name: 'CaioFora',
         handle: '@caiofora'
     },
     {
-        id: 'UCXAmHA4lVgVY7ndp6lqaS7A',  // Gks - CONFIRMADO
+        id: 'UCXAmHA4lVgVY7ndp6lqaS7A',  // Gks
         name: 'Gks',
         handle: '@gks_aoe'
     },
     {
-        id: 'UCrAbkIFpoh8EZWof6y6DfmA',  // Vicentin - CONFIRMADO
+        id: 'UCrAbkIFpoh8EZWof6y6DfmA',  // Vicentin
         name: 'VicentiN',
         handle: '@vitorvicentin'
     },
     {
-        id: 'UCqjTl4yd5LQHsxJgLtqkS3A',  // Utinowns - ID PROVISÓRIO
+        id: 'UCqjTl4yd5LQHsxJgLtqkS3A',  // Utinowns - ID CORRETO
         name: 'Utinowns',
         handle: '@utinowns9776'
     }
 ];
+
+const TWITCH_CHANNELS = ['gks_aoe', 'legowzz', 'nyxel_tv', 'ericbr_', 'utinowns', 'vicentin', 'vitruvius_tv', 'cai0fora'];
 
 // Chaves da API
 const YOUTUBE_API_KEY = 'AIzaSyDCl2JCPqjLMsCIA1Drx4PmcX2z_7hD74I';
@@ -32,19 +34,23 @@ class CreatorsManager {
         this.creators = [];
         this.twitchAccessToken = null;
         this.currentView = 'all';
+        this.isLoading = true;
     }
 
     async init() {
+        console.log('🚀 Iniciando CreatorsManager...');
         await this.getTwitchAccessToken();
         await this.loadAllCreators();
         this.renderLiveStreams();
         this.renderAllCreators();
         this.setupEventListeners();
+        this.isLoading = false;
     }
 
     // Autenticação Twitch
     async getTwitchAccessToken() {
         try {
+            console.log('🔑 Obtendo token Twitch...');
             const response = await fetch('https://id.twitch.tv/oauth2/token', {
                 method: 'POST',
                 headers: {
@@ -53,10 +59,13 @@ class CreatorsManager {
                 body: `client_id=${TWITCH_CLIENT_ID}&client_secret=${TWITCH_CLIENT_SECRET}&grant_type=client_credentials`
             });
 
+            if (!response.ok) throw new Error('Falha na autenticação Twitch');
+
             const data = await response.json();
             this.twitchAccessToken = data.access_token;
+            console.log('✅ Token Twitch obtido com sucesso');
         } catch (error) {
-            console.error('Erro ao obter token Twitch:', error);
+            console.error('❌ Erro ao obter token Twitch:', error);
         }
     }
 
@@ -69,7 +78,7 @@ class CreatorsManager {
             };
             localStorage.setItem(key, JSON.stringify(cacheData));
         } catch (error) {
-            console.log('Erro ao salvar cache:', error);
+            console.log('⚠️ Erro ao salvar cache:', error);
         }
     }
 
@@ -83,17 +92,16 @@ class CreatorsManager {
                 localStorage.removeItem(key);
                 return null;
             }
-
             return cacheData.data;
         } catch (error) {
-            console.log('Erro ao ler cache:', error);
+            console.log('⚠️ Erro ao ler cache:', error);
             return null;
         }
     }
 
-    // Buscar dados do YouTube - VERSÃO SIMPLIFICADA E CONFIÁVEL
+    // Buscar dados do YouTube - VERSÃO ROBUSTA
     async fetchYouTubeData(channel) {
-        // Verificar cache primeiro (10 minutos)
+        // Verificar cache primeiro
         const cacheKey = `yt_${channel.id}`;
         const cached = this.getFromCache(cacheKey);
 
@@ -102,27 +110,34 @@ class CreatorsManager {
             return cached;
         }
 
-        try {
-            console.log(`🎯 Buscando: ${channel.name} (ID: ${channel.id})`);
+        // Se não tem ID, pular busca
+        if (!channel.id) {
+            console.log(`⏭️  Sem ID, usando fallback: ${channel.name}`);
+            return this.createYouTubeFallback(channel);
+        }
 
-            // Buscar dados do canal
+        try {
+            console.log(`🎯 Buscando: ${channel.name}`);
+
+            // Buscar dados do canal com timeout
+            const controller = new AbortController();
+            const timeout = setTimeout(() => controller.abort(), 8000);
+
             const channelResponse = await fetch(
-                `https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics&id=${channel.id}&key=${YOUTUBE_API_KEY}`
+                `https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics&id=${channel.id}&key=${YOUTUBE_API_KEY}`,
+                { signal: controller.signal }
             );
 
+            clearTimeout(timeout);
+
             if (!channelResponse.ok) {
-                throw new Error(`HTTP error! status: ${channelResponse.status}`);
+                throw new Error(`HTTP ${channelResponse.status}`);
             }
 
             const channelData = await channelResponse.json();
 
             if (!channelData.items || channelData.items.length === 0) {
                 console.log(`❌ Canal não encontrado: ${channel.name}`);
-                // Tentar buscar ID correto
-                const correctedChannel = await this.findCorrectChannelId(channel);
-                if (correctedChannel) {
-                    return await this.fetchYouTubeData(correctedChannel);
-                }
                 return this.createYouTubeFallback(channel);
             }
 
@@ -133,23 +148,19 @@ class CreatorsManager {
                 `https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${channel.id}&maxResults=1&order=date&type=video&key=${YOUTUBE_API_KEY}`
             );
 
-            if (!videosResponse.ok) {
-                throw new Error(`HTTP error! status: ${videosResponse.status}`);
-            }
-
             const videosData = await videosResponse.json();
 
             const result = {
                 platform: 'youtube',
                 name: channelInfo.snippet.title,
                 handle: channel.handle,
-                avatar: channelInfo.snippet.thumbnails.medium.url,
-                subscribers: this.formatNumber(channelInfo.statistics.subscriberCount),
-                videos: this.formatNumber(channelInfo.statistics.videoCount),
+                avatar: channelInfo.snippet.thumbnails?.medium?.url || 'https://via.placeholder.com/150/FF0000/FFFFFF?text=YT',
+                subscribers: this.formatNumber(channelInfo.statistics?.subscriberCount || 0),
+                videos: this.formatNumber(channelInfo.statistics?.videoCount || 0),
                 lastVideo: videosData.items && videosData.items.length > 0 ? {
                     id: videosData.items[0].id.videoId,
                     title: videosData.items[0].snippet.title,
-                    thumbnail: videosData.items[0].snippet.thumbnails.medium.url,
+                    thumbnail: videosData.items[0].snippet.thumbnails?.medium?.url || 'https://via.placeholder.com/320/180/FF0000/FFFFFF?text=Video',
                     publishedAt: videosData.items[0].snippet.publishedAt,
                     views: 'Carregando...'
                 } : null,
@@ -157,13 +168,13 @@ class CreatorsManager {
                 success: true
             };
 
-            // Salvar no cache (10 minutos)
-            this.saveToCache(cacheKey, result, 10 * 60 * 1000);
+            // Salvar no cache (15 minutos)
+            this.saveToCache(cacheKey, result, 15 * 60 * 1000);
             console.log(`✅ Sucesso: ${channel.name}`);
             return result;
 
         } catch (error) {
-            console.error(`💥 Erro em ${channel.name}:`, error);
+            console.error(`💥 Erro em ${channel.name}:`, error.message);
 
             // Tentar usar cache mesmo com erro
             const fallbackCache = this.getFromCache(cacheKey);
@@ -174,37 +185,6 @@ class CreatorsManager {
 
             return this.createYouTubeFallback(channel);
         }
-    }
-
-    // Tentar encontrar ID correto do canal
-    async findCorrectChannelId(channel) {
-        try {
-            console.log(`🔍 Tentando encontrar ID correto para: ${channel.name}`);
-
-            const searchResponse = await fetch(
-                `https://www.googleapis.com/youtube/v3/search?part=snippet&type=channel&q=${channel.handle.replace('@', '')}&key=${YOUTUBE_API_KEY}`
-            );
-
-            if (!searchResponse.ok) return null;
-
-            const searchData = await searchResponse.json();
-
-            if (searchData.items && searchData.items.length > 0) {
-                const foundChannel = searchData.items[0];
-                const newId = foundChannel.id.channelId;
-                console.log(`🎯 ID encontrado para ${channel.name}: ${newId}`);
-
-                // Atualizar o canal com novo ID
-                return {
-                    ...channel,
-                    id: newId
-                };
-            }
-        } catch (error) {
-            console.error(`Erro ao buscar ID para ${channel.name}:`, error);
-        }
-
-        return null;
     }
 
     // Fallback quando a API do YouTube falha
@@ -227,10 +207,14 @@ class CreatorsManager {
 
     // Buscar dados do Twitch
     async fetchTwitchData(username) {
-        if (!this.twitchAccessToken) return null;
+        if (!this.twitchAccessToken) {
+            console.log(`⏭️  Sem token Twitch: ${username}`);
+            return null;
+        }
 
         try {
-            // Buscar informações do usuário
+            console.log(`🎮 Buscando Twitch: ${username}`);
+
             const userResponse = await fetch(
                 `https://api.twitch.tv/helix/users?login=${username}`,
                 {
@@ -240,10 +224,14 @@ class CreatorsManager {
                     }
                 }
             );
+
+            if (!userResponse.ok) throw new Error(`HTTP ${userResponse.status}`);
+
             const userData = await userResponse.json();
 
             if (!userData.data || userData.data.length === 0) {
-                throw new Error('Usuário não encontrado');
+                console.log(`❌ Usuário Twitch não encontrado: ${username}`);
+                return null;
             }
 
             const userInfo = userData.data[0];
@@ -258,17 +246,19 @@ class CreatorsManager {
                     }
                 }
             );
-            const streamData = await streamResponse.json();
 
+            const streamData = await streamResponse.json();
             const isLive = streamData.data && streamData.data.length > 0;
             const streamInfo = isLive ? streamData.data[0] : null;
+
+            console.log(`✅ Twitch: ${username} ${isLive ? '🔴 LIVE' : '⚫ OFFLINE'}`);
 
             return {
                 platform: 'twitch',
                 name: userInfo.display_name,
                 handle: `@${userInfo.login}`,
                 avatar: userInfo.profile_image_url,
-                followers: 'N/A', // API não permite buscar followers facilmente
+                followers: 'N/A',
                 isLive: isLive,
                 stream: isLive ? {
                     title: streamInfo.title,
@@ -279,44 +269,66 @@ class CreatorsManager {
                 url: `https://twitch.tv/${username}`
             };
         } catch (error) {
-            console.error(`Erro ao buscar dados do Twitch para ${username}:`, error);
+            console.error(`💥 Erro no Twitch para ${username}:`, error.message);
             return null;
         }
     }
 
     // Carregar todos os criadores
     async loadAllCreators() {
+        console.log('📥 Carregando todos os criadores...');
         this.creators = [];
 
-        // Carregar canais do YouTube
+        // Carregar YouTube primeiro
+        console.log('📺 Carregando canais do YouTube...');
         for (const channel of YOUTUBE_CHANNELS) {
             const data = await this.fetchYouTubeData(channel);
-            if (data) this.creators.push(data);
-            await new Promise(resolve => setTimeout(resolve, 1500)); // Delay maior entre requests
+            if (data) {
+                this.creators.push(data);
+                console.log(`✅ YouTube adicionado: ${channel.name}`);
+            } else {
+                console.log(`❌ YouTube falhou: ${channel.name}`);
+            }
+            await new Promise(resolve => setTimeout(resolve, 1200));
         }
 
-        // Carregar canais do Twitch
+        // Carregar Twitch depois
+        console.log('🎮 Carregando canais do Twitch...');
         for (const username of TWITCH_CHANNELS) {
             const data = await this.fetchTwitchData(username);
-            if (data) this.creators.push(data);
-            await new Promise(resolve => setTimeout(resolve, 800));
+            if (data) {
+                this.creators.push(data);
+                console.log(`✅ Twitch adicionado: ${username}`);
+            } else {
+                console.log(`❌ Twitch falhou: ${username}`);
+            }
+            await new Promise(resolve => setTimeout(resolve, 600));
         }
 
-        // Ordenar: YouTube primeiro, depois Twitch, e por nome
+        // Ordenar
         this.creators.sort((a, b) => {
-            if (a.platform !== b.platform) {
-                return a.platform === 'youtube' ? -1 : 1;
-            }
+            if (a.platform !== b.platform) return a.platform === 'youtube' ? -1 : 1;
             return a.name.localeCompare(b.name);
         });
+
+        console.log(`🎉 Carregamento completo! Total: ${this.creators.length} criadores`);
+        console.log(`📊 YouTube: ${this.creators.filter(c => c.platform === 'youtube').length}`);
+        console.log(`📊 Twitch: ${this.creators.filter(c => c.platform === 'twitch').length}`);
     }
 
     // Renderizar streams ao vivo em destaque
     renderLiveStreams() {
         const container = document.getElementById('live-streams-container');
+        if (!container) {
+            console.error('❌ Container de live streams não encontrado!');
+            return;
+        }
+
         const liveStreams = this.creators.filter(creator =>
             creator.platform === 'twitch' && creator.isLive
         );
+
+        console.log(`🔴 Streams ao vivo encontradas: ${liveStreams.length}`);
 
         if (liveStreams.length === 0) {
             container.innerHTML = `
@@ -333,13 +345,13 @@ class CreatorsManager {
             <div class="live-stream-card">
                 <div class="live-badge">AO VIVO</div>
                 <div class="stream-preview" onclick="window.open('${stream.url}', '_blank')">
-                    <img src="${stream.stream.thumbnail}" alt="${stream.stream.title}">
+                    <img src="${stream.stream.thumbnail}" alt="${stream.stream.title}" onerror="this.src='https://via.placeholder.com/320/180/9146FF/FFFFFF?text=Twitch'">
                     <div class="viewer-count">👁️ ${stream.stream.viewers}</div>
                 </div>
                 <div class="stream-info">
                     <div class="streamer-info">
                         <div class="streamer-avatar">
-                            <img src="${stream.avatar}" alt="${stream.name}">
+                            <img src="${stream.avatar}" alt="${stream.name}" onerror="this.src='https://via.placeholder.com/50/9146FF/FFFFFF?text=TW'">
                         </div>
                         <div class="streamer-details">
                             <h3>${stream.name}</h3>
@@ -355,17 +367,23 @@ class CreatorsManager {
         `).join('');
     }
 
-    // Renderizar todos os criadores (layout compacto)
+    // Renderizar todos os criadores
     renderAllCreators() {
         const grid = document.getElementById('all-creators-grid');
+        if (!grid) {
+            console.error('❌ Grid de criadores não encontrado!');
+            return;
+        }
+
         let filteredCreators = this.creators;
 
-        // Aplicar filtro
         if (this.currentView === 'youtube') {
             filteredCreators = this.creators.filter(creator => creator.platform === 'youtube');
         } else if (this.currentView === 'twitch') {
             filteredCreators = this.creators.filter(creator => creator.platform === 'twitch');
         }
+
+        console.log(`🎨 Renderizando ${filteredCreators.length} criadores (view: ${this.currentView})`);
 
         if (filteredCreators.length === 0) {
             grid.innerHTML = `
@@ -380,68 +398,67 @@ class CreatorsManager {
         grid.innerHTML = filteredCreators.map(creator => this.createCompactCard(creator)).join('');
     }
 
-    // Criar card compacto - VERSÃO MELHORADA PARA YOUTUBE
+    // Criar card compacto
     createCompactCard(creator) {
         const isLive = creator.platform === 'twitch' && creator.isLive;
         const isFallback = creator.isFallback;
         const isYouTube = creator.platform === 'youtube';
 
-        // Card para YouTube (mais completo)
         if (isYouTube) {
             return `
-            <div class="creator-card-compact youtube ${isFallback ? 'fallback' : ''}">
+                <div class="creator-card-compact youtube ${isFallback ? 'fallback' : ''}">
+                    <div class="creator-avatar-compact">
+                        <img src="${creator.avatar}" alt="${creator.name}" onerror="this.src='https://via.placeholder.com/50/FF0000/FFFFFF?text=YT'">
+                        ${isFallback ? '<div class="fallback-indicator">⚠️</div>' : ''}
+                        <div class="platform-icon youtube">📺</div>
+                    </div>
+                    
+                    <div class="creator-info-compact">
+                        <h4 class="creator-name-compact">${creator.name}</h4>
+                        <p class="creator-handle-compact">${creator.handle}</p>
+                        <div class="creator-stats-compact">
+                            <div class="youtube-stats">
+                                <span class="stat">${creator.subscribers} inscritos</span>
+                                <span class="stat">${creator.videos} vídeos</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <a href="${creator.url}" target="_blank" class="watch-btn-compact youtube ${isFallback ? 'fallback' : ''}">
+                        ${isFallback ? 'Tentar Acessar' : 'Ver Canal'}
+                    </a>
+                </div>
+            `;
+        }
+
+        // Twitch
+        let statsText = isLive ? `${creator.stream.viewers} viewers` : 'Offline';
+
+        return `
+            <div class="creator-card-compact ${isLive ? 'live' : ''}">
                 <div class="creator-avatar-compact">
-                    <img src="${creator.avatar}" alt="${creator.name}">
-                    ${isFallback ? '<div class="fallback-indicator">⚠️</div>' : ''}
-                    <div class="platform-icon youtube">📺</div>
+                    <img src="${creator.avatar}" alt="${creator.name}" onerror="this.src='https://via.placeholder.com/50/9146FF/FFFFFF?text=TW'">
+                    ${isLive ? '<div class="live-indicator"></div>' : ''}
+                    <div class="platform-icon twitch">🎮</div>
                 </div>
                 
                 <div class="creator-info-compact">
                     <h4 class="creator-name-compact">${creator.name}</h4>
                     <p class="creator-handle-compact">${creator.handle}</p>
                     <div class="creator-stats-compact">
-                        <div class="youtube-stats">
-                            <span class="stat">${creator.subscribers} inscritos</span>
-                            <span class="stat">${creator.videos} vídeos</span>
-                        </div>
+                        <span class="platform-badge twitch">Twitch</span>
+                        <span>${statsText}</span>
                     </div>
                 </div>
                 
-                <a href="${creator.url}" target="_blank" class="watch-btn-compact youtube ${isFallback ? 'fallback' : ''}">
-                    ${isFallback ? 'Tentar Acessar' : 'Ver Canal'}
+                <a href="${creator.url}" target="_blank" class="watch-btn-compact twitch ${isLive ? 'live' : ''}">
+                    ${isLive ? '🔴 LIVE' : 'Ver Perfil'}
                 </a>
             </div>
         `;
-        }
-
-        // Card para Twitch (mantém o original)
-        let statsText = isLive ? `${creator.stream.viewers} viewers` : 'Offline';
-
-        return `
-        <div class="creator-card-compact ${isLive ? 'live' : ''}">
-            <div class="creator-avatar-compact">
-                <img src="${creator.avatar}" alt="${creator.name}">
-                ${isLive ? '<div class="live-indicator"></div>' : ''}
-                <div class="platform-icon twitch">🎮</div>
-            </div>
-            
-            <div class="creator-info-compact">
-                <h4 class="creator-name-compact">${creator.name}</h4>
-                <p class="creator-handle-compact">${creator.handle}</p>
-                <div class="creator-stats-compact">
-                    <span class="platform-badge twitch">Twitch</span>
-                    <span>${statsText}</span>
-                </div>
-            </div>
-            
-            <a href="${creator.url}" target="_blank" class="watch-btn-compact twitch ${isLive ? 'live' : ''}">
-                ${isLive ? '🔴 LIVE' : 'Ver Perfil'}
-            </a>
-        </div>
-    `;
     }
 
-    // Configurar event listeners para os filtros
+    // Configurar event listeners
     setupEventListeners() {
         const toggleButtons = document.querySelectorAll('.toggle-btn');
 
@@ -480,7 +497,7 @@ class CreatorsManager {
         return `há ${Math.floor(diffDays / 30)} mês${Math.floor(diffDays / 30) > 1 ? 'es' : ''}`;
     }
 
-    // Método para adicionar novos canais
+    // Métodos para adicionar canais
     addYouTubeChannel(channelId, name, handle) {
         YOUTUBE_CHANNELS.push({ id: channelId, name, handle });
         this.refreshData();
@@ -492,6 +509,7 @@ class CreatorsManager {
     }
 
     async refreshData() {
+        console.log('🔄 Atualizando dados...');
         await this.loadAllCreators();
         this.renderLiveStreams();
         this.renderAllCreators();
@@ -500,6 +518,7 @@ class CreatorsManager {
 
 // Inicializar quando a página carregar
 document.addEventListener('DOMContentLoaded', async () => {
+    console.log('🏁 DOM Carregado - Iniciando CreatorsManager');
     window.creatorsManager = new CreatorsManager();
     await window.creatorsManager.init();
 });

@@ -1,7 +1,10 @@
 // forum-api.js - VERSÃO 100% POSTGRESQL
 class ForumAPI {
     constructor() {
-        this.baseURL = window.location.origin;
+        // ✅ CORREÇÃO PARA PRODUÇÃO
+        this.baseURL = (window.APP_CONFIG && window.APP_CONFIG.API_BASE_URL)
+            ? window.APP_CONFIG.API_BASE_URL
+            : 'https://aoe4.com.br:8080'; // Fallback para produção
         this.currentUser = null;
         this.isAdmin = false;
         this.categories = [];
@@ -40,15 +43,22 @@ class ForumAPI {
 
     async loadCategories() {
         try {
+            console.log('🔄 Tentando carregar categorias de:', `${this.baseURL}/api/forum/categories`);
+
             const response = await fetch(`${this.baseURL}/api/forum/categories`);
+            console.log('📊 Status da resposta:', response.status);
+
             if (response.ok) {
                 this.categories = await response.json();
-                console.log('📂 Categorias carregadas do PostgreSQL:', this.categories.length);
+                console.log('✅ Categorias carregadas:', this.categories);
             } else {
-                throw new Error('Erro ao carregar categorias');
+                console.error('❌ Erro HTTP:', response.status, response.statusText);
+                throw new Error(`Erro ${response.status} ao carregar categorias`);
             }
         } catch (error) {
-            console.error('❌ Erro ao carregar categorias:', error);
+            console.error('❌ Erro completo ao carregar categorias:', error);
+
+
             // Fallback para categorias padrão
             this.categories = [
                 {
@@ -94,6 +104,7 @@ class ForumAPI {
             ];
         }
     }
+
 
     // 📊 ESTATÍSTICAS
     async getStats() {
@@ -205,6 +216,8 @@ class ForumAPI {
     async createTopic(topicData) {
         if (!this.currentUser) {
             throw new Error('Usuário não autenticado. Faça login com Discord para criar tópicos.');
+            console.log('🔍 DEBUG createTopic - URL completa:', `${this.baseURL}/api/forum/topics`);
+            console.log('🔍 DEBUG createTopic - baseURL:', this.baseURL);
         }
 
         console.log('🔍 Dados do usuário atual:', this.currentUser);

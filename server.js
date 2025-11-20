@@ -431,6 +431,8 @@ app.get('/api/forum/stats', async (req, res) => {
 
 console.log('✅ Endpoints do fórum carregados!');
 
+
+
 // Adicione isto temporariamente no server.js para testar
 app.get('/api/debug/forum', async (req, res) => {
     console.log('🔍 Debug endpoint acionado');
@@ -456,6 +458,18 @@ app.get('/api/debug/forum', async (req, res) => {
 // ROTAS DO FÓRUM
 // =============================================
 
+const corsOptions = {
+    origin: [
+        'https://aoe4.com.br',
+        'https://www.aoe4.com.br',
+        'https://aoe4.com.br:8080',
+        'http://localhost:3000', // desenvolvimento
+        'http://127.0.0.1:3000'
+    ],
+    credentials: true,
+    optionsSuccessStatus: 200
+};
+app.use(cors(corsOptions));
 
 // Função para converter pontos em classe/rank
 function pointsToClass(points) {

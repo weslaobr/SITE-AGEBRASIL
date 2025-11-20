@@ -1,8 +1,9 @@
-// forum-topic.js - VERSÃO COMPLETA COM MODERAÇÃO
+// forum-topic.js - VERSÃO POSTGRESQL CORRIGIDA
 class ForumTopicUI {
     constructor() {
         this.api = window.forumAPI;
         this.currentTopicId = null;
+        this.currentTopic = null;
         this.init();
     }
 
@@ -98,18 +99,15 @@ class ForumTopicUI {
         console.log('📖 Carregando tópico:', this.currentTopicId);
 
         try {
-            const topic = this.api.getTopic(this.currentTopicId);
+            // ✅ CORREÇÃO: Usar método assíncrono do PostgreSQL
+            this.currentTopic = await this.api.getTopic(this.currentTopicId);
 
-            if (!topic) {
+            if (!this.currentTopic) {
                 this.showError('Tópico não encontrado');
                 return;
             }
 
-            // Atualizar visualizações
-            topic.views = (topic.views || 0) + 1;
-            this.api.saveData('forum_topics', this.api.topics);
-
-            this.displayTopic(topic);
+            this.displayTopic(this.currentTopic);
             this.loadReplies();
 
         } catch (error) {
@@ -299,104 +297,114 @@ class ForumTopicUI {
         }
     }
 
-    loadReplies() {
-        const replies = this.api.getReplies(this.currentTopicId);
-        const repliesList = document.getElementById('repliesList');
-        const repliesCount = document.getElementById('repliesCount');
-        const replyForm = document.querySelector('.reply-form');
+    async loadReplies() {
+        try {
+            // ✅ CORREÇÃO: Usar método assíncrono do PostgreSQL
+            const replies = await this.api.getReplies(this.currentTopicId);
+            const repliesList = document.getElementById('repliesList');
+            const repliesCount = document.getElementById('repliesCount');
+            const replyForm = document.querySelector('.reply-form');
 
-        // Mostrar/ocultar formulário de resposta baseado no status de bloqueio
-        const topic = this.api.getTopic(this.currentTopicId);
-        if (replyForm && topic) {
-            replyForm.style.display = topic.isLocked ? 'none' : 'block';
+            // Mostrar/ocultar formulário de resposta baseado no status de bloqueio
+            if (replyForm && this.currentTopic) {
+                replyForm.style.display = this.currentTopic.isLocked ? 'none' : 'block';
 
-            if (topic.isLocked) {
-                const lockedMessage = document.createElement('div');
-                lockedMessage.className = 'locked-message';
-                lockedMessage.style.cssText = `
-                    background: var(--card-bg);
-                    border: 1px solid var(--border-color);
-                    border-radius: 8px;
-                    padding: 1rem;
-                    text-align: center;
-                    color: #a0aec0;
-                    margin-bottom: 1rem;
-                `;
-                lockedMessage.innerHTML = `
-                    <i class="fas fa-lock" style="font-size: 1.5rem; margin-bottom: 0.5rem;"></i>
-                    <p>Este tópico está bloqueado. Não é possível responder.</p>
-                `;
-                replyForm.parentNode.insertBefore(lockedMessage, replyForm);
+                if (this.currentTopic.isLocked) {
+                    const lockedMessage = document.createElement('div');
+                    lockedMessage.className = 'locked-message';
+                    lockedMessage.style.cssText = `
+                        background: var(--card-bg);
+                        border: 1px solid var(--border-color);
+                        border-radius: 8px;
+                        padding: 1rem;
+                        text-align: center;
+                        color: #a0aec0;
+                        margin-bottom: 1rem;
+                    `;
+                    lockedMessage.innerHTML = `
+                        <i class="fas fa-lock" style="font-size: 1.5rem; margin-bottom: 0.5rem;"></i>
+                        <p>Este tópico está bloqueado. Não é possível responder.</p>
+                    `;
+                    replyForm.parentNode.insertBefore(lockedMessage, replyForm);
+                }
             }
-        }
 
-        // Atualizar contador
-        repliesCount.textContent = `${replies.length} ${replies.length === 1 ? 'resposta' : 'respostas'}`;
+            // Atualizar contador
+            repliesCount.textContent = `${replies.length} ${replies.length === 1 ? 'resposta' : 'respostas'}`;
 
-        if (replies.length === 0) {
+            if (replies.length === 0) {
+                repliesList.innerHTML = `
+                    <div class="no-replies" style="text-align: center; padding: 3rem; color: #a0aec0;">
+                        <i class="fas fa-comments" style="font-size: 3rem; margin-bottom: 1rem;"></i>
+                        <h3>Nenhuma resposta ainda</h3>
+                        <p>Seja o primeiro a responder este tópico!</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const repliesHTML = replies.map(reply => `
+                <div class="reply-item" id="reply-${reply.id}">
+                    <div class="reply-header">
+                        <div class="reply-author">
+                            <div class="reply-avatar">
+                                ${reply.authorAvatar ?
+                    `<img src="https://cdn.discordapp.com/avatars/${reply.authorId}/${reply.authorAvatar}.webp?size=40" 
+                                          alt="${reply.author}"
+                                          onerror="this.src='https://cdn.discordapp.com/embed/avatars/${reply.authorId % 5}.png'">` :
+                    `<span>${reply.author.charAt(0)}</span>`
+                }
+                            </div>
+                            <div class="reply-author-info">
+                                <div class="reply-author-name">
+                                    ${reply.author}
+                                    ${this.api.admins.includes(reply.authorId) ? '<span class="admin-badge">ADMIN</span>' : ''}
+                                </div>
+                                <div class="reply-date">${this.formatDate(reply.createdAt)}</div>
+                            </div>
+                        </div>
+                        ${this.api.isAdmin ? `
+                            <div class="reply-mod-actions">
+                                <button class="mod-action" onclick="forumTopicUI.deleteReply(${reply.id})" title="Deletar Resposta">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        ` : ''}
+                    </div>
+                    <div class="reply-content">
+                        ${this.formatContent(reply.content)}
+                        ${reply.lastEditedBy ? `
+                            <div class="edit-info">
+                                Editado por ${reply.lastEditedBy} em ${this.formatDate(reply.lastEditedAt)}
+                            </div>
+                        ` : ''}
+                    </div>
+                    <div class="reply-actions">
+                        <button class="reply-action" onclick="forumTopicUI.likeReply(${reply.id})">
+                            <i class="fas fa-thumbs-up"></i>
+                            Curtir
+                        </button>
+                        <button class="reply-action" onclick="forumTopicUI.quoteReply(${reply.id})">
+                            <i class="fas fa-quote-left"></i>
+                            Citar
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+
+            repliesList.innerHTML = repliesHTML;
+
+        } catch (error) {
+            console.error('Erro ao carregar respostas:', error);
+            const repliesList = document.getElementById('repliesList');
             repliesList.innerHTML = `
-                <div class="no-replies" style="text-align: center; padding: 3rem; color: #a0aec0;">
-                    <i class="fas fa-comments" style="font-size: 3rem; margin-bottom: 1rem;"></i>
-                    <h3>Nenhuma resposta ainda</h3>
-                    <p>Seja o primeiro a responder este tópico!</p>
+                <div class="no-replies" style="text-align: center; padding: 3rem; color: #e53e3e;">
+                    <i class="fas fa-exclamation-triangle" style="font-size: 3rem; margin-bottom: 1rem;"></i>
+                    <h3>Erro ao carregar respostas</h3>
+                    <p>Tente recarregar a página</p>
                 </div>
             `;
-            return;
         }
-
-        const repliesHTML = replies.map(reply => `
-            <div class="reply-item" id="reply-${reply.id}">
-                <div class="reply-header">
-                    <div class="reply-author">
-                        <div class="reply-avatar">
-                            ${reply.authorAvatar ?
-                `<img src="https://cdn.discordapp.com/avatars/${reply.authorId}/${reply.authorAvatar}.webp?size=40" 
-                                      alt="${reply.author}"
-                                      onerror="this.src='https://cdn.discordapp.com/embed/avatars/${reply.authorId % 5}.png'">` :
-                `<span>${reply.author.charAt(0)}</span>`
-            }
-                        </div>
-                        <div class="reply-author-info">
-                            <div class="reply-author-name">
-                                ${reply.author}
-                                ${this.api.admins.includes(reply.authorId) ? '<span class="admin-badge">ADMIN</span>' : ''}
-                            </div>
-                            <div class="reply-date">${this.formatDate(reply.createdAt)}</div>
-                        </div>
-                    </div>
-                    ${this.api.isAdmin ? `
-                        <div class="reply-mod-actions">
-                            <button class="mod-action" onclick="forumTopicUI.editReply(${reply.id})" title="Editar Resposta">
-                                <i class="fas fa-edit"></i>
-                            </button>
-                            <button class="mod-action" onclick="forumTopicUI.deleteReply(${reply.id})" title="Deletar Resposta">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </div>
-                    ` : ''}
-                </div>
-                <div class="reply-content">
-                    ${this.formatContent(reply.content)}
-                    ${reply.lastEditedBy ? `
-                        <div class="edit-info">
-                            Editado por ${reply.lastEditedBy} em ${this.formatDate(reply.lastEditedAt)}
-                        </div>
-                    ` : ''}
-                </div>
-                <div class="reply-actions">
-                    <button class="reply-action" onclick="forumTopicUI.likeReply(${reply.id})">
-                        <i class="fas fa-thumbs-up"></i>
-                        Curtir
-                    </button>
-                    <button class="reply-action" onclick="forumTopicUI.quoteReply(${reply.id})">
-                        <i class="fas fa-quote-left"></i>
-                        Citar
-                    </button>
-                </div>
-            </div>
-        `).join('');
-
-        repliesList.innerHTML = repliesHTML;
     }
 
     async createReply() {
@@ -406,8 +414,7 @@ class ForumTopicUI {
             return;
         }
 
-        const topic = this.api.getTopic(this.currentTopicId);
-        if (topic && topic.isLocked) {
+        if (this.currentTopic && this.currentTopic.isLocked) {
             this.showNotification('Este tópico está bloqueado. Não é possível responder.', 'error');
             return;
         }
@@ -430,10 +437,11 @@ class ForumTopicUI {
                 content: content
             };
 
+            // ✅ CORREÇÃO: Usar método assíncrono do PostgreSQL
             await this.api.createReply(replyData);
 
             // Recarregar respostas
-            this.loadReplies();
+            await this.loadReplies();
 
             // Limpar formulário
             document.getElementById('replyContent').value = '';
@@ -441,21 +449,11 @@ class ForumTopicUI {
             // Mostrar sucesso
             this.showNotification('Resposta enviada com sucesso!', 'success');
 
-            // Scroll para a nova resposta
+            // Scroll para o topo das respostas
             setTimeout(() => {
-                const replies = this.api.getReplies(this.currentTopicId);
-                if (replies.length > 0) {
-                    const latestReply = replies[replies.length - 1];
-                    const element = document.getElementById(`reply-${latestReply.id}`);
-                    if (element) {
-                        element.scrollIntoView({ behavior: 'smooth' });
-
-                        // Destaque temporário
-                        element.style.backgroundColor = 'rgba(72, 187, 120, 0.1)';
-                        setTimeout(() => {
-                            element.style.backgroundColor = '';
-                        }, 2000);
-                    }
+                const repliesSection = document.querySelector('.replies-section');
+                if (repliesSection) {
+                    repliesSection.scrollIntoView({ behavior: 'smooth' });
                 }
             }, 500);
 
@@ -495,7 +493,7 @@ class ForumTopicUI {
         try {
             await this.api.deleteReply(replyId);
             this.showNotification('Resposta deletada com sucesso!', 'success');
-            this.loadReplies(); // Recarregar a lista de respostas
+            await this.loadReplies(); // Recarregar a lista de respostas
 
         } catch (error) {
             console.error('Erro ao deletar resposta:', error);
@@ -507,7 +505,7 @@ class ForumTopicUI {
         try {
             const topic = await this.api.togglePinTopic(topicId);
             this.showNotification(`Tópico ${topic.isPinned ? 'fixado' : 'desfixado'} com sucesso!`, 'success');
-            this.loadTopic(); // Recarregar o tópico para atualizar a interface
+            await this.loadTopic(); // Recarregar o tópico para atualizar a interface
 
         } catch (error) {
             console.error('Erro ao fixar/desfixar tópico:', error);
@@ -519,29 +517,12 @@ class ForumTopicUI {
         try {
             const topic = await this.api.toggleLockTopic(topicId);
             this.showNotification(`Tópico ${topic.isLocked ? 'bloqueado' : 'desbloqueado'} com sucesso!`, 'success');
-            this.loadTopic(); // Recarregar o tópico para atualizar a interface
-            this.loadReplies(); // Recarregar respostas para mostrar/ocultar formulário
+            await this.loadTopic(); // Recarregar o tópico para atualizar a interface
+            await this.loadReplies(); // Recarregar respostas para mostrar/ocultar formulário
 
         } catch (error) {
             console.error('Erro ao bloquear/desbloquear tópico:', error);
             this.showNotification(error.message, 'error');
-        }
-    }
-
-    editReply(replyId) {
-        const reply = this.api.replies.find(r => r.id == replyId);
-        if (!reply) return;
-
-        const newContent = prompt('Editar resposta:', reply.content);
-        if (newContent !== null && newContent.trim() !== '') {
-            try {
-                this.api.editReply(replyId, newContent.trim());
-                this.showNotification('Resposta editada com sucesso!', 'success');
-                this.loadReplies(); // Recarregar respostas
-            } catch (error) {
-                console.error('Erro ao editar resposta:', error);
-                this.showNotification(error.message, 'error');
-            }
         }
     }
 
@@ -559,14 +540,17 @@ class ForumTopicUI {
             return;
         }
 
-        const reply = this.api.replies.find(r => r.id == replyId);
-        if (reply) {
-            const quoteText = `> ${reply.content}\n\n`;
-            const textarea = document.getElementById('replyContent');
-            textarea.value = quoteText + textarea.value;
-            textarea.focus();
-            this.showNotification('Resposta citada!', 'success');
-        }
+        // ✅ CORREÇÃO: Buscar reply do PostgreSQL
+        this.api.getReplies(this.currentTopicId).then(replies => {
+            const reply = replies.find(r => r.id == replyId);
+            if (reply) {
+                const quoteText = `> ${reply.content}\n\n`;
+                const textarea = document.getElementById('replyContent');
+                textarea.value = quoteText + textarea.value;
+                textarea.focus();
+                this.showNotification('Resposta citada!', 'success');
+            }
+        });
     }
 
     formatContent(content) {

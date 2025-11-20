@@ -1,652 +1,843 @@
-// forum-topic.js - VERSÃO POSTGRESQL CORRIGIDA
-class ForumTopicUI {
-    constructor() {
-        this.api = window.forumAPI;
-        this.currentTopicId = null;
-        this.currentTopic = null;
-        this.init();
-    }
+< !DOCTYPE html >
+    <html lang="pt-BR">
 
-    init() {
-        console.log('🔧 Inicializando ForumTopicUI...');
-        console.log('👤 Status Admin:', this.api.isAdmin ? '✅ ADMIN' : '❌ USUÁRIO');
+        <head>
+            <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <title>Tópico - Age of Empires IV Brasil</title>
+                    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+                        <link rel="stylesheet" href="css/style.css">
+                            <link rel="icon" type="image/png" href="https://i.postimg.cc/3JT4W3hz/favicon.png">
 
-        this.currentTopicId = this.getTopicIdFromURL();
-        console.log('📌 Tópico ID:', this.currentTopicId);
-
-        if (!this.currentTopicId) {
-            this.showError('Tópico não encontrado');
-            return;
+                                <style>
+        /* HEADER COM DUAS LINHAS - PADRONIZADO */
+                                    .header-top {
+                                        display: flex;
+                                    justify-content: space-between;
+                                    align-items: center;
+                                    flex-wrap: wrap;
+                                    gap: 1rem;
+                                    padding-bottom: 1rem;
         }
 
-        this.checkAuthState();
-        this.setupEventListeners();
-
-        if (this.api.currentUser) {
-            this.loadTopic();
-        }
-    }
-
-    getTopicIdFromURL() {
-        const urlParams = new URLSearchParams(window.location.search);
-        return urlParams.get('id');
-    }
-
-    checkAuthState() {
-        const user = this.api.currentUser;
-        const authElements = document.querySelectorAll('[data-auth-only]');
-        const noAuthElements = document.querySelectorAll('[data-no-auth]');
-
-        if (user) {
-            authElements.forEach(el => el.style.display = '');
-            noAuthElements.forEach(el => el.style.display = 'none');
-            this.updateUserInfo(user);
-        } else {
-            authElements.forEach(el => el.style.display = 'none');
-            noAuthElements.forEach(el => el.style.display = '');
-        }
-    }
-
-    updateUserInfo(user) {
-        const userInfoElement = document.getElementById('userInfo');
-        if (userInfoElement) {
-            userInfoElement.innerHTML = `
-                <div class="user-avatar">
-                    <img src="https://cdn.discordapp.com/embed/avatars/${user.discriminator % 5}.png" 
-                         alt="${user.username}">
-                </div>
-                <span class="user-name">${user.global_name || user.username}</span>
-                ${this.api.isAdmin ? '<span class="admin-badge">ADMIN</span>' : ''}
-            `;
-        }
-    }
-
-    setupEventListeners() {
-        const loginBtn = document.getElementById('loginBtn');
-        const logoutBtn = document.getElementById('logoutBtn');
-
-        if (loginBtn) {
-            loginBtn.addEventListener('click', (e) => {
-                e.preventDefault();
-                this.redirectToLogin();
-            });
+                                    .header-bottom {
+                                        display: flex;
+                                    justify-content: flex-end;
+                                    padding-top: 1rem;
         }
 
-        if (logoutBtn) {
-            logoutBtn.addEventListener('click', (e) => {
-                e.preventDefault();
-                this.logout();
-            });
+                                    .logo {
+                                        display: flex;
+                                    align-items: center;
+                                    gap: 1rem;
         }
-    }
 
-    redirectToLogin() {
-        localStorage.setItem('returnUrl', window.location.href);
-        if (window.discordAuth) {
-            window.discordAuth.login();
-        } else {
-            window.location.href = 'forum-auth.html';
+                                    .logo-img {
+                                        height: 40px;
+                                    width: auto;
         }
-    }
 
-    logout() {
-        if (window.discordAuth) {
-            window.discordAuth.logout();
+                                    .logo h1 {
+                                        color: var(--text-color);
+                                    font-size: 1.5rem;
+                                    margin: 0;
         }
-    }
 
-    async loadTopic() {
-        console.log('📖 Carregando tópico:', this.currentTopicId);
+                                    nav ul {
+                                        display: flex;
+                                    list-style: none;
+                                    margin: 0;
+                                    padding: 0;
+                                    gap: 2rem;
+        }
 
-        try {
-            // ✅ CORREÇÃO: Usar método assíncrono do PostgreSQL
-            this.currentTopic = await this.api.getTopic(this.currentTopicId);
+                                    nav a {
+                                        color: var(--text-color);
+                                    text-decoration: none;
+                                    font-weight: 500;
+                                    transition: color 0.3s ease;
+                                    padding: 0.5rem 0;
+        }
 
-            if (!this.currentTopic) {
-                this.showError('Tópico não encontrado');
-                return;
+                                    nav a:hover,
+                                    nav a.active {
+                                        color: var(--accent-color);
+        }
+
+                                    .user-actions {
+                                        display: flex;
+                                    align-items: center;
+                                    gap: 1rem;
+        }
+
+                                    .user-info-container {
+                                        display: flex;
+                                    align-items: center;
+                                    gap: 0.5rem;
+                                    background: var(--secondary-color);
+                                    padding: 0.5rem 1rem;
+                                    border-radius: 20px;
+                                    border: 1px solid var(--border-color);
+        }
+
+                                    .user-avatar img {
+                                        width: 32px;
+                                    height: 32px;
+                                    border-radius: 50%;
+                                    border: 2px solid var(--accent-color);
+        }
+
+                                    .user-name {
+                                        color: var(--text-color);
+                                    font-weight: 600;
+                                    font-size: 0.9rem;
+        }
+
+                                    .login-btn-header {
+                                        background: none;
+                                    border: none;
+                                    color: var(--text-color);
+                                    font-weight: 600;
+                                    cursor: pointer;
+                                    padding: 0;
+                                    display: flex;
+                                    align-items: center;
+                                    gap: 0.5rem;
+                                    font-size: 0.9rem;
+                                    transition: color 0.3s ease;
+        }
+
+                                    .login-btn-header:hover {
+                                        color: var(--accent-color);
+        }
+
+                                    .logout-btn {
+                                        background: #4a5568;
+                                    color: white;
+                                    border: none;
+                                    padding: 0.7rem 1.2rem;
+                                    border-radius: 8px;
+                                    font-weight: 600;
+                                    cursor: pointer;
+                                    transition: all 0.3s ease;
+                                    display: inline-flex;
+                                    align-items: center;
+                                    gap: 0.5rem;
+                                    font-size: 0.9rem;
+        }
+
+                                    .logout-btn:hover {
+                                        background: #2d3748;
+                                    transform: translateY(-1px);
+        }
+
+                                    .admin-badge {
+                                        background: var(--accent-color);
+                                    color: white;
+                                    padding: 0.2rem 0.6rem;
+                                    border-radius: 12px;
+                                    font-size: 0.7rem;
+                                    font-weight: 600;
+        }
+
+                                    @media (max-width: 768px) {
+            .header - top {
+                                        flex - direction: column;
+                                    align-items: flex-start;
+                                    gap: 1rem;
             }
 
-            this.displayTopic(this.currentTopic);
-            this.loadReplies();
+                                    .header-bottom {
+                                        justify - content: center;
+            }
 
-        } catch (error) {
-            console.error('Erro ao carregar tópico:', error);
-            this.showError('Erro ao carregar tópico');
-        }
-    }
+                                    nav ul {
+                                        gap: 1rem;
+                                    flex-wrap: wrap;
+            }
 
-    displayTopic(topic) {
-        // Atualizar breadcrumb
-        document.getElementById('topicTitleBreadcrumb').textContent = topic.title;
-
-        // Atualizar categoria
-        const category = this.api.categories.find(cat => cat.id == topic.categoryId);
-        if (category) {
-            document.getElementById('topicCategory').textContent = category.name;
-            document.getElementById('categoryLink').textContent = category.name;
-            document.getElementById('categoryLink').href = `forum-category.html?category=${category.slug}`;
+                                    .user-actions {
+                                        width: 100%;
+                                    justify-content: center;
+            }
         }
 
-        // Atualizar título
-        const topicTitleElement = document.getElementById('topicTitle');
-        let titleHTML = topic.title;
-
-        if (topic.isPinned) {
-            titleHTML = '<i class="fas fa-thumbtack" style="color: #e53e3e; margin-right: 10px;"></i>' + titleHTML;
+                                    /* ESTILOS DO TÓPICO */
+                                    .topic-container {
+                                        max - width: 900px;
+                                    margin: 0 auto;
+                                    padding: 2rem 0;
         }
 
-        if (topic.isLocked) {
-            titleHTML += ' <i class="fas fa-lock" style="color: #a0aec0; margin-left: 10px;"></i>';
+                                    .topic-header {
+                                        background: var(--card-bg);
+                                    border-radius: 12px;
+                                    padding: 2rem;
+                                    border: 1px solid var(--border-color);
+                                    margin-bottom: 2rem;
         }
 
-        topicTitleElement.innerHTML = titleHTML;
-
-        // Atualizar data
-        document.getElementById('topicDate').textContent = this.formatDate(topic.createdAt);
-
-        // Atualizar autor
-        const authorNameElement = document.getElementById('authorName');
-        authorNameElement.textContent = topic.author;
-
-        // Adicionar badge de admin se o autor for admin
-        if (this.api.admins.includes(topic.authorId)) {
-            authorNameElement.innerHTML += '<span class="admin-badge">ADMIN</span>';
+                                    .topic-meta {
+                                        display: flex;
+                                    justify-content: between;
+                                    align-items: center;
+                                    margin-bottom: 1rem;
+                                    flex-wrap: wrap;
+                                    gap: 1rem;
         }
 
-        // Atualizar avatar do autor
-        const authorAvatar = document.getElementById('authorAvatar');
-        if (topic.authorAvatar) {
-            authorAvatar.innerHTML = `
-                <img src="https://cdn.discordapp.com/avatars/${topic.authorId}/${topic.authorAvatar}.webp?size=80" 
-                     alt="${topic.author}"
-                     onerror="this.src='https://cdn.discordapp.com/embed/avatars/${topic.authorId % 5}.png'">
-            `;
-        } else {
-            authorAvatar.innerHTML = `<span>${topic.author.charAt(0)}</span>`;
+                                    .topic-category {
+                                        background: var(--accent-color);
+                                    color: white;
+                                    padding: 0.4rem 1rem;
+                                    border-radius: 20px;
+                                    font-size: 0.8rem;
+                                    font-weight: 600;
         }
 
-        // Atualizar conteúdo
-        document.getElementById('topicContentText').innerHTML = this.formatContent(topic.content);
-
-        // 🔧 ADICIONAR BOTÕES DE MODERAÇÃO SE FOR ADMIN
-        this.addModerationButtons(topic);
-    }
-
-    // 🔧 ADICIONAR BOTÕES DE MODERAÇÃO
-    addModerationButtons(topic) {
-        const topicActions = document.querySelector('.topic-actions');
-
-        if (!topicActions) return;
-
-        // Limpar botões de moderação existentes
-        const existingModButtons = topicActions.querySelectorAll('.mod-btn');
-        existingModButtons.forEach(btn => btn.remove());
-
-        // Se for admin, adicionar botões de moderação
-        if (this.api.isAdmin) {
-            const modButtons = document.createElement('div');
-            modButtons.className = 'moderation-actions';
-            modButtons.style.cssText = `
-                display: flex;
-                gap: 0.5rem;
-                margin-left: auto;
-                flex-wrap: wrap;
-            `;
-
-            modButtons.innerHTML = `
-                <button class="btn btn-warning mod-btn" onclick="forumTopicUI.togglePinTopic(${topic.id})" title="${topic.isPinned ? 'Desfixar' : 'Fixar'} Tópico">
-                    <i class="fas fa-thumbtack"></i>
-                    ${topic.isPinned ? 'Desfixar' : 'Fixar'}
-                </button>
-                <button class="btn btn-warning mod-btn" onclick="forumTopicUI.toggleLockTopic(${topic.id})" title="${topic.isLocked ? 'Desbloquear' : 'Bloquear'} Tópico">
-                    <i class="fas ${topic.isLocked ? 'fa-unlock' : 'fa-lock'}"></i>
-                    ${topic.isLocked ? 'Desbloquear' : 'Bloquear'}
-                </button>
-                <button class="btn btn-danger mod-btn" onclick="forumTopicUI.deleteTopic(${topic.id})" title="Deletar Tópico">
-                    <i class="fas fa-trash"></i>
-                    Deletar
-                </button>
-            `;
-
-            topicActions.appendChild(modButtons);
-
-            // Adicionar estilos para os botões de moderação
-            this.addModerationStyles();
+                                    .topic-date {
+                                        color: #a0aec0;
+                                    font-size: 0.9rem;
         }
-    }
 
-    addModerationStyles() {
-        if (!document.querySelector('#moderation-styles')) {
-            const styles = document.createElement('style');
-            styles.id = 'moderation-styles';
-            styles.textContent = `
-                .btn-warning {
-                    background: #ed8936 !important;
-                    color: white !important;
-                    border: none !important;
-                }
-                .btn-warning:hover {
-                    background: #dd6b20 !important;
-                    transform: translateY(-1px);
-                }
-                .btn-danger {
-                    background: #e53e3e !important;
-                    color: white !important;
-                    border: none !important;
-                }
-                .btn-danger:hover {
-                    background: #c53030 !important;
-                    transform: translateY(-1px);
-                }
-                .moderation-actions {
-                    border-left: 2px solid #4a5568;
-                    padding-left: 1rem;
-                    margin-left: 1rem;
-                }
-                .admin-badge {
-                    background: #e53e3e;
-                    color: white;
-                    padding: 0.2rem 0.5rem;
-                    border-radius: 12px;
-                    font-size: 0.7rem;
-                    font-weight: bold;
-                    margin-left: 0.5rem;
-                }
-                .reply-mod-actions {
-                    display: flex;
-                    gap: 0.5rem;
-                }
-                .mod-action {
-                    color: #e53e3e !important;
-                    font-size: 0.9rem !important;
-                    background: none;
-                    border: none;
-                    cursor: pointer;
-                    padding: 0.3rem;
-                    border-radius: 4px;
-                    transition: all 0.3s ease;
-                }
-                .mod-action:hover {
-                    color: #c53030 !important;
-                    background: rgba(229, 62, 62, 0.1);
-                    transform: scale(1.1);
-                }
-                .edit-info {
-                    border-top: 1px solid #4a5568;
-                    padding-top: 0.5rem;
-                    font-size: 0.8rem;
-                    color: #a0aec0;
-                    font-style: italic;
-                    margin-top: 0.5rem;
-                }
-                @media (max-width: 768px) {
-                    .moderation-actions {
-                        border-left: none;
-                        padding-left: 0;
-                        margin-left: 0;
-                        border-top: 1px solid #4a5568;
-                        padding-top: 1rem;
-                        margin-top: 1rem;
-                        width: 100%;
-                        justify-content: center;
+                                    .topic-title {
+                                        font - size: 2rem;
+                                    font-weight: 700;
+                                    color: var(--text-color);
+                                    margin-bottom: 1rem;
+                                    line-height: 1.3;
+        }
+
+                                    .topic-author {
+                                        display: flex;
+                                    align-items: center;
+                                    gap: 1rem;
+                                    padding-top: 1rem;
+                                    border-top: 1px solid var(--border-color);
+        }
+
+                                    .author-avatar {
+                                        width: 50px;
+                                    height: 50px;
+                                    border-radius: 50%;
+                                    background: var(--secondary-color);
+                                    display: flex;
+                                    align-items: center;
+                                    justify-content: center;
+                                    font-weight: 600;
+                                    color: var(--text-color);
+                                    overflow: hidden;
+        }
+
+                                    .author-avatar img {
+                                        width: 100%;
+                                    height: 100%;
+                                    object-fit: cover;
+        }
+
+                                    .author-info {
+                                        flex: 1;
+        }
+
+                                    .author-name {
+                                        font - weight: 600;
+                                    color: var(--text-color);
+                                    margin-bottom: 0.2rem;
+        }
+
+                                    .author-role {
+                                        color: #a0aec0;
+                                    font-size: 0.8rem;
+        }
+
+                                    .topic-content {
+                                        background: var(--card-bg);
+                                    border-radius: 12px;
+                                    padding: 2rem;
+                                    border: 1px solid var(--border-color);
+                                    margin-bottom: 2rem;
+                                    line-height: 1.6;
+        }
+
+                                    .topic-content p {
+                                        margin - bottom: 1rem;
+        }
+
+                                    .topic-actions {
+                                        display: flex;
+                                    gap: 1rem;
+                                    margin-top: 2rem;
+                                    padding-top: 1rem;
+                                    border-top: 1px solid var(--border-color);
+        }
+
+                                    .btn {
+                                        padding: 0.7rem 1.5rem;
+                                    border: none;
+                                    border-radius: 8px;
+                                    font-weight: 600;
+                                    cursor: pointer;
+                                    transition: all 0.3s ease;
+                                    font-size: 0.9rem;
+                                    display: inline-flex;
+                                    align-items: center;
+                                    gap: 0.5rem;
+        }
+
+                                    .btn-primary {
+                                        background: var(--accent-color);
+                                    color: white;
+        }
+
+                                    .btn-primary:hover {
+                                        background: #c53030;
+                                    transform: translateY(-1px);
+        }
+
+                                    .btn-secondary {
+                                        background: var(--secondary-color);
+                                    color: var(--text-color);
+                                    border: 1px solid var(--border-color);
+        }
+
+                                    .btn-secondary:hover {
+                                        background: #4a5568;
+                                    transform: translateY(-1px);
+        }
+
+                                    /* RESPOSTAS */
+                                    .replies-section {
+                                        margin - top: 3rem;
+        }
+
+                                    .replies-header {
+                                        display: flex;
+                                    justify-content: space-between;
+                                    align-items: center;
+                                    margin-bottom: 1.5rem;
+        }
+
+                                    .replies-header h2 {
+                                        color: var(--text-color);
+                                    margin: 0;
+        }
+
+                                    .replies-count {
+                                        color: #a0aec0;
+                                    font-size: 0.9rem;
+        }
+
+                                    .reply-form {
+                                        background: var(--card-bg);
+                                    border-radius: 12px;
+                                    padding: 2rem;
+                                    border: 1px solid var(--border-color);
+                                    margin-bottom: 2rem;
+        }
+
+                                    .form-group {
+                                        margin - bottom: 1.5rem;
+        }
+
+                                    .form-group label {
+                                        display: block;
+                                    margin-bottom: 0.5rem;
+                                    color: var(--text-color);
+                                    font-weight: 600;
+                                    font-size: 0.9rem;
+        }
+
+                                    .form-group textarea {
+                                        width: 100%;
+                                    padding: 1rem;
+                                    background: var(--secondary-color);
+                                    border: 1px solid var(--border-color);
+                                    border-radius: 8px;
+                                    color: var(--text-color);
+                                    font-size: 1rem;
+                                    transition: border-color 0.3s ease;
+                                    box-sizing: border-box;
+                                    min-height: 120px;
+                                    resize: vertical;
+                                    font-family: inherit;
+        }
+
+                                    .form-group textarea:focus {
+                                        outline: none;
+                                    border-color: var(--accent-color);
+                                    box-shadow: 0 0 0 2px rgba(229, 62, 62, 0.1);
+        }
+
+                                    .form-actions {
+                                        display: flex;
+                                    gap: 1rem;
+                                    justify-content: flex-end;
+        }
+
+                                    .replies-list {
+                                        display: flex;
+                                    flex-direction: column;
+                                    gap: 1.5rem;
+        }
+
+                                    .reply-item {
+                                        background: var(--card-bg);
+                                    border-radius: 12px;
+                                    padding: 1.5rem;
+                                    border: 1px solid var(--border-color);
+                                    transition: transform 0.3s ease;
+        }
+
+                                    .reply-item:hover {
+                                        transform: translateY(-2px);
+        }
+
+                                    .reply-header {
+                                        display: flex;
+                                    justify-content: space-between;
+                                    align-items: flex-start;
+                                    margin-bottom: 1rem;
+        }
+
+                                    .reply-author {
+                                        display: flex;
+                                    align-items: center;
+                                    gap: 1rem;
+        }
+
+                                    .reply-avatar {
+                                        width: 40px;
+                                    height: 40px;
+                                    border-radius: 50%;
+                                    background: var(--secondary-color);
+                                    display: flex;
+                                    align-items: center;
+                                    justify-content: center;
+                                    font-weight: 600;
+                                    color: var(--text-color);
+                                    overflow: hidden;
+        }
+
+                                    .reply-avatar img {
+                                        width: 100%;
+                                    height: 100%;
+                                    object-fit: cover;
+        }
+
+                                    .reply-author-info {
+                                        flex: 1;
+        }
+
+                                    .reply-author-name {
+                                        font - weight: 600;
+                                    color: var(--text-color);
+                                    margin-bottom: 0.2rem;
+        }
+
+                                    .reply-date {
+                                        color: #a0aec0;
+                                    font-size: 0.8rem;
+        }
+
+                                    .reply-content {
+                                        line - height: 1.6;
+                                    color: var(--text-color);
+        }
+
+                                    .reply-actions {
+                                        display: flex;
+                                    gap: 1rem;
+                                    margin-top: 1rem;
+                                    padding-top: 1rem;
+                                    border-top: 1px solid var(--border-color);
+        }
+
+                                    .reply-action {
+                                        background: none;
+                                    border: none;
+                                    color: #a0aec0;
+                                    cursor: pointer;
+                                    font-size: 0.8rem;
+                                    display: flex;
+                                    align-items: center;
+                                    gap: 0.3rem;
+                                    transition: color 0.3s ease;
+        }
+
+                                    .reply-action:hover {
+                                        color: var(--accent-color);
+        }
+
+                                    /* BREADCRUMB */
+                                    .breadcrumb {
+                                        margin - bottom: 2rem;
+                                    padding: 1rem 0;
+        }
+
+                                    .breadcrumb a {
+                                        color: var(--accent-color);
+                                    text-decoration: none;
+        }
+
+                                    .breadcrumb a:hover {
+                                        text - decoration: underline;
+        }
+
+                                    .breadcrumb span {
+                                        color: #a0aec0;
+        }
+
+                                    /* MENSAGEM SEM AUTENTICAÇÃO */
+                                    .no-auth-message {
+                                        background: var(--card-bg);
+                                    border: 1px solid var(--border-color);
+                                    border-radius: 12px;
+                                    padding: 3rem;
+                                    text-align: center;
+                                    margin: 2rem 0;
+        }
+
+                                    .no-auth-message i {
+                                        font - size: 4rem;
+                                    color: var(--accent-color);
+                                    margin-bottom: 1.5rem;
+        }
+
+                                    .no-auth-message h3 {
+                                        color: var(--text-color);
+                                    margin-bottom: 1rem;
+                                    font-size: 1.5rem;
+        }
+
+                                    .no-auth-message p {
+                                        color: #a0aec0;
+                                    margin-bottom: 2rem;
+                                    font-size: 1.1rem;
+        }
+
+                                    /* RESPONSIVIDADE */
+                                    @media (max-width: 768px) {
+            .topic - title {
+                                        font - size: 1.5rem;
+            }
+
+                                    .topic-meta {
+                                        flex - direction: column;
+                                    align-items: flex-start;
+            }
+
+                                    .reply-header {
+                                        flex - direction: column;
+                                    gap: 1rem;
+            }
+
+                                    .form-actions {
+                                        flex - direction: column;
+            }
+        }
+                                </style>
+                            </head>
+
+                            <body>
+                                <header>
+                                    <div class="container">
+                                        <!-- Primeira linha: Logo e Navegação -->
+                                        <div class="header-top">
+                                            <div class="logo">
+                                                <img src="https://i.postimg.cc/rFNdr7FV/logo.png" alt="Age of Empires IV Brasil" class="logo-img">
+                                                    <h1>Age of Empires IV Brasil</h1>
+                                            </div>
+
+                                            <nav>
+                                                <ul>
+                                                    <li><a href="index.html">Início</a></li>
+                                                    <li><a href="forum.html">Fórum</a></li>
+                                                    <li><a href="leaderboard.html">Tabela de classificação</a></li>
+                                                    <li><a href="torneios.html">Torneios</a></li>
+                                                    <li><a href="about.html">Sobre</a></li>
+                                                </ul>
+                                            </nav>
+                                        </div>
+
+                                        <!-- Segunda linha: Botão do Discord -->
+                                        <div class="header-bottom">
+                                            <div class="user-actions">
+                                                <!-- Container do usuário logado -->
+                                                <div id="userInfo" data-auth-only class="user-info-container" style="display: none;">
+                                                    <div class="user-avatar">
+                                                        <!-- Avatar será carregado via JavaScript -->
+                                                    </div>
+                                                    <div class="user-name">
+                                                        <!-- Nome será carregado via JavaScript -->
+                                                    </div>
+                                                </div>
+
+                                                <!-- Container do botão de login (não logado) -->
+                                                <div id="loginContainer" data-no-auth class="user-info-container" style="display: none;">
+                                                    <i class="fab fa-discord" style="color: #5865F2;"></i>
+                                                    <button id="loginBtn" class="login-btn-header">
+                                                        Entrar com Discord
+                                                    </button>
+                                                </div>
+
+                                                <!-- Botão de logout -->
+                                                <button id="logoutBtn" data-auth-only style="display: none;" class="logout-btn">
+                                                    <i class="fas fa-sign-out-alt"></i>
+                                                    Sair
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </header>
+
+                                <main class="container">
+                                    <!-- Breadcrumb -->
+                                    <div class="breadcrumb">
+                                        <a href="forum.html">Fórum</a>
+                                        <span>→</span>
+                                        <a href="#" id="categoryLink">Categoria</a>
+                                        <span>→</span>
+                                        <span id="topicTitleBreadcrumb">Tópico</span>
+                                    </div>
+
+                                    <!-- Mensagem para usuários não autenticados -->
+                                    <div id="noAuthMessage" data-no-auth class="no-auth-message" style="display: none;">
+                                        <i class="fab fa-discord"></i>
+                                        <h3>Faça login para visualizar tópicos</h3>
+                                        <p>Conecte-se com sua conta Discord para ler e participar das discussões</p>
+                                        <button class="login-btn" onclick="window.forumTopicUI.redirectToLogin()">
+                                            <i class="fab fa-discord"></i>
+                                            Entrar com Discord
+                                        </button>
+                                    </div>
+
+                                    <!-- Conteúdo do tópico (visível apenas para usuários autenticados) -->
+                                    <div id="topicContent" data-auth-only style="display: none;">
+                                        <div class="topic-container">
+                                            <!-- Cabeçalho do Tópico -->
+                                            <div class="topic-header">
+                                                <div class="topic-meta">
+                                                    <div class="topic-category" id="topicCategory">Estratégias</div>
+                                                    <div class="topic-date" id="topicDate">há 2 dias</div>
+                                                </div>
+                                                <h1 class="topic-title" id="topicTitle">Carregando tópico...</h1>
+
+                                                <div class="topic-author">
+                                                    <div class="author-avatar" id="authorAvatar">
+                                                        <!-- Avatar será carregado via JavaScript -->
+                                                    </div>
+                                                    <div class="author-info">
+                                                        <div class="author-name" id="authorName">Autor</div>
+                                                        <div class="author-role" id="authorRole">Membro</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Conteúdo do Tópico -->
+                                            <div class="topic-content" id="topicContentText">
+                                                <p>Carregando conteúdo do tópico...</p>
+                                            </div>
+
+                                            <!-- Ações do Tópico -->
+                                            <div class="topic-actions">
+                                                <button class="btn btn-secondary" onclick="window.history.back()">
+                                                    <i class="fas fa-arrow-left"></i>
+                                                    Voltar ao Fórum
+                                                </button>
+                                                <button class="btn btn-primary" onclick="scrollToReply()">
+                                                    <i class="fas fa-reply"></i>
+                                                    Responder
+                                                </button>
+                                            </div>
+
+                                            <!-- Seção de Respostas -->
+                                            <div class="replies-section">
+                                                <div class="replies-header">
+                                                    <h2>Respostas</h2>
+                                                    <div class="replies-count" id="repliesCount">0 respostas</div>
+                                                </div>
+
+                                                <!-- Formulário de Resposta -->
+                                                <div class="reply-form">
+                                                    <div class="form-group">
+                                                        <label for="replyContent">Sua Resposta</label>
+                                                        <textarea id="replyContent" placeholder="Digite sua resposta aqui..." required
+                                                            minlength="5"></textarea>
+                                                    </div>
+                                                    <div class="form-actions">
+                                                        <button type="button" class="btn btn-secondary" onclick="clearReplyForm()">
+                                                            <i class="fas fa-times"></i>
+                                                            Cancelar
+                                                        </button>
+                                                        <button type="button" class="btn btn-primary" onclick="submitReply()">
+                                                            <i class="fas fa-paper-plane"></i>
+                                                            Enviar Resposta
+                                                        </button>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Lista de Respostas -->
+                                                <div class="replies-list" id="repliesList">
+                                                    <!-- Respostas serão carregadas via JavaScript -->
+                                                    <div class="no-replies" style="text-align: center; padding: 3rem; color: #a0aec0;">
+                                                        <i class="fas fa-comments" style="font-size: 3rem; margin-bottom: 1rem;"></i>
+                                                        <h3>Nenhuma resposta ainda</h3>
+                                                        <p>Seja o primeiro a responder este tópico!</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </main>
+
+                                <footer>
+                                    <div class="container">
+                                        <div class="footer-content">
+                                            <div class="logo">
+                                                <img src="https://i.postimg.cc/rFNdr7FV/logo.png" alt="Age of Empires IV Brasil" class="logo-img">
+                                                    <h2>Age of Empires IV Brasil</h2>
+                                            </div>
+                                            <div class="footer-links">
+                                                <a href="index.html">Início</a>
+                                                <a href="forum.html">Fórum</a>
+                                                <a href="leaderboard.html">Tabela de classificação</a>
+                                                <a href="torneios.html">Torneios</a>
+                                                <a href="about.html">Sobre</a>
+                                            </div>
+                                            <div class="copyright">
+                                                &copy; 2025 - Age of Empires IV Brasil. Dados de aoe4world.com. Este site não possui qualquer
+                                                vínculo com a Microsoft ou a Relic Entertainment.
+                                            </div>
+                                        </div>
+                                    </div>
+                                </footer>
+
+                                <script src="js/discord-login.js"></script>
+                                <script src="js/forum-api.js"></script>
+                                <script src="js/forum-topic.js"></script>
+
+                                <script>
+        // Funções auxiliares
+                                    function scrollToReply() {
+                                        document.getElementById('replyContent').scrollIntoView({
+                                            behavior: 'smooth',
+                                            block: 'center'
+                                        });
+                                    document.getElementById('replyContent').focus();
+        }
+
+                                    function clearReplyForm() {
+                                        document.getElementById('replyContent').value = '';
+        }
+
+                                    function submitReply() {
+            if (window.forumTopicUI) {
+                                        window.forumTopicUI.createReply();
+            }
+        }
+
+                                    // Focar no textarea quando a página carregar
+                                    document.addEventListener('DOMContentLoaded', function () {
+            const urlParams = new URLSearchParams(window.location.search);
+                                    if (urlParams.get('focus') === 'reply') {
+                                        setTimeout(scrollToReply, 500);
+            }
+        });
+                                </script>
+
+                                <script>
+        // GERENCIADOR PADRONIZADO DO HEADER
+        document.addEventListener('DOMContentLoaded', () => {
+            const userInfo = document.getElementById('userInfo');
+                                    const loginContainer = document.getElementById('loginContainer');
+                                    const loginBtn = document.getElementById('loginBtn');
+                                    const logoutBtn = document.getElementById('logoutBtn');
+                                    const noAuthMessage = document.getElementById('noAuthMessage');
+                                    const content = document.getElementById('topicContent');
+
+                                    function renderHeader() {
+                                        // Tenta obter usuário de várias fontes
+                                        let user = null;
+                                    let isAdmin = false;
+
+                                    if (window.discordAuth && typeof window.discordAuth.getCurrentUser === 'function') {
+                                        user = window.discordAuth.getCurrentUser();
+                } else if (window.forumAPI && window.forumAPI.currentUser) {
+                                        user = window.forumAPI.currentUser;
+                } else {
+                    // Fallback: verifica localStorage
+                    try {
+                        const userData = localStorage.getItem('discord_user');
+                                    user = userData ? JSON.parse(userData) : null;
+                    } catch (e) {
+                                        user = null;
                     }
                 }
-            `;
-            document.head.appendChild(styles);
-        }
-    }
 
-    async loadReplies() {
-        try {
-            // ✅ CORREÇÃO: Usar método assíncrono do PostgreSQL
-            const replies = await this.api.getReplies(this.currentTopicId);
-            const repliesList = document.getElementById('repliesList');
-            const repliesCount = document.getElementById('repliesCount');
-            const replyForm = document.querySelector('.reply-form');
+                                    // Verifica se é admin
+                                    if (user && user.username === 'BRO.WESLAO') {
+                                        isAdmin = true;
+                }
 
-            // Mostrar/ocultar formulário de resposta baseado no status de bloqueio
-            if (replyForm && this.currentTopic) {
-                replyForm.style.display = this.currentTopic.isLocked ? 'none' : 'block';
+                                    if (user) {
+                    // USUÁRIO LOGADO
+                    if (userInfo) {
+                                        userInfo.style.display = 'flex';
+                                    const avatar = user.avatar
+                                    ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.webp?size=64`
+                                    : `https://cdn.discordapp.com/embed/avatars/${user.discriminator % 5}.png`;
 
-                if (this.currentTopic.isLocked) {
-                    const lockedMessage = document.createElement('div');
-                    lockedMessage.className = 'locked-message';
-                    lockedMessage.style.cssText = `
-                        background: var(--card-bg);
-                        border: 1px solid var(--border-color);
-                        border-radius: 8px;
-                        padding: 1rem;
-                        text-align: center;
-                        color: #a0aec0;
-                        margin-bottom: 1rem;
-                    `;
-                    lockedMessage.innerHTML = `
-                        <i class="fas fa-lock" style="font-size: 1.5rem; margin-bottom: 0.5rem;"></i>
-                        <p>Este tópico está bloqueado. Não é possível responder.</p>
-                    `;
-                    replyForm.parentNode.insertBefore(lockedMessage, replyForm);
+                                    userInfo.innerHTML = `
+                                    <div class="user-avatar"><img src="${avatar}" alt="${user.username}"></div>
+                                    <div class="user-name">${user.global_name || user.username}</div>
+                                    ${isAdmin ? '<span class="admin-badge">ADMIN</span>' : ''}
+                                    `;
+                    }
+                                    if (loginContainer) loginContainer.style.display = 'none';
+                                    if (logoutBtn) logoutBtn.style.display = 'flex';
+                                    if (noAuthMessage) noAuthMessage.style.display = 'none';
+                                    if (content) content.style.display = '';
+                } else {
+                    // USUÁRIO NÃO LOGADO
+                    if (userInfo) userInfo.style.display = 'none';
+                                    if (loginContainer) loginContainer.style.display = 'flex';
+                                    if (logoutBtn) logoutBtn.style.display = 'none';
+                                    if (noAuthMessage) noAuthMessage.style.display = '';
+                                    if (content) content.style.display = 'none';
                 }
             }
 
-            // Atualizar contador
-            repliesCount.textContent = `${replies.length} ${replies.length === 1 ? 'resposta' : 'respostas'}`;
-
-            if (replies.length === 0) {
-                repliesList.innerHTML = `
-                    <div class="no-replies" style="text-align: center; padding: 3rem; color: #a0aec0;">
-                        <i class="fas fa-comments" style="font-size: 3rem; margin-bottom: 1rem;"></i>
-                        <h3>Nenhuma resposta ainda</h3>
-                        <p>Seja o primeiro a responder este tópico!</p>
-                    </div>
-                `;
-                return;
+                                    // Event listeners
+                                    if (loginBtn) {
+                                        loginBtn.addEventListener('click', (e) => {
+                                            e.preventDefault();
+                                            if (window.discordAuth && typeof window.discordAuth.login === 'function') {
+                                                window.discordAuth.login();
+                                            } else {
+                                                window.location.href = 'forum-auth.html';
+                                            }
+                                        });
             }
 
-            const repliesHTML = replies.map(reply => `
-                <div class="reply-item" id="reply-${reply.id}">
-                    <div class="reply-header">
-                        <div class="reply-author">
-                            <div class="reply-avatar">
-                                ${reply.authorAvatar ?
-                    `<img src="https://cdn.discordapp.com/avatars/${reply.authorId}/${reply.authorAvatar}.webp?size=40" 
-                                          alt="${reply.author}"
-                                          onerror="this.src='https://cdn.discordapp.com/embed/avatars/${reply.authorId % 5}.png'">` :
-                    `<span>${reply.author.charAt(0)}</span>`
-                }
-                            </div>
-                            <div class="reply-author-info">
-                                <div class="reply-author-name">
-                                    ${reply.author}
-                                    ${this.api.admins.includes(reply.authorId) ? '<span class="admin-badge">ADMIN</span>' : ''}
-                                </div>
-                                <div class="reply-date">${this.formatDate(reply.createdAt)}</div>
-                            </div>
-                        </div>
-                        ${this.api.isAdmin ? `
-                            <div class="reply-mod-actions">
-                                <button class="mod-action" onclick="forumTopicUI.deleteReply(${reply.id})" title="Deletar Resposta">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </div>
-                        ` : ''}
-                    </div>
-                    <div class="reply-content">
-                        ${this.formatContent(reply.content)}
-                        ${reply.lastEditedBy ? `
-                            <div class="edit-info">
-                                Editado por ${reply.lastEditedBy} em ${this.formatDate(reply.lastEditedAt)}
-                            </div>
-                        ` : ''}
-                    </div>
-                    <div class="reply-actions">
-                        <button class="reply-action" onclick="forumTopicUI.likeReply(${reply.id})">
-                            <i class="fas fa-thumbs-up"></i>
-                            Curtir
-                        </button>
-                        <button class="reply-action" onclick="forumTopicUI.quoteReply(${reply.id})">
-                            <i class="fas fa-quote-left"></i>
-                            Citar
-                        </button>
-                    </div>
-                </div>
-            `).join('');
-
-            repliesList.innerHTML = repliesHTML;
-
-        } catch (error) {
-            console.error('Erro ao carregar respostas:', error);
-            const repliesList = document.getElementById('repliesList');
-            repliesList.innerHTML = `
-                <div class="no-replies" style="text-align: center; padding: 3rem; color: #e53e3e;">
-                    <i class="fas fa-exclamation-triangle" style="font-size: 3rem; margin-bottom: 1rem;"></i>
-                    <h3>Erro ao carregar respostas</h3>
-                    <p>Tente recarregar a página</p>
-                </div>
-            `;
-        }
-    }
-
-    async createReply() {
-        if (!this.api.currentUser) {
-            this.showNotification('Faça login para responder.', 'error');
-            this.redirectToLogin();
-            return;
-        }
-
-        if (this.currentTopic && this.currentTopic.isLocked) {
-            this.showNotification('Este tópico está bloqueado. Não é possível responder.', 'error');
-            return;
-        }
-
-        const content = document.getElementById('replyContent').value.trim();
-
-        if (!content) {
-            this.showNotification('Digite uma resposta.', 'error');
-            return;
-        }
-
-        if (content.length < 5) {
-            this.showNotification('A resposta deve ter pelo menos 5 caracteres.', 'error');
-            return;
-        }
-
-        try {
-            const replyData = {
-                topicId: parseInt(this.currentTopicId),
-                content: content
-            };
-
-            // ✅ CORREÇÃO: Usar método assíncrono do PostgreSQL
-            await this.api.createReply(replyData);
-
-            // Recarregar respostas
-            await this.loadReplies();
-
-            // Limpar formulário
-            document.getElementById('replyContent').value = '';
-
-            // Mostrar sucesso
-            this.showNotification('Resposta enviada com sucesso!', 'success');
-
-            // Scroll para o topo das respostas
-            setTimeout(() => {
-                const repliesSection = document.querySelector('.replies-section');
-                if (repliesSection) {
-                    repliesSection.scrollIntoView({ behavior: 'smooth' });
-                }
-            }, 500);
-
-        } catch (error) {
-            console.error('Erro ao criar resposta:', error);
-            this.showNotification(error.message, 'error');
-        }
-    }
-
-    // 🔧 MÉTODOS DE MODERAÇÃO
-
-    async deleteTopic(topicId) {
-        if (!confirm('Tem certeza que deseja deletar este tópico? Esta ação não pode ser desfeita.')) {
-            return;
-        }
-
-        try {
-            await this.api.deleteTopic(topicId);
-            this.showNotification('Tópico deletado com sucesso!', 'success');
-
-            // Redirecionar para o fórum após 2 segundos
-            setTimeout(() => {
-                window.location.href = 'forum.html';
-            }, 2000);
-
-        } catch (error) {
-            console.error('Erro ao deletar tópico:', error);
-            this.showNotification(error.message, 'error');
-        }
-    }
-
-    async deleteReply(replyId) {
-        if (!confirm('Tem certeza que deseja deletar esta resposta?')) {
-            return;
-        }
-
-        try {
-            await this.api.deleteReply(replyId);
-            this.showNotification('Resposta deletada com sucesso!', 'success');
-            await this.loadReplies(); // Recarregar a lista de respostas
-
-        } catch (error) {
-            console.error('Erro ao deletar resposta:', error);
-            this.showNotification(error.message, 'error');
-        }
-    }
-
-    async togglePinTopic(topicId) {
-        try {
-            const topic = await this.api.togglePinTopic(topicId);
-            this.showNotification(`Tópico ${topic.isPinned ? 'fixado' : 'desfixado'} com sucesso!`, 'success');
-            await this.loadTopic(); // Recarregar o tópico para atualizar a interface
-
-        } catch (error) {
-            console.error('Erro ao fixar/desfixar tópico:', error);
-            this.showNotification(error.message, 'error');
-        }
-    }
-
-    async toggleLockTopic(topicId) {
-        try {
-            const topic = await this.api.toggleLockTopic(topicId);
-            this.showNotification(`Tópico ${topic.isLocked ? 'bloqueado' : 'desbloqueado'} com sucesso!`, 'success');
-            await this.loadTopic(); // Recarregar o tópico para atualizar a interface
-            await this.loadReplies(); // Recarregar respostas para mostrar/ocultar formulário
-
-        } catch (error) {
-            console.error('Erro ao bloquear/desbloquear tópico:', error);
-            this.showNotification(error.message, 'error');
-        }
-    }
-
-    likeReply(replyId) {
-        if (!this.api.currentUser) {
-            this.showNotification('Faça login para curtir respostas.', 'error');
-            return;
-        }
-        this.showNotification('Funcionalidade de curtir em desenvolvimento!', 'info');
-    }
-
-    quoteReply(replyId) {
-        if (!this.api.currentUser) {
-            this.showNotification('Faça login para citar respostas.', 'error');
-            return;
-        }
-
-        // ✅ CORREÇÃO: Buscar reply do PostgreSQL
-        this.api.getReplies(this.currentTopicId).then(replies => {
-            const reply = replies.find(r => r.id == replyId);
-            if (reply) {
-                const quoteText = `> ${reply.content}\n\n`;
-                const textarea = document.getElementById('replyContent');
-                textarea.value = quoteText + textarea.value;
-                textarea.focus();
-                this.showNotification('Resposta citada!', 'success');
+                                    if (logoutBtn) {
+                                        logoutBtn.addEventListener('click', (e) => {
+                                            e.preventDefault();
+                                            if (window.discordAuth && typeof window.discordAuth.logout === 'function') {
+                                                window.discordAuth.logout();
+                                            } else {
+                                                localStorage.removeItem('discord_user');
+                                                localStorage.removeItem('discord_access_token');
+                                                setTimeout(() => location.reload(), 300);
+                                            }
+                                        });
             }
+
+                                    // Inicializar
+                                    renderHeader();
+                                    setTimeout(renderHeader, 500);
+                                    setTimeout(renderHeader, 1000);
         });
-    }
+                                </script>
+                            </body>
 
-    formatContent(content) {
-        // Simples formatação de texto
-        return content
-            .replace(/\n/g, '<br>')
-            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-            .replace(/\*(.*?)\*/g, '<em>$1</em>')
-            .replace(/`(.*?)`/g, '<code>$1</code>');
-    }
-
-    formatDate(dateString) {
-        const date = new Date(dateString);
-        const now = new Date();
-        const diffMs = now - date;
-        const diffMins = Math.floor(diffMs / 60000);
-        const diffHours = Math.floor(diffMs / 3600000);
-        const diffDays = Math.floor(diffMs / 86400000);
-
-        if (diffMins < 1) return 'Agora mesmo';
-        if (diffMins < 60) return `${diffMins} min atrás`;
-        if (diffHours < 24) return `${diffHours} h atrás`;
-        if (diffDays < 7) return `${diffDays} dias atrás`;
-
-        return date.toLocaleDateString('pt-BR', {
-            day: '2-digit',
-            month: '2-digit',
-            year: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-        });
-    }
-
-    showNotification(message, type = 'info') {
-        const notification = document.createElement('div');
-        notification.className = `notification ${type === 'error' ? 'notification-error' : type === 'warning' ? 'notification-warning' : ''}`;
-
-        const icon = type === 'success' ? 'check-circle' :
-            type === 'error' ? 'exclamation-triangle' : 'info-circle';
-
-        notification.innerHTML = `
-            <div style="display: flex; align-items: center; gap: 0.5rem;">
-                <i class="fas fa-${icon}"></i>
-                <span>${message}</span>
-            </div>
-        `;
-
-        notification.style.cssText = `
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: ${type === 'success' ? '#48bb78' :
-                type === 'error' ? '#e53e3e' : '#3e8ce5'};
-            color: white;
-            padding: 1rem 1.5rem;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-            z-index: 1001;
-            animation: slideInRight 0.3s ease;
-            max-width: 400px;
-            border-left: 4px solid ${type === 'success' ? '#38a169' :
-                type === 'error' ? '#c53030' : '#3182ce'};
-        `;
-
-        document.body.appendChild(notification);
-
-        setTimeout(() => {
-            notification.style.animation = 'slideOutRight 0.3s ease';
-            setTimeout(() => {
-                if (notification.parentNode) {
-                    notification.parentNode.removeChild(notification);
-                }
-            }, 300);
-        }, 5000);
-    }
-
-    showError(message) {
-        const topicContent = document.getElementById('topicContent');
-        if (topicContent) {
-            topicContent.innerHTML = `
-                <div class="no-auth-message">
-                    <i class="fas fa-exclamation-triangle"></i>
-                    <h3>Erro</h3>
-                    <p>${message}</p>
-                    <button class="login-btn" onclick="window.location.href = 'forum.html'">
-                        <i class="fas fa-arrow-left"></i>
-                        Voltar ao Fórum
-                    </button>
-                </div>
-            `;
-        }
-    }
-}
-
-// Inicializar quando DOM estiver pronto
-document.addEventListener('DOMContentLoaded', () => {
-    console.log('🚀 DOM carregado, inicializando ForumTopicUI...');
-    window.forumTopicUI = new ForumTopicUI();
-});
+                        </html>

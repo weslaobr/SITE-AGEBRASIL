@@ -4,6 +4,7 @@
     padding: 3rem 0;
     margin: 2rem 0;
     border-radius: 12px;
+    text-align: center;
     border: 1px solid rgba(229, 62, 62, 0.2);
 }
 
@@ -811,4 +812,109 @@
     .action-btn-compact {
         flex: 1;
     }
+}
+
+/* 🛡️ CSS PARA FALLBACK E ESTADOS OFFLINE */
+.creator-card-compact.fallback {
+    opacity: 0.8;
+    border-color: #a0aec0;
+    background: rgba(160, 174, 192, 0.05);
+}
+
+.fallback-badge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background: #ed8936;
+    color: white;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    border: 2px solid var(--card-bg);
+}
+
+.specialty-tags-compact {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem;
+    margin: 0.5rem 0;
+}
+
+.tag-compact {
+    background: rgba(66, 153, 225, 0.1);
+    color: #4299e1;
+    padding: 0.2rem 0.5rem;
+    border-radius: 10px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.youtube-stats-compact.unavailable {
+    color: #a0aec0;
+    font-style: italic;
+    font-size: 0.7rem;
+}
+
+/* Melhorar visualização dos dados */
+.creator-description-compact {
+    color: #a0aec0;
+    font-size: 0.8rem;
+    line-height: 1.3;
+    margin-bottom: 0.5rem;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.stats-compact {
+    font-size: 0.75rem;
+}
+
+/* Estados de loading melhorados */
+.loading,
+.no-live-streams,
+.no-creators {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 2rem;
+    color: #a0aec0;
+}
+
+.loading i {
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+    display: block;
+}
+
+/* Mensagem de erro de API */
+.api-error {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 2rem;
+    background: rgba(229, 62, 62, 0.1);
+    border: 1px solid rgba(229, 62, 62, 0.3);
+    border-radius: 8px;
+    color: #fc8181;
+}
+
+.api-error i {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+    display: block;
+}
+
+.api-error h3 {
+    margin: 0 0 0.5rem 0;
+    color: #fc8181;
+}
+
+.api-error p {
+    margin: 0;
+    font-size: 0.9rem;
 }

@@ -1,189 +1,130 @@
-// streamers-api.js - VERSÃO OTIMIZADA
+// streamers-api.js - VERSÃO COM FALLBACKS
 class StreamersManager {
     constructor() {
         this.creators = [];
         this.twitchAccessToken = null;
         this.currentFilter = 'all';
-        this.cacheDuration = 5 * 60 * 1000; // 5 minutos de cache
+        this.cacheDuration = 10 * 60 * 1000; // 10 minutos
+        this.useFallback = false;
     }
 
     async init() {
-        console.time('⏱️ Inicialização completa');
+        console.log('🚀 Iniciando StreamersManager...');
 
-        // Carregar imediatamente com dados locais
-        this.loadFromCache();
+        // Mostrar UI instantaneamente
+        this.renderSkeletonUI();
 
-        // Buscar token Twitch em paralelo com renderização
-        Promise.all([
-            this.getTwitchAccessToken(),
-            this.renderSkeletonUI() // UI imediata
-        ]).then(async () => {
+        try {
+            await this.getTwitchAccessToken();
             await this.loadAllCreatorsFast();
-            this.renderAllViews();
-            this.setupEventListeners();
-        });
-
-        console.timeEnd('⏱️ Inicialização completa');
-    }
-
-    // UI esqueleto para carregamento instantâneo
-    renderSkeletonUI() {
-        const liveContainer = document.getElementById('live-streams-container');
-        const creatorsGrid = document.getElementById('all-creators-grid');
-
-        // Skeleton para streams ao vivo
-        liveContainer.innerHTML = `
-            <div class="skeleton-streams">
-                ${Array(3).fill().map(() => `
-                    <div class="skeleton-stream-card">
-                        <div class="skeleton-thumbnail"></div>
-                        <div class="skeleton-content">
-                            <div class="skeleton-avatar"></div>
-                            <div class="skeleton-text">
-                                <div class="skeleton-line short"></div>
-                                <div class="skeleton-line medium"></div>
-                            </div>
-                        </div>
-                    </div>
-                `).join('')}
-            </div>
-        `;
-
-        // Skeleton para criadores
-        creatorsGrid.innerHTML = `
-            <div class="skeleton-creators">
-                ${Array(8).fill().map(() => `
-                    <div class="skeleton-creator-card">
-                        <div class="skeleton-avatar-large"></div>
-                        <div class="skeleton-info">
-                            <div class="skeleton-line long"></div>
-                            <div class="skeleton-line short"></div>
-                            <div class="skeleton-tags">
-                                <div class="skeleton-tag"></div>
-                                <div class="skeleton-tag"></div>
-                            </div>
-                        </div>
-                    </div>
-                `).join('')}
-            </div>
-        `;
-    }
-
-    // Sistema de Cache Melhorado
-    saveToCache(key, data) {
-        try {
-            const cacheData = {
-                data: data,
-                expiry: Date.now() + this.cacheDuration,
-                timestamp: new Date().toISOString()
-            };
-            localStorage.setItem(`aoe4_${key}`, JSON.stringify(cacheData));
         } catch (error) {
-            console.log('⚠️ Cache desabilitado (localStorage cheio)');
+            console.error('❌ Erro crítico, usando fallback:', error);
+            this.useFallback = true;
+            await this.loadFallbackData();
         }
+
+        this.renderAllViews();
+        this.setupEventListeners();
     }
 
-    getFromCache(key) {
-        try {
-            const cached = localStorage.getItem(`aoe4_${key}`);
-            if (!cached) return null;
+    // Sistema de Fallback para quando APIs falham
+    async loadFallbackData() {
+        console.log('🛡️ Usando dados fallback...');
 
-            const cacheData = JSON.parse(cached);
-            if (Date.now() > cacheData.expiry) {
-                localStorage.removeItem(`aoe4_${key}`);
-                return null;
+        this.creators = CREATORS_CONFIG.map(creator => ({
+            ...creator,
+            avatar: this.getFallbackAvatar(creator.name),
+            isLive: false, // Não sabemos online
+            youtubeData: creator.platforms.youtube ? {
+                statistics: {
+                    subscriberCount: 'N/A',
+                    videoCount: 'N/A'
+                }
+            } : null,
+            liveViewers: 0,
+            liveTitle: 'Age of Empires IV',
+            lastStream: 'Indisponível'
+        }));
+
+        this.saveToCache('creators_fallback', this.creators);
+    }
+
+    getFallbackAvatar(name) {
+        const avatars = {
+            'Gks': 'https://static-cdn.jtvnw.net/jtv_user_pictures/asmongold-profile_image-f7ddcbd0332f5d28-300x300.png',
+            'CaioFora': 'https://static-cdn.jtvnw.net/jtv_user_pictures/xqcow-profile_image-9298dca608632101-300x300.jpeg',
+            'VicentiN': 'https://static-cdn.jtvnw.net/jtv_user_pictures/summit1g-profile_image-7e7d2f64e08cae0a-300x300.png',
+            'Utinowns': 'https://static-cdn.jtvnw.net/jtv_user_pictures/tfue-profile_image-7e7d2f64e08cae0a-300x300.png',
+            'EricBR': 'https://static-cdn.jtvnw.net/jtv_user_pictures/nickmercs-profile_image-5e7d2f64e08cae0a-300x300.png',
+            'Vitruvius TV': 'https://static-cdn.jtvnw.net/jtv_user_pictures/timthetatman-profile_image-5e7d2f64e08cae0a-300x300.png',
+            'Nyxel TV': 'https://static-cdn.jtvnw.net/jtv_user_pictures/lirik-profile_image-5e7d2f64e08cae0a-300x300.png',
+            'LegoWzz': 'https://static-cdn.jtvnw.net/jtv_user_pictures/shodan-profile_image-5e7d2f64e08cae0a-300x300.png'
+        };
+        return avatars[name] || 'https://static-cdn.jtvnw.net/jtv_user_pictures/unknown-user-300x300.png';
+    }
+
+    // YouTube com Proxy/fallback
+    async fetchAllYouTubeData() {
+        // Tentar cache primeiro
+        const cached = this.getFromCache('youtube_data');
+        if (cached) return cached;
+
+        const youtubeChannels = CREATORS_CONFIG
+            .filter(creator => creator.platforms.youtube)
+            .map(creator => creator.platforms.youtube.id);
+
+        if (youtubeChannels.length === 0) return [];
+
+        try {
+            console.log('📺 Buscando dados YouTube...');
+
+            // Tentar método direto primeiro
+            const response = await fetch(
+                `https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics&id=${youtubeChannels.join(',')}&key=${CONFIG.YOUTUBE.API_KEY}`,
+                {
+                    method: 'GET',
+                    mode: 'cors',
+                    headers: {
+                        'Accept': 'application/json',
+                    }
+                }
+            );
+
+            if (!response.ok) {
+                throw new Error(`YouTube API error: ${response.status}`);
             }
 
-            console.log(`📦 Cache: ${key} (${new Date(cacheData.timestamp).toLocaleTimeString()})`);
-            return cacheData.data;
-        } catch (error) {
-            return null;
-        }
-    }
-
-    loadFromCache() {
-        const cachedCreators = this.getFromCache('creators');
-        if (cachedCreators) {
-            this.creators = cachedCreators;
-            this.renderAllViews();
-        }
-    }
-
-    // Autenticação Twitch Otimizada
-    async getTwitchAccessToken() {
-        const cachedToken = this.getFromCache('twitch_token');
-        if (cachedToken) {
-            this.twitchAccessToken = cachedToken;
-            return;
-        }
-
-        try {
-            const response = await fetch('https://id.twitch.tv/oauth2/token', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                body: `client_id=${CONFIG.TWITCH.CLIENT_ID}&client_secret=${CONFIG.TWITCH.CLIENT_SECRET}&grant_type=client_credentials`
-            });
-
             const data = await response.json();
-            this.twitchAccessToken = data.access_token;
-            this.saveToCache('twitch_token', data.access_token);
+            const result = data.items || [];
+
+            this.saveToCache('youtube_data', result);
+            return result;
+
         } catch (error) {
-            console.error('❌ Erro Twitch auth:', error);
+            console.warn('⚠️ YouTube API falhou, usando fallback:', error);
+
+            // Criar dados fallback para YouTube
+            return youtubeChannels.map(channelId => ({
+                id: channelId,
+                statistics: {
+                    subscriberCount: 'N/A',
+                    videoCount: 'N/A'
+                },
+                snippet: {
+                    title: 'Canal YouTube',
+                    thumbnails: {
+                        default: { url: this.getFallbackAvatar('YouTube') }
+                    }
+                }
+            }));
         }
     }
 
-    // Carregamento RÁPIDO em paralelo
-    async loadAllCreatorsFast() {
-        console.time('🚀 Carregamento rápido');
-
-        try {
-            // Buscar TODOS os dados em paralelo
-            const [twitchData, youtubeData] = await Promise.all([
-                this.fetchAllTwitchData(),
-                this.fetchAllYouTubeData()
-            ]);
-
-            // Combinar dados (super rápido)
-            this.creators = CREATORS_CONFIG.map(creator => {
-                const twitchUsername = creator.platforms.twitch;
-                const youtubeChannel = creator.platforms.youtube;
-
-                const twitchStream = twitchData.streams.find(s =>
-                    s.user_login.toLowerCase() === twitchUsername?.toLowerCase()
-                );
-                const twitchUser = twitchData.users.find(u =>
-                    u.login.toLowerCase() === twitchUsername?.toLowerCase()
-                );
-                const youtubeChannelData = youtubeData.find(y =>
-                    y.id === youtubeChannel?.id
-                );
-
-                return {
-                    ...creator,
-                    avatar: twitchUser?.profile_image_url || 'https://static-cdn.jtvnw.net/jtv_user_pictures/unknown-user-300x300.png',
-                    isLive: !!twitchStream,
-                    twitchData: twitchUser ? { profile: twitchUser, stream: twitchStream } : null,
-                    youtubeData: youtubeChannelData || null,
-                    liveViewers: twitchStream?.viewer_count || 0,
-                    liveTitle: twitchStream?.title || 'Age of Empires IV',
-                    lastStream: this.formatRelativeTime(twitchStream?.started_at)
-                };
-            });
-
-            // Salvar cache
-            this.saveToCache('creators', this.creators);
-            console.timeEnd('🚀 Carregamento rápido');
-
-        } catch (error) {
-            console.error('💥 Erro no carregamento rápido:', error);
-        }
-    }
-
-    // Buscar TODOS os dados Twitch de uma vez
+    // Twitch com fallback
     async fetchAllTwitchData() {
-        if (!this.twitchAccessToken) return { streams: [], users: [] };
+        if (!this.twitchAccessToken) {
+            return { streams: [], users: [] };
+        }
 
         const twitchUsernames = CREATORS_CONFIG
             .filter(creator => creator.platforms.twitch)
@@ -192,7 +133,8 @@ class StreamersManager {
         if (twitchUsernames.length === 0) return { streams: [], users: [] };
 
         try {
-            // Buscar streams e usuários em paralelo
+            console.log('🎮 Buscando dados Twitch...');
+
             const [streamsResponse, usersResponse] = await Promise.all([
                 fetch(`https://api.twitch.tv/helix/streams?${twitchUsernames.map(u => `user_login=${u}`).join('&')}&first=100`, {
                     headers: {
@@ -208,6 +150,10 @@ class StreamersManager {
                 })
             ]);
 
+            if (!streamsResponse.ok || !usersResponse.ok) {
+                throw new Error('Twitch API error');
+            }
+
             const [streamsData, usersData] = await Promise.all([
                 streamsResponse.json(),
                 usersResponse.json()
@@ -219,125 +165,50 @@ class StreamersManager {
             };
 
         } catch (error) {
-            console.error('❌ Erro ao buscar dados Twitch:', error);
-            return { streams: [], users: [] };
+            console.warn('⚠️ Twitch API falhou, usando fallback:', error);
+
+            // Fallback para Twitch
+            return {
+                streams: [],
+                users: twitchUsernames.map(username => ({
+                    login: username,
+                    profile_image_url: this.getFallbackAvatar(username),
+                    display_name: username
+                }))
+            };
         }
     }
 
-    // Buscar TODOS os dados YouTube de uma vez
-    async fetchAllYouTubeData() {
-        const youtubeChannels = CREATORS_CONFIG
-            .filter(creator => creator.platforms.youtube)
-            .map(creator => creator.platforms.youtube.id);
-
-        if (youtubeChannels.length === 0) return [];
-
-        try {
-            const response = await fetch(
-                `https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics&id=${youtubeChannels.join(',')}&key=${CONFIG.YOUTUBE.API_KEY}`
-            );
-
-            const data = await response.json();
-            return data.items || [];
-
-        } catch (error) {
-            console.error('❌ Erro ao buscar dados YouTube:', error);
-            return [];
-        }
-    }
-
-    // Renderização otimizada
-    renderAllViews() {
-        this.renderLiveStreams();
-        this.renderAllCreators();
-    }
-
-    renderLiveStreams() {
-        const container = document.getElementById('live-streams-container');
-        const liveStreams = this.creators.filter(creator => creator.isLive);
-
-        if (liveStreams.length === 0) {
-            container.innerHTML = `
-                <div class="no-live-streams">
-                    <i class="fas fa-tv"></i>
-                    <h3>Nenhuma transmissão ao vivo</h3>
-                    <p>Os criadores podem estar offline agora</p>
-                </div>
-            `;
-            return;
-        }
-
-        container.innerHTML = liveStreams.map(creator => `
-            <div class="live-stream-card">
-                <div class="live-badge">
-                    <span class="pulse"></span>
-                    AO VIVO
-                </div>
-                <div class="stream-preview" onclick="window.open('https://twitch.tv/${creator.platforms.twitch}', '_blank')">
-                    <img src="${creator.avatar}" alt="${creator.name}" 
-                         loading="lazy"
-                         onerror="this.src='https://static-cdn.jtvnw.net/jtv_user_pictures/unknown-user-300x300.png'">
-                    <div class="viewer-count">👁️ ${this.formatNumber(creator.liveViewers)}</div>
-                </div>
-                <div class="stream-info">
-                    <div class="streamer-info">
-                        <div class="streamer-avatar">
-                            <img src="${creator.avatar}" alt="${creator.name}"
-                                 loading="lazy"
-                                 onerror="this.src='https://static-cdn.jtvnw.net/jtv_user_pictures/unknown-user-300x300.png'">
-                        </div>
-                        <div class="streamer-details">
-                            <h3>${creator.name}</h3>
-                            <p>${creator.platforms.twitch ? `@${creator.platforms.twitch}` : creator.platforms.youtube?.handle || ''}</p>
-                        </div>
-                    </div>
-                    <div class="stream-title">${creator.liveTitle}</div>
-                    <a href="https://twitch.tv/${creator.platforms.twitch}" target="_blank" class="watch-live-btn">
-                        <i class="fas fa-play"></i> Assistir
-                    </a>
-                </div>
-            </div>
-        `).join('');
-    }
-
-    renderAllCreators() {
-        const grid = document.getElementById('all-creators-grid');
-        let filteredCreators = this.creators;
-
-        switch (this.currentFilter) {
-            case 'twitch': filteredCreators = this.creators.filter(c => c.platforms.twitch); break;
-            case 'youtube': filteredCreators = this.creators.filter(c => c.platforms.youtube); break;
-            case 'live': filteredCreators = this.creators.filter(c => c.isLive); break;
-        }
-
-        grid.innerHTML = filteredCreators.map(creator => this.createCompactCard(creator)).join('');
-    }
-
-    // Card COMPACTO com YouTube + Twitch (como você gostou)
+    // Renderização com tratamento de erros
     createCompactCard(creator) {
-        const isLive = creator.isLive;
+        const isLive = creator.isLive && !this.useFallback;
         const hasYouTube = !!creator.platforms.youtube;
         const hasTwitch = !!creator.platforms.twitch;
 
-        const subscribers = creator.youtubeData?.statistics?.subscriberCount || 0;
-        const videos = creator.youtubeData?.statistics?.videoCount || 0;
+        // Dados YouTube com fallback
+        const subscribers = creator.youtubeData?.statistics?.subscriberCount;
+        const videos = creator.youtubeData?.statistics?.videoCount;
+
+        const showYouTubeStats = hasYouTube && subscribers && videos && subscribers !== 'N/A';
 
         return `
-            <div class="creator-card-compact ${isLive ? 'live' : ''}">
+            <div class="creator-card-compact ${isLive ? 'live' : ''} ${this.useFallback ? 'fallback' : ''}">
                 <div class="creator-avatar-compact">
                     <img src="${creator.avatar}" alt="${creator.name}" 
                          loading="lazy"
                          onerror="this.src='https://static-cdn.jtvnw.net/jtv_user_pictures/unknown-user-300x300.png'">
                     ${isLive ? '<div class="live-indicator"></div>' : ''}
+                    ${this.useFallback ? '<div class="fallback-badge">⚠️</div>' : ''}
                 </div>
                 
                 <div class="creator-info-compact">
                     <h4 class="creator-name-compact">${creator.name}</h4>
                     <p class="creator-description-compact">${creator.description}</p>
                     
-                    <div class="platforms-compact">
-                        ${hasTwitch ? `<span class="platform-badge twitch">Twitch</span>` : ''}
-                        ${hasYouTube ? `<span class="platform-badge youtube">YouTube</span>` : ''}
+                    <div class="specialty-tags-compact">
+                        ${creator.specialty.map(spec =>
+            `<span class="tag-compact">${spec}</span>`
+        ).join('')}
                     </div>
 
                     <div class="stats-compact">
@@ -348,10 +219,14 @@ class StreamersManager {
                             </div>
                         ` : ''}
                         
-                        ${hasYouTube ? `
+                        ${showYouTubeStats ? `
                             <div class="youtube-stats-compact">
                                 <span>👥 ${this.formatNumber(subscribers)}</span>
                                 <span>🎬 ${this.formatNumber(videos)}</span>
+                            </div>
+                        ` : hasYouTube ? `
+                            <div class="youtube-stats-compact unavailable">
+                                <span>📺 YouTube conectado</span>
                             </div>
                         ` : ''}
                     </div>

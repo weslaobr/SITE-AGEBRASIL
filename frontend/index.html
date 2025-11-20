@@ -48,7 +48,7 @@
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
             gap: 1.5rem;
-            margin-top: 2rem;
+            margin-top: 1rem;
         }
 
         .player-card {
@@ -136,7 +136,8 @@
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
             gap: 1.5rem;
-            margin-top: 2rem;
+            margin-top: 1rem;
+            margin-bottom: 1rem;
         }
 
         .quick-stat-card {
@@ -206,9 +207,10 @@
 
         .clans-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
             gap: 1.5rem;
-            margin-top: 2rem;
+            margin-top: 1rem;
+            margin-bottom: 1rem;
         }
 
         .clan-card {
@@ -252,6 +254,7 @@
             max-height: 400px;
             overflow-y: auto;
             margin-top: 1rem;
+            margin-bottom: 1rem;
             background: var(--card-bg);
             border-radius: 8px;
             padding: 1rem;
@@ -474,132 +477,133 @@
             </div>
         </div>
     </header>
+    <main class="container">
+        <section class="hero">
+            <div class="container">
+                <h2>Age of Empires IV <span style="color: #ffee00;"> Brasil</span></h2>
+                <p>A plataforma definitiva para acompanhar estatísticas, rankings e histórico de partidas do Age of
+                    Empires
+                    IV em tempo real</p>
 
-    <section class="hero">
-        <div class="container">
-            <h2>Age of Empires IV <span style="color: #ffee00;"> Brasil</span></h2>
-            <p>A plataforma definitiva para acompanhar estatísticas, rankings e histórico de partidas do Age of Empires
-                IV em tempo real</p>
-
-            <div class="hero-stats" id="hero-stats">
-                <div class="hero-stat">
-                    <span class="number">0</span>
-                    <span class="label">Jogadores</span>
-                </div>
-                <div class="hero-stat">
-                    <span class="number">0</span>
-                    <span class="label">Partidas</span>
-                </div>
-                <div class="hero-stat">
-                    <span class="number">0</span>
-                    <span class="label">Clans</span>
-                </div>
-                <div class="hero-stat">
-                    <span class="number">0</span>
-                    <span class="label">Ativos hoje</span>
+                <div class="hero-stats" id="hero-stats">
+                    <div class="hero-stat">
+                        <span class="number">0</span>
+                        <span class="label">Jogadores</span>
+                    </div>
+                    <div class="hero-stat">
+                        <span class="number">0</span>
+                        <span class="label">Partidas</span>
+                    </div>
+                    <div class="hero-stat">
+                        <span class="number">0</span>
+                        <span class="label">Clans</span>
+                    </div>
+                    <div class="hero-stat">
+                        <span class="number">0</span>
+                        <span class="label">Ativos hoje</span>
+                    </div>
                 </div>
             </div>
-        </div>
-    </section>
+        </section>
 
-    <!-- Seção de Streams Ao Vivo Destaque -->
-    <section class="live-streams-highlight">
-        <div class="container">
-            <h2 class="section-title">🎥 <span class="live-pulse">●</span> TRANSMISSÕES AO VIVO</h2>
-            <p class="section-subtitle">Acompanhe os criadores brasileiros de Age of Empires IV em tempo real</p>
+        <!-- Seção de Streams Ao Vivo Destaque -->
+        <section class="live-streams-highlight">
+            <div class="container">
+                <h2 class="section-title">🎥 <span class="live-pulse">●</span> TRANSMISSÕES AO VIVO</h2>
+                <p class="section-subtitle">Acompanhe os criadores brasileiros de Age of Empires IV em tempo real</p>
 
-            <div class="live-streams-container" id="live-streams-container">
+                <div class="live-streams-container" id="live-streams-container">
+                    <div class="loading">
+                        <i class="fas fa-spinner fa-spin"></i> Buscando streams ao vivo...
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Seção de Criadores de Conteúdo (Abaixo) -->
+        <section class="all-creators-section">
+            <div class="container">
+                <div class="creators-header">
+                    <h2 class="section-title">📺 Todos os Criadores</h2>
+                    <div class="view-toggle">
+                        <button class="toggle-btn active" data-view="all">Todos</button>
+                        <button class="toggle-btn" data-view="youtube">YouTube</button>
+                        <button class="toggle-btn" data-view="twitch">Twitch</button>
+                    </div>
+                </div>
+
+                <div class="all-creators-grid" id="all-creators-grid">
+                    <div class="loading">
+                        <i class="fas fa-spinner fa-spin"></i> Carregando criadores...
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- Top Players -->
+        <section class="featured-players">
+            <div class="container">
+                <h2 class="section-title">🏆 Os 5 melhores jogadores - Temporada 12</h2>
+                <div class="players-grid" id="top-players">
+                    <div class="loading">
+                        <i class="fas fa-spinner fa-spin"></i> Carregando top players...
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Estatísticas Rápidas -->
+        <section class="quick-stats">
+            <h2 class="section-title">📈 Estatísticas da Comunidade</h2>
+            <div class="quick-stats-grid" id="community-stats">
                 <div class="loading">
-                    <i class="fas fa-spinner fa-spin"></i> Buscando streams ao vivo...
+                    <i class="fas fa-chart-bar"></i> Carregando estatísticas...
                 </div>
             </div>
-        </div>
-    </section>
+        </section>
 
-    <!-- Seção de Criadores de Conteúdo (Abaixo) -->
-    <section class="all-creators-section">
-        <div class="container">
-            <div class="creators-header">
-                <h2 class="section-title">📺 Todos os Criadores</h2>
-                <div class="view-toggle">
-                    <button class="toggle-btn active" data-view="all">Todos</button>
-                    <button class="toggle-btn" data-view="youtube">YouTube</button>
-                    <button class="toggle-btn" data-view="twitch">Twitch</button>
-                </div>
-            </div>
-
-            <div class="all-creators-grid" id="all-creators-grid">
+        <!-- Clans em Destaque -->
+        <section class="featured-clans">
+            <h2 class="section-title">👑 Clans em Destaque</h2>
+            <div class="clans-grid" id="top-clans">
                 <div class="loading">
-                    <i class="fas fa-spinner fa-spin"></i> Carregando criadores...
+                    <i class="fas fa-users"></i> Carregando clans...
                 </div>
             </div>
-        </div>
-    </section>
+        </section>
 
-
-    <!-- Top Players -->
-    <section class="featured-players">
-        <div class="container">
-            <h2 class="section-title">🏆 Os 5 melhores jogadores - Temporada 12</h2>
-            <div class="players-grid" id="top-players">
+        <!-- Atividade Recente -->
+        <section class="recent-activity">
+            <h2 class="section-title">🔄 Atividade Recente</h2>
+            <div class="activity-feed" id="recent-activity">
                 <div class="loading">
-                    <i class="fas fa-spinner fa-spin"></i> Carregando top players...
+                    <i class="fas fa-sync-alt fa-spin"></i> Carregando atividade...
                 </div>
             </div>
-        </div>
-    </section>
+        </section>
 
-    <!-- Estatísticas Rápidas -->
-    <section class="quick-stats">
-        <h2 class="section-title">📈 Estatísticas da Comunidade</h2>
-        <div class="quick-stats-grid" id="community-stats">
-            <div class="loading">
-                <i class="fas fa-chart-bar"></i> Carregando estatísticas...
+        <!-- Call-to-Action -->
+        <section class="cta-section">
+            <h2 class="section-title">Explorar Mais</h2>
+            <div class="cta-grid">
+                <a href="leaderboard.html" class="cta-card">
+                    <i class="fas fa-trophy"></i>
+                    <h3>Classificação completa</h3>
+                    <p>Classificações ranqueados solo e em equipe</p>
+                </a>
+                <a href="leaderboard.html" class="cta-card">
+                    <i class="fas fa-search"></i>
+                    <h3>Buscar jogadores</h3>
+                    <p>Encontre jogadores específicos e compare estatísticas</p>
+                </a>
+                <a href="leaderboard.html" class="cta-card">
+                    <i class="fas fa-chart-bar"></i>
+                    <h3>Estatísticas avançadas</h3>
+                    <p>Dados detalhados, gráficos e análises</p>
+                </a>
             </div>
-        </div>
-    </section>
-
-    <!-- Clans em Destaque -->
-    <section class="featured-clans">
-        <h2 class="section-title">👑 Clans em Destaque</h2>
-        <div class="clans-grid" id="top-clans">
-            <div class="loading">
-                <i class="fas fa-users"></i> Carregando clans...
-            </div>
-        </div>
-    </section>
-
-    <!-- Atividade Recente -->
-    <section class="recent-activity">
-        <h2 class="section-title">🔄 Atividade Recente</h2>
-        <div class="activity-feed" id="recent-activity">
-            <div class="loading">
-                <i class="fas fa-sync-alt fa-spin"></i> Carregando atividade...
-            </div>
-        </div>
-    </section>
-
-    <!-- Call-to-Action -->
-    <section class="cta-section">
-        <h2 class="section-title">Explorar Mais</h2>
-        <div class="cta-grid">
-            <a href="leaderboard.html" class="cta-card">
-                <i class="fas fa-trophy"></i>
-                <h3>Classificação completa</h3>
-                <p>Classificações ranqueados solo e em equipe</p>
-            </a>
-            <a href="leaderboard.html" class="cta-card">
-                <i class="fas fa-search"></i>
-                <h3>Buscar jogadores</h3>
-                <p>Encontre jogadores específicos e compare estatísticas</p>
-            </a>
-            <a href="leaderboard.html" class="cta-card">
-                <i class="fas fa-chart-bar"></i>
-                <h3>Estatísticas avançadas</h3>
-                <p>Dados detalhados, gráficos e análises</p>
-            </a>
-        </div>
-    </section>
+        </section>
     </main>
 
     <footer>

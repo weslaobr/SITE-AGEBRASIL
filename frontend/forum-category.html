@@ -575,7 +575,8 @@
 <body>
     <header>
         <div class="container">
-            <div class="header-content">
+            <!-- Primeira linha: Logo e Navegação -->
+            <div class="header-top">
                 <div class="logo">
                     <img src="https://i.postimg.cc/rFNdr7FV/logo.png" alt="Age of Empires IV Brasil" class="logo-img">
                     <h1>Age of Empires IV Brasil</h1>
@@ -590,16 +591,30 @@
                         <li><a href="about.html">Sobre</a></li>
                     </ul>
                 </nav>
+            </div>
 
-                <!-- Controles de Autenticação -->
+            <!-- Segunda linha: Botão do Discord -->
+            <div class="header-bottom">
                 <div class="user-actions">
-                    <div id="userInfo" data-auth-only style="display: none;">
-                        <!-- Informações do usuário serão carregadas aqui -->
+                    <!-- Container do usuário logado -->
+                    <div id="userInfo" data-auth-only class="user-info-container" style="display: none;">
+                        <div class="user-avatar">
+                            <!-- Avatar será carregado via JavaScript -->
+                        </div>
+                        <div class="user-name">
+                            <!-- Nome será carregado via JavaScript -->
+                        </div>
                     </div>
-                    <button id="loginBtn" data-no-auth class="login-btn">
-                        <i class="fab fa-discord"></i>
-                        Entrar com Discord
-                    </button>
+
+                    <!-- Container do botão de login (não logado) -->
+                    <div id="loginContainer" data-no-auth class="user-info-container" style="display: none;">
+                        <i class="fab fa-discord" style="color: #5865F2;"></i>
+                        <button id="loginBtn" class="login-btn-header">
+                            Entrar com Discord
+                        </button>
+                    </div>
+
+                    <!-- Botão de logout -->
                     <button id="logoutBtn" data-auth-only style="display: none;" class="logout-btn">
                         <i class="fas fa-sign-out-alt"></i>
                         Sair
@@ -771,6 +786,101 @@
             }
         });
     </script>
+
+    <script>
+        // GERENCIADOR DE AUTENTICAÇÃO PARA forum-category.html
+        document.addEventListener('DOMContentLoaded', () => {
+            const userInfo = document.getElementById('userInfo');
+            const loginContainer = document.getElementById('loginContainer');
+            const loginBtn = document.getElementById('loginBtn');
+            const logoutBtn = document.getElementById('logoutBtn');
+            const noAuthMessage = document.getElementById('noAuthMessage');
+            const categoryContent = document.getElementById('categoryContent');
+
+            function renderAuth() {
+                // Tenta obter usuário de várias fontes
+                let user = null;
+
+                if (window.discordAuth && typeof window.discordAuth.getCurrentUser === 'function') {
+                    user = window.discordAuth.getCurrentUser();
+                } else if (window.forumAPI && window.forumAPI.currentUser) {
+                    user = window.forumAPI.currentUser;
+                } else {
+                    // Fallback: verifica localStorage
+                    try {
+                        const userData = localStorage.getItem('discord_user');
+                        user = userData ? JSON.parse(userData) : null;
+                    } catch (e) {
+                        user = null;
+                    }
+                }
+
+                // Verifica se é admin (exemplo - ajuste conforme sua lógica)
+                let isAdmin = false;
+                if (user && user.username === 'BRO.WESLAO') {
+                    isAdmin = true;
+                }
+
+                if (user) {
+                    // USUÁRIO LOGADO
+                    if (userInfo) {
+                        userInfo.style.display = 'flex';
+                        const avatar = user.avatar
+                            ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.webp?size=64`
+                            : `https://cdn.discordapp.com/embed/avatars/${user.discriminator % 5}.png`;
+
+                        userInfo.innerHTML = `
+                            <div class="user-avatar"><img src="${avatar}" alt="${user.username}"></div>
+                            <div class="user-name">${user.global_name || user.username}</div>
+                            ${isAdmin ? '<span class="admin-badge">ADMIN</span>' : ''}
+                        `;
+                    }
+                    if (loginContainer) loginContainer.style.display = 'none';
+                    if (logoutBtn) logoutBtn.style.display = 'flex';
+                    if (noAuthMessage) noAuthMessage.style.display = 'none';
+                    if (categoryContent) categoryContent.style.display = '';
+                } else {
+                    // USUÁRIO NÃO LOGADO
+                    if (userInfo) userInfo.style.display = 'none';
+                    if (loginContainer) loginContainer.style.display = 'flex';
+                    if (logoutBtn) logoutBtn.style.display = 'none';
+                    if (noAuthMessage) noAuthMessage.style.display = '';
+                    if (categoryContent) categoryContent.style.display = 'none';
+                }
+            }
+
+            // Event listeners
+            if (loginBtn) {
+                loginBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    if (window.discordAuth && typeof window.discordAuth.login === 'function') {
+                        window.discordAuth.login();
+                    } else {
+                        window.location.href = 'forum-auth.html';
+                    }
+                });
+            }
+
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    if (window.discordAuth && typeof window.discordAuth.logout === 'function') {
+                        window.discordAuth.logout();
+                    } else {
+                        localStorage.removeItem('discord_user');
+                        localStorage.removeItem('discord_access_token');
+                        setTimeout(() => location.reload(), 300);
+                    }
+                });
+            }
+
+            // Inicializar
+            renderAuth();
+            setTimeout(renderAuth, 500);
+            setTimeout(renderAuth, 1000);
+        });
+    </script>
+
 </body>
 
 </html>

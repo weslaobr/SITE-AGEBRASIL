@@ -431,6 +431,27 @@ app.get('/api/forum/stats', async (req, res) => {
 
 console.log('✅ Endpoints do fórum carregados!');
 
+// Adicione isto temporariamente no server.js para testar
+app.get('/api/debug/forum', async (req, res) => {
+    console.log('🔍 Debug endpoint acionado');
+    const client = await pool.connect();
+    try {
+        const topics = await client.query('SELECT COUNT(*) as count FROM forum_topics');
+        const categories = await client.query('SELECT COUNT(*) as count FROM forum_categories');
+
+        res.json({
+            database: 'conectado',
+            topics: topics.rows[0].count,
+            categories: categories.rows[0].count,
+            timestamp: new Date().toISOString()
+        });
+    } catch (error) {
+        res.json({ error: error.message });
+    } finally {
+        client.release();
+    }
+});
+
 // =============================================
 // ROTAS DO FÓRUM
 // =============================================

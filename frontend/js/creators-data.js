@@ -1,4 +1,4 @@
-// creators-data.js - SEM AVATARS FIXOS
+// creators-data.js - MANTIDO IGUAL
 const CREATORS_CONFIG = [
     {
         id: 1,

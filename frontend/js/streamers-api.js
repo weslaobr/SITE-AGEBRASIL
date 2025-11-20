@@ -1,120 +1,259 @@
-// streamers-api.js - AVATARS SINCRONIZADOS
+// streamers-api.js - CARDS ESTÁTICOS + LIVES DINÂMICAS
 class StreamersManager {
     constructor() {
         this.creators = [];
         this.twitchAccessToken = null;
         this.currentFilter = 'all';
-        this.avatarCache = new Map(); // Cache para avatares
+        this.avatarCache = new Map();
     }
 
     async init() {
-        console.log('🚀 Iniciando StreamersManager...');
+        console.log('🚀 Iniciando Sistema Híbrido...');
 
-        this.renderSkeletonUI();
+        // 1. Renderizar cards estáticos IMEDIATAMENTE
+        this.renderStaticCreators();
 
-        try {
-            await this.getTwitchAccessToken();
-            await this.loadTwitchData();
-        } catch (error) {
-            console.warn('⚠️ Twitch falhou, usando dados estáticos:', error);
-            this.loadStaticData();
-        }
+        // 2. Buscar lives em segundo plano
+        this.loadLiveStreams();
 
-        this.renderAllViews();
         this.setupEventListeners();
     }
 
-    // Carregar dados Twitch (AGORA COM AVATARS)
-    async loadTwitchData() {
-        const twitchUsernames = CREATORS_CONFIG.map(creator => creator.twitch);
+    // CARDS ESTÁTICOS - Carregamento instantâneo
+    async renderStaticCreators() {
+        console.log('📋 Renderizando cards estáticos...');
 
+        // Inicializar com dados estáticos
+        this.creators = CREATORS_CONFIG.map(creator => ({
+            ...creator,
+            avatar: this.getTwitchAvatarUrl(creator.twitch),
+            isLive: false, // Inicialmente offline
+            liveViewers: 0,
+            liveTitle: 'Age of Empires IV'
+        }));
+
+        // Renderizar cards imediatamente
+        this.renderAllCreators();
+
+        // Buscar avatares da Twitch em segundo plano
+        this.loadTwitchAvatars();
+    }
+
+    // URL do avatar da Twitch (formato padrão)
+    getTwitchAvatarUrl(username) {
+        return `https://static-cdn.jtvnw.net/jtv_user_pictures/${username}-profile_image-300x300.png`;
+    }
+
+    // Buscar avatares reais da Twitch em segundo plano
+    async loadTwitchAvatars() {
         try {
-            // Buscar streams ao vivo E informações dos usuários
-            const [streamsResponse, usersResponse] = await Promise.all([
-                fetch(`https://api.twitch.tv/helix/streams?${twitchUsernames.map(u => `user_login=${u}`).join('&')}&first=100`, {
+            await this.getTwitchAccessToken();
+
+            const twitchUsernames = CREATORS_CONFIG.map(creator => creator.twitch);
+            const response = await fetch(
+                `https://api.twitch.tv/helix/users?${twitchUsernames.map(u => `login=${u}`).join('&')}`,
+                {
                     headers: {
                         'Client-ID': CONFIG.TWITCH.CLIENT_ID,
                         'Authorization': `Bearer ${this.twitchAccessToken}`
                     }
-                }),
-                fetch(`https://api.twitch.tv/helix/users?${twitchUsernames.map(u => `login=${u}`).join('&')}`, {
-                    headers: {
-                        'Client-ID': CONFIG.TWITCH.CLIENT_ID,
-                        'Authorization': `Bearer ${this.twitchAccessToken}`
+                }
+            );
+
+            const data = await response.json();
+
+            if (data.data) {
+                // Atualizar avatares com URLs reais
+                data.data.forEach(user => {
+                    const creator = this.creators.find(c => c.twitch.toLowerCase() === user.login.toLowerCase());
+                    if (creator) {
+                        creator.avatar = user.profile_image_url;
+                        this.avatarCache.set(user.login.toLowerCase(), user.profile_image_url);
                     }
-                })
-            ]);
+                });
 
-            const [streamsData, usersData] = await Promise.all([
-                streamsResponse.json(),
-                usersResponse.json()
-            ]);
-
-            // Criar mapas para acesso rápido
-            const streamsMap = new Map();
-            streamsData.data?.forEach(stream => {
-                streamsMap.set(stream.user_login.toLowerCase(), stream);
-            });
-
-            const usersMap = new Map();
-            usersData.data?.forEach(user => {
-                usersMap.set(user.login.toLowerCase(), user);
-                // Cache do avatar
-                this.avatarCache.set(user.login.toLowerCase(), user.profile_image_url);
-            });
-
-            // Combinar dados - AGORA COM AVATARS REAIS
-            this.creators = CREATORS_CONFIG.map(creator => {
-                const twitchUser = usersMap.get(creator.twitch.toLowerCase());
-                const twitchStream = streamsMap.get(creator.twitch.toLowerCase());
-
-                // Avatar REAL da Twitch
-                const avatar = twitchUser?.profile_image_url || this.getFallbackAvatar(creator.name);
-
-                return {
-                    ...creator,
-                    avatar: avatar,
-                    isLive: !!twitchStream,
-                    liveViewers: twitchStream?.viewer_count || 0,
-                    liveTitle: twitchStream?.title || 'Age of Empires IV',
-                    lastStream: this.formatRelativeTime(twitchStream?.started_at)
-                };
-            });
+                // Re-renderizar com avatares reais
+                this.renderAllCreators();
+                console.log('✅ Avatares atualizados');
+            }
 
         } catch (error) {
-            console.error('❌ Erro ao carregar dados Twitch:', error);
-            this.loadStaticData();
+            console.warn('⚠️ Não foi possível carregar avatares Twitch:', error);
+            // Mantém os avatares padrão
         }
     }
 
-    // Fallback avatares (apenas se Twitch falhar)
-    getFallbackAvatar(name) {
-        const fallbackAvatars = {
-            'Gks': 'https://static-cdn.jtvnw.net/jtv_user_pictures/asmongold-profile_image-f7ddcbd0332f5d28-300x300.png',
-            'CaioFora': 'https://static-cdn.jtvnw.net/jtv_user_pictures/xqcow-profile_image-9298dca608632101-300x300.jpeg',
-            'VicentiN': 'https://static-cdn.jtvnw.net/jtv_user_pictures/summit1g-profile_image-7e7d2f64e08cae0a-300x300.png',
-            'Utinowns': 'https://static-cdn.jtvnw.net/jtv_user_pictures/tfue-profile_image-7e7d2f64e08cae0a-300x300.png',
-            'EricBR': 'https://static-cdn.jtvnw.net/jtv_user_pictures/nickmercs-profile_image-5e7d2f64e08cae0a-300x300.png',
-            'Vitruvius TV': 'https://static-cdn.jtvnw.net/jtv_user_pictures/timthetatman-profile_image-5e7d2f64e08cae0a-300x300.png',
-            'Nyxel TV': 'https://static-cdn.jtvnw.net/jtv_user_pictures/lirik-profile_image-5e7d2f64e08cae0a-300x300.png',
-            'LegoWzz': 'https://static-cdn.jtvnw.net/jtv_user_pictures/shodan-profile_image-5e7d2f64e08cae0a-300x300.png'
-        };
-        return fallbackAvatars[name] || 'https://static-cdn.jtvnw.net/jtv_user_pictures/unknown-user-300x300.png';
+    // SISTEMA DE LIVES - Dinâmico
+    async loadLiveStreams() {
+        try {
+            await this.getTwitchAccessToken();
+
+            const twitchUsernames = CREATORS_CONFIG.map(creator => creator.twitch);
+            const response = await fetch(
+                `https://api.twitch.tv/helix/streams?${twitchUsernames.map(u => `user_login=${u}`).join('&')}&first=100`,
+                {
+                    headers: {
+                        'Client-ID': CONFIG.TWITCH.CLIENT_ID,
+                        'Authorization': `Bearer ${this.twitchAccessToken}`
+                    }
+                }
+            );
+
+            const data = await response.json();
+
+            if (data.data) {
+                // Atualizar status de live
+                const liveStreams = data.data;
+
+                this.creators.forEach(creator => {
+                    const stream = liveStreams.find(s =>
+                        s.user_login.toLowerCase() === creator.twitch.toLowerCase()
+                    );
+
+                    if (stream) {
+                        creator.isLive = true;
+                        creator.liveViewers = stream.viewer_count;
+                        creator.liveTitle = stream.title;
+                    } else {
+                        creator.isLive = false;
+                        creator.liveViewers = 0;
+                    }
+                });
+
+                // Atualizar UI
+                this.renderLiveStreams();
+                this.renderAllCreators();
+                console.log('🎮 Status de lives atualizado');
+            }
+
+        } catch (error) {
+            console.warn('⚠️ Não foi possível carregar lives:', error);
+        }
     }
 
-    // Dados estáticos com fallback
-    loadStaticData() {
-        this.creators = CREATORS_CONFIG.map(creator => ({
-            ...creator,
-            avatar: this.getFallbackAvatar(creator.name),
-            isLive: false,
-            liveViewers: 0,
-            liveTitle: 'Age of Empires IV',
-            lastStream: 'Offline'
-        }));
+    // Autenticação Twitch (apenas para lives e avatares)
+    async getTwitchAccessToken() {
+        if (this.twitchAccessToken) return;
+
+        try {
+            const response = await fetch('https://id.twitch.tv/oauth2/token', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `client_id=${CONFIG.TWITCH.CLIENT_ID}&client_secret=${CONFIG.TWITCH.CLIENT_SECRET}&grant_type=client_credentials`
+            });
+
+            const data = await response.json();
+            this.twitchAccessToken = data.access_token;
+        } catch (error) {
+            console.error('❌ Erro Twitch auth:', error);
+            throw error;
+        }
     }
 
-    // Card ATUALIZADO com avatar sincronizado
+    // RENDERIZAÇÃO
+    renderSkeletonUI() {
+        const liveContainer = document.getElementById('live-streams-container');
+        const creatorsGrid = document.getElementById('all-creators-grid');
+
+        liveContainer.innerHTML = `
+            <div class="skeleton-streams">
+                ${Array(2).fill().map(() => `
+                    <div class="skeleton-stream-card">
+                        <div class="skeleton-thumbnail"></div>
+                        <div class="skeleton-content">
+                            <div class="skeleton-avatar"></div>
+                            <div class="skeleton-text">
+                                <div class="skeleton-line short"></div>
+                                <div class="skeleton-line medium"></div>
+                            </div>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+
+        creatorsGrid.innerHTML = `
+            <div class="skeleton-creators">
+                ${Array(8).fill().map(() => `
+                    <div class="skeleton-creator-card">
+                        <div class="skeleton-avatar-large"></div>
+                        <div class="skeleton-info">
+                            <div class="skeleton-line long"></div>
+                            <div class="skeleton-line short"></div>
+                            <div class="skeleton-tags">
+                                <div class="skeleton-tag"></div>
+                                <div class="skeleton-tag"></div>
+                            </div>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+    }
+
+    renderLiveStreams() {
+        const container = document.getElementById('live-streams-container');
+        const liveStreams = this.creators.filter(creator => creator.isLive);
+
+        if (liveStreams.length === 0) {
+            container.innerHTML = `
+                <div class="no-live-streams">
+                    <i class="fas fa-tv"></i>
+                    <h3>Nenhuma transmissão ao vivo</h3>
+                    <p>Quando um criador estiver online, aparecerá aqui!</p>
+                </div>
+            `;
+            return;
+        }
+
+        container.innerHTML = liveStreams.map(creator => `
+            <div class="live-stream-card">
+                <div class="live-badge">
+                    <span class="pulse"></span>
+                    AO VIVO
+                </div>
+                <div class="stream-preview" onclick="window.open('https://twitch.tv/${creator.twitch}', '_blank')">
+                    <img src="${creator.avatar}" alt="${creator.name}" 
+                         loading="lazy"
+                         onerror="this.src='https://static-cdn.jtvnw.net/jtv_user_pictures/unknown-user-300x300.png'">
+                    <div class="viewer-count">👁️ ${this.formatNumber(creator.liveViewers)}</div>
+                </div>
+                <div class="stream-info">
+                    <div class="streamer-info">
+                        <div class="streamer-avatar">
+                            <img src="${creator.avatar}" alt="${creator.name}"
+                                 loading="lazy"
+                                 onerror="this.src='https://static-cdn.jtvnw.net/jtv_user_pictures/unknown-user-300x300.png'">
+                        </div>
+                        <div class="streamer-details">
+                            <h3>${creator.name}</h3>
+                            <p>@${creator.twitch}</p>
+                        </div>
+                    </div>
+                    <div class="stream-title">${creator.liveTitle}</div>
+                    <a href="https://twitch.tv/${creator.twitch}" target="_blank" class="watch-live-btn">
+                        <i class="fas fa-play"></i> Assistir
+                    </a>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    renderAllCreators() {
+        const grid = document.getElementById('all-creators-grid');
+        let filteredCreators = this.creators;
+
+        switch (this.currentFilter) {
+            case 'twitch': filteredCreators = this.creators.filter(c => c.twitch); break;
+            case 'youtube': filteredCreators = this.creators.filter(c => c.youtube); break;
+            case 'live': filteredCreators = this.creators.filter(c => c.isLive); break;
+        }
+
+        grid.innerHTML = filteredCreators.map(creator => this.createCreatorCard(creator)).join('');
+    }
+
     createCreatorCard(creator) {
         const isLive = creator.isLive;
         const hasYouTube = !!creator.youtube;
@@ -189,20 +328,6 @@ class StreamersManager {
         return number.toString();
     }
 
-    formatRelativeTime(dateString) {
-        if (!dateString) return '';
-        const date = new Date(dateString);
-        const now = new Date();
-        const diffMs = now - date;
-        const diffMins = Math.floor(diffMs / 60000);
-        const diffHours = Math.floor(diffMs / 3600000);
-
-        if (diffMins < 1) return 'Agora';
-        if (diffMins < 60) return `Há ${diffMins} min`;
-        if (diffHours < 24) return `Há ${diffHours} h`;
-        return 'Hoje';
-    }
-
     setupEventListeners() {
         document.querySelectorAll('.toggle-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
@@ -213,33 +338,15 @@ class StreamersManager {
             });
         });
 
-        // Auto-refresh a cada 3 minutos
+        // Auto-refresh das lives a cada 2 minutos
         setInterval(() => {
-            this.loadTwitchData().then(() => {
-                this.renderAllViews();
-            });
-        }, 180000);
+            this.loadLiveStreams();
+        }, 120000);
     }
 }
 
-    // Função para forçar atualização de avatares
-    async refreshAvatars() {
-    try {
-        await this.loadTwitchData();
-        this.renderAllViews();
-        console.log('✅ Avatares atualizados');
-    } catch (error) {
-        console.error('❌ Erro ao atualizar avatares:', error);
-    }
-}
-
-// Inicialização
+// Inicialização RÁPIDA
 document.addEventListener('DOMContentLoaded', () => {
     window.streamersManager = new StreamersManager();
     window.streamersManager.init();
-
-    // Atualizar avatares a cada 10 minutos (opcional)
-    setInterval(() => {
-        window.streamersManager.refreshAvatars();
-    }, 600000);
 });

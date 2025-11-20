@@ -1,32 +1,481 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Torneios - Age of Empires IV Brasil</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="css/responsive.css">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="icon" type="image/png" href="https://i.postimg.cc/3JT4W3hz/favicon.png">
+
   <style>
-    .tournaments-grid { display:grid; grid-template-columns: repeat(auto-fit,minmax(320px,1fr)); gap:1rem; margin:1rem 0; }
-    .tournament-card { background:#0f172a; border:1px solid #1e293b; padding:16px; border-radius:10px; color:#e2e8f0; }
-    .api-status { padding:10px; border-radius:8px; margin:10px 0; }
-    .api-status.loading { background: rgba(66,153,225,0.12); color:#4299e1; border:1px solid #4299e1; }
-    .api-status.success { background: rgba(72,187,120,0.12); color:#48bb78; border:1px solid #48bb78; }
-    .api-status.error { background: rgba(245,101,101,0.12); color:#f56565; border:1px solid #f56565; }
-    .action-btn { background:#2563eb; color:white; padding:8px 12px; border-radius:8px; text-decoration:none; display:inline-block; }
+    /* Estilos específicos para a página Torneios em manutenção */
+    .maintenance-hero {
+      background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+      padding: 5rem 0;
+      text-align: center;
+      color: white;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .maintenance-hero::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" preserveAspectRatio="none"><path d="M0,0 L100,0 L100,100 Z" fill="rgba(255,255,255,0.05)"/></svg>');
+      background-size: cover;
+    }
+
+    .maintenance-content {
+      position: relative;
+      z-index: 1;
+    }
+
+    .maintenance-icon {
+      font-size: 5rem;
+      color: var(--accent-color);
+      margin-bottom: 2rem;
+      animation: float 3s ease-in-out infinite;
+    }
+
+    @keyframes float {
+
+      0%,
+      100% {
+        transform: translateY(0);
+      }
+
+      50% {
+        transform: translateY(-10px);
+      }
+    }
+
+    .maintenance-hero h1 {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+    }
+
+    .maintenance-hero p {
+      font-size: 1.2rem;
+      max-width: 600px;
+      margin: 0 auto 2rem;
+      opacity: 0.9;
+    }
+
+    .maintenance-stats {
+      display: flex;
+      justify-content: center;
+      gap: 3rem;
+      margin-top: 3rem;
+      flex-wrap: wrap;
+    }
+
+    .maintenance-stat {
+      text-align: center;
+      padding: 1rem;
+    }
+
+    .maintenance-stat .number {
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: var(--accent-color);
+      display: block;
+    }
+
+    .maintenance-stat .label {
+      color: #cbd5e0;
+      font-size: 0.9rem;
+    }
+
+    .maintenance-info {
+      background: var(--card-bg);
+      border-radius: 12px;
+      padding: 3rem;
+      margin: 3rem auto;
+      max-width: 800px;
+      text-align: center;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+      border: 1px solid var(--border-color);
+    }
+
+    .maintenance-info h2 {
+      color: var(--accent-color);
+      margin-bottom: 1.5rem;
+      font-size: 2rem;
+    }
+
+    .maintenance-info p {
+      color: #a0aec0;
+      line-height: 1.7;
+      margin-bottom: 2rem;
+    }
+
+    .progress-container {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      padding: 2rem;
+      margin: 2rem 0;
+    }
+
+    .progress-bar {
+      height: 10px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 5px;
+      overflow: hidden;
+      margin-bottom: 1rem;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent-color), #ffee00);
+      border-radius: 5px;
+      width: 75%;
+      animation: progress-pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes progress-pulse {
+
+      0%,
+      100% {
+        opacity: 1;
+      }
+
+      50% {
+        opacity: 0.7;
+      }
+    }
+
+    .progress-text {
+      display: flex;
+      justify-content: space-between;
+      color: #a0aec0;
+      font-size: 0.9rem;
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 2rem;
+      margin-top: 3rem;
+    }
+
+    .feature-card {
+      background: rgba(255, 255, 255, 0.05);
+      padding: 2rem;
+      border-radius: 8px;
+      text-align: center;
+      transition: transform 0.3s ease;
+      border: 1px solid var(--border-color);
+    }
+
+    .feature-card:hover {
+      transform: translateY(-5px);
+      border-color: var(--accent-color);
+    }
+
+    .feature-card i {
+      font-size: 2.5rem;
+      color: var(--accent-color);
+      margin-bottom: 1.5rem;
+    }
+
+    .feature-card h3 {
+      color: var(--text-color);
+      margin-bottom: 1rem;
+    }
+
+    .feature-card p {
+      color: #a0aec0;
+      font-size: 0.9rem;
+      line-height: 1.6;
+    }
+
+    .countdown {
+      background: var(--card-bg);
+      border-radius: 12px;
+      padding: 2rem;
+      margin: 3rem auto;
+      max-width: 600px;
+      text-align: center;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+      border: 1px solid var(--border-color);
+    }
+
+    .countdown h2 {
+      color: var(--accent-color);
+      margin-bottom: 2rem;
+    }
+
+    .countdown-timer {
+      display: flex;
+      justify-content: center;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+    }
+
+    .countdown-item {
+      text-align: center;
+      min-width: 80px;
+    }
+
+    .countdown-number {
+      display: block;
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: var(--accent-color);
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 8px;
+      padding: 1rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .countdown-label {
+      color: #a0aec0;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+    }
+
+    .notification {
+      background: var(--card-bg);
+      border-radius: 12px;
+      padding: 2rem;
+      margin: 2rem auto;
+      max-width: 600px;
+      text-align: center;
+      border-left: 4px solid var(--accent-color);
+    }
+
+    .notification h3 {
+      color: var(--text-color);
+      margin-bottom: 1rem;
+    }
+
+    .notification p {
+      color: #a0aec0;
+      margin-bottom: 1.5rem;
+    }
+
+    .notification-btn {
+      display: inline-block;
+      background: var(--accent-color);
+      color: white;
+      padding: 0.8rem 1.5rem;
+      border-radius: 30px;
+      text-decoration: none;
+      font-weight: 600;
+      transition: all 0.3s ease;
+    }
+
+    .notification-btn:hover {
+      background: #d63031;
+      transform: translateY(-3px);
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    }
+
+    @media (max-width: 768px) {
+      .maintenance-hero h1 {
+        font-size: 2.2rem;
+      }
+
+      .maintenance-icon {
+        font-size: 4rem;
+      }
+
+      .maintenance-stats {
+        gap: 1.5rem;
+      }
+
+      .maintenance-stat .number {
+        font-size: 2rem;
+      }
+
+      .countdown-number {
+        font-size: 2rem;
+        padding: 0.8rem;
+      }
+
+      .features-grid {
+        grid-template-columns: 1fr;
+      }
+    }
   </style>
 </head>
+
 <body>
-  <header><div class="container"><h1>Torneios de Age of Empires IV</h1></div></header>
-  <main class="container">
-    <div id="api-status" class="api-status loading"><i class="fas fa-sync fa-spin"></i> Carregando torneios...</div>
-    <section id="tournaments-container">
-      <div class="tournaments-grid">
-        <div class="loading">Buscando torneios...</div>
+  <header>
+    <div class="container">
+      <div class="header-content">
+        <div class="logo">
+          <img src="https://i.postimg.cc/rFNdr7FV/logo.png" alt="Age of Empires IV Brasil" class="logo-img">
+          <h1>Age of Empires IV Brasil</h1>
+        </div>
+        <nav>
+          <ul>
+            <li><a href="index.html">Início</a></li>
+            <li><a href="forum.html">Fórum</a></li>
+            <li><a href="leaderboard.html">Tabela de classificação</a></li>
+            <li><a href="torneios.html" class="active">Torneios</a></li>
+            <li><a href="about.html">Sobre</a></li>
+          </ul>
+        </nav>
       </div>
-    </section>
+    </div>
+  </header>
+
+  <section class="maintenance-hero">
+    <div class="container maintenance-content">
+      <div class="maintenance-icon">
+        <i class="fas fa-tools"></i>
+      </div>
+      <h1>Página de Torneios em Manutenção</h1>
+      <p>Estamos trabalhando para trazer uma experiência incrível de torneios para a comunidade brasileira de Age of
+        Empires IV</p>
+
+      <div class="maintenance-stats">
+        <div class="maintenance-stat">
+          <span class="number">12</span>
+          <span class="label">Torneios Realizados</span>
+        </div>
+        <div class="maintenance-stat">
+          <span class="number">350+</span>
+          <span class="label">Jogadores Participantes</span>
+        </div>
+        <div class="maintenance-stat">
+          <span class="number">R$ 5.000+</span>
+          <span class="label">Em Prêmios Distribuídos</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <main class="container">
+    <div class="maintenance-info">
+      <h2>Novidades Chegando Em Breve!</h2>
+      <p>Estamos desenvolvendo um sistema completo de torneios com inscrições automáticas, chaves interativas,
+        transmissão integrada e muito mais para melhor atender nossa comunidade.</p>
+
+      <div class="progress-container">
+        <div class="progress-bar">
+          <div class="progress-fill"></div>
+        </div>
+        <div class="progress-text">
+          <span>Desenvolvimento</span>
+          <span>75% Concluído</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="countdown">
+      <h2>Previsão de Lançamento</h2>
+      <div class="countdown-timer" id="countdown">
+        <div class="countdown-item">
+          <span class="countdown-number" id="days">00</span>
+          <span class="countdown-label">Dias</span>
+        </div>
+        <div class="countdown-item">
+          <span class="countdown-number" id="hours">00</span>
+          <span class="countdown-label">Horas</span>
+        </div>
+        <div class="countdown-item">
+          <span class="countdown-number" id="minutes">00</span>
+          <span class="countdown-label">Minutos</span>
+        </div>
+        <div class="countdown-item">
+          <span class="countdown-number" id="seconds">00</span>
+          <span class="countdown-label">Segundos</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="features-grid">
+      <div class="feature-card">
+        <i class="fas fa-trophy"></i>
+        <h3>Sistema de Torneios</h3>
+        <p>Organização completa de torneios com chaves eliminatórias, grupos e fases classificatórias.</p>
+      </div>
+      <div class="feature-card">
+        <i class="fas fa-user-plus"></i>
+        <h3>Inscrições Automáticas</h3>
+        <p>Processo simplificado de inscrição com verificação automática de elegibilidade.</p>
+      </div>
+      <div class="feature-card">
+        <i class="fas fa-broadcast-tower"></i>
+        <h3>Transmissão Integrada</h3>
+        <p>Suporte nativo para transmissões ao vivo integradas diretamente na plataforma.</p>
+      </div>
+      <div class="feature-card">
+        <i class="fas fa-chart-line"></i>
+        <h3>Estatísticas Detalhadas</h3>
+        <p>Análises avançadas de desempenho dos jogadores durante os torneios.</p>
+      </div>
+    </div>
+
+    <div class="notification">
+      <h3>Quer ser notificado quando lançarmos?</h3>
+      <p>Deixe seu e-mail e seremos os primeiros a avisar quando o sistema de torneios estiver disponível!</p>
+      <a href="#" class="notification-btn">
+        <i class="fas fa-bell"></i> Receber Notificação
+      </a>
+    </div>
   </main>
-  <script src="js/torneios-reais.js"></script>
+
+  <footer>
+    <div class="container">
+      <div class="footer-content">
+        <div class="logo">
+          <i class="fas fa-crown" style="color: #e53e3e;"></i>
+          <h2>Age of Empires IV Brasil</h2>
+        </div>
+        <div class="footer-links">
+          <a href="index.html">Início</a>
+          <a href="forum.html">Fórum</a>
+          <a href="leaderboard.html">Tabela de classificação</a>
+          <a href="torneios.html">Torneios</a>
+          <a href="about.html">Sobre</a>
+        </div>
+        <div class="copyright">
+          &copy; 2025 - Age of Empires IV Brasil. Dados de aoe4world.com. Este site não possui qualquer
+          vínculo com a Microsoft ou a Relic Entertainment.
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // Contador regressivo para 15 dias a partir de hoje
+    function updateCountdown() {
+      const launchDate = new Date();
+      launchDate.setDate(launchDate.getDate() + 15); // 15 dias a partir de hoje
+
+      const now = new Date().getTime();
+      const distance = launchDate - now;
+
+      const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+      document.getElementById("days").textContent = days.toString().padStart(2, '0');
+      document.getElementById("hours").textContent = hours.toString().padStart(2, '0');
+      document.getElementById("minutes").textContent = minutes.toString().padStart(2, '0');
+      document.getElementById("seconds").textContent = seconds.toString().padStart(2, '0');
+
+      if (distance < 0) {
+        clearInterval(countdownTimer);
+        document.getElementById("countdown").innerHTML = "<h3>Lançado!</h3>";
+      }
+    }
+
+    // Atualizar a cada segundo
+    const countdownTimer = setInterval(updateCountdown, 1000);
+    updateCountdown(); // Chamar imediatamente para evitar delay inicial
+  </script>
 </body>
+
 </html>

@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sobre - Age of Empires IV Brasil</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/responsive.css">
+    <link rel="icon" type="image/png" href="https://i.postimg.cc/3JT4W3hz/favicon.png">
+
+    <style>
+        /* Estilos específicos para a página Sobre */
+        .about-hero {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            padding: 4rem 0;
+            text-align: center;
+            color: white;
+            margin-bottom: 3rem;
+        }
+
+        .about-hero h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .about-hero p {
+            font-size: 1.2rem;
+            max-width: 800px;
+            margin: 0 auto;
+            opacity: 0.9;
+        }
+
+        .about-content {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 3rem;
+            margin-bottom: 4rem;
+        }
+
+        .developer-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 2rem;
+            text-align: center;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            border: 1px solid var(--border-color);
+        }
+
+        .developer-photo {
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin: 0 auto 1.5rem;
+            border: 4px solid var(--accent-color);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .developer-name {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+            color: var(--text-color);
+        }
+
+        .developer-title {
+            color: var(--accent-color);
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        .developer-bio {
+            color: #a0aec0;
+            line-height: 1.6;
+            margin-bottom: 1.5rem;
+        }
+
+        .social-links {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .social-link {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--secondary-color);
+            color: white;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .social-link:hover {
+            background: var(--accent-color);
+            transform: translateY(-3px);
+        }
+
+        .project-info {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 2.5rem;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            border: 1px solid var(--border-color);
+        }
+
+        .project-info h2 {
+            color: var(--accent-color);
+            margin-bottom: 1.5rem;
+            font-size: 1.8rem;
+        }
+
+        .mission-section {
+            margin-bottom: 2.5rem;
+        }
+
+        .mission-section h3 {
+            color: var(--text-color);
+            margin-bottom: 1rem;
+            font-size: 1.3rem;
+        }
+
+        .mission-section p {
+            color: #a0aec0;
+            line-height: 1.7;
+            margin-bottom: 1.5rem;
+        }
+
+        .values-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .value-card {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 1.5rem;
+            border-radius: 8px;
+            border-left: 4px solid var(--accent-color);
+            transition: transform 0.3s ease;
+        }
+
+        .value-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .value-card i {
+            font-size: 2rem;
+            color: var(--accent-color);
+            margin-bottom: 1rem;
+        }
+
+        .value-card h4 {
+            color: var(--text-color);
+            margin-bottom: 0.8rem;
+        }
+
+        .value-card p {
+            color: #a0aec0;
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+
+        .community-impact {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 3rem;
+            margin: 4rem 0;
+            text-align: center;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            border: 1px solid var(--border-color);
+        }
+
+        .community-impact h2 {
+            color: var(--accent-color);
+            margin-bottom: 2rem;
+            font-size: 2rem;
+        }
+
+        .impact-stats {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .impact-stat {
+            text-align: center;
+            flex: 1;
+            min-width: 150px;
+        }
+
+        .impact-stat .number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--accent-color);
+            display: block;
+        }
+
+        .impact-stat .label {
+            color: #a0aec0;
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+        }
+
+        .contact-section {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 3rem;
+            text-align: center;
+            margin-top: 4rem;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            border: 1px solid var(--border-color);
+        }
+
+        .contact-section h2 {
+            color: var(--accent-color);
+            margin-bottom: 1.5rem;
+        }
+
+        .contact-section p {
+            color: #a0aec0;
+            margin-bottom: 2rem;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .contact-button {
+            display: inline-block;
+            background: var(--accent-color);
+            color: white;
+            padding: 0.8rem 2rem;
+            border-radius: 30px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .contact-button:hover {
+            background: #d63031;
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        @media (max-width: 768px) {
+            .about-content {
+                grid-template-columns: 1fr;
+                gap: 2rem;
+            }
+
+            .developer-card {
+                order: 1;
+            }
+
+            .project-info {
+                order: 2;
+            }
+
+            .impact-stats {
+                flex-direction: column;
+                gap: 1.5rem;
+            }
+
+            .impact-stat {
+                min-width: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <img src="https://i.postimg.cc/rFNdr7FV/logo.png" alt="Age of Empires IV Brasil" class="logo-img">
+                    <h1>Age of Empires IV Brasil</h1>
+                </div>
+                <nav>
+                    <ul>
+                        <li><a href="index.html">Início</a></li>
+                        <li><a href="leaderboard.html">Tabela de classificação</a></li>
+                        <li><a href="torneios.html">Torneios</a></li>
+                        <li><a href="forum.html">Fórum</a></li>
+                        <li><a href="about.html" class="active">Sobre</a></li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <section class="about-hero">
+        <div class="container">
+            <h1>Sobre o Projeto</h1>
+            <p>Conheça a história por trás da plataforma Age of Empires IV Brasil e seu criador</p>
+        </div>
+    </section>
+
+    <main class="container">
+        <div class="about-content">
+            <div class="developer-card">
+                <img src="https://i.postimg.cc/L8NSChFr/WESLAO.jpg" alt="Weslão" class="developer-photo">
+                <h2 class="developer-name">Weslão</h2>
+                <p class="developer-title">Desenvolvedor & Arquiteto</p>
+                <p class="developer-bio">
+                    Arquiteto de formação e apaixonado por Age of Empires desde a infância,
+                    uni minhas habilidades para criar uma plataforma que fortaleça a comunidade brasileira do jogo.
+                </p>
+                <div class="social-links">
+                    <a href="#" class="social-link">
+                        <i class="fab fa-twitter"></i>
+                    </a>
+                    <a href="#" class="social-link">
+                        <i class="fab fa-linkedin"></i>
+                    </a>
+                    <a href="https://github.com/weslaobr" class="social-link">
+                        <i class="fab fa-github"></i>
+                    </a>
+                    <a href="https://discordapp.com/users/407624932101455873" class="social-link">
+                        <i class="fab fa-discord"></i>
+                    </a>
+                </div>
+            </div>
+
+            <div class="project-info">
+                <h2>Sobre o Age of Empires IV Brasil</h2>
+
+                <div class="mission-section">
+                    <h3>Nossa Missão</h3>
+                    <p>
+                        O Age of Empires IV Brasil nasceu com o objetivo de unir e fortalecer a comunidade brasileira
+                        de Age of Empires IV, proporcionando uma plataforma centralizada para estatísticas, rankings,
+                        torneios e interação entre jogadores.
+                    </p>
+                </div>
+
+                <div class="mission-section">
+                    <h3>O que Fazemos</h3>
+                    <p>
+                        Desenvolvemos ferramentas e recursos para ajudar jogadores de todos os níveis a melhorarem
+                        seu desempenho, acompanharem suas estatísticas, encontrarem oponentes adequados e participarem
+                        de uma comunidade ativa e acolhedora.
+                    </p>
+                </div>
+
+                <h3 style="margin-top: 2rem;">Nossos Valores</h3>
+                <div class="values-grid">
+                    <div class="value-card">
+                        <i class="fas fa-trophy"></i>
+                        <h4>Incentivo a Competições</h4>
+                        <p>Promovemos e organizamos torneios regulares para todos os níveis de habilidade.</p>
+                    </div>
+                    <div class="value-card">
+                        <i class="fas fa-users"></i>
+                        <h4>Comunicação e Relações</h4>
+                        <p>Facilitamos a conexão entre jogadores para formar amizades e parcerias de jogo.</p>
+                    </div>
+                    <div class="value-card">
+                        <i class="fas fa-balance-scale"></i>
+                        <h4>Ambiente Neutro</h4>
+                        <p>Mantemos um espaço imparcial onde todos são bem-vindos e respeitados.</p>
+                    </div>
+                    <div class="value-card">
+                        <i class="fas fa-gamepad"></i>
+                        <h4>Diversão em Primeiro Lugar</h4>
+                        <p>Priorizamos a experiência divertida e positiva para todos os participantes.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="community-impact">
+            <h2>Impacto na Comunidade</h2>
+            <p>Desde o lançamento, nossa plataforma tem contribuído para o crescimento da comunidade brasileira de Age
+                of Empires IV</p>
+
+            <div class="impact-stats">
+                <div class="impact-stat">
+                    <span class="number">500+</span>
+                    <span class="label">Jogadores Ativos</span>
+                </div>
+                <div class="impact-stat">
+                    <span class="number">25+</span>
+                    <span class="label">Torneios Realizados</span>
+                </div>
+                <div class="impact-stat">
+                    <span class="number">15+</span>
+                    <span class="label">Clans Registrados</span>
+                </div>
+                <div class="impact-stat">
+                    <span class="number">1000+</span>
+                    <span class="label">Partidas Analisadas</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="contact-section">
+            <h2>Entre em Contato</h2>
+            <p>
+                Tem sugestões, críticas ou quer colaborar com o projeto?
+                Estou sempre aberto a conversas e novas ideias para melhorar nossa comunidade.
+            </p>
+            <a href="mailto:wesleylisboa@live.com" class="contact-button">
+                <i class="fas fa-envelope"></i> Enviar Mensagem
+            </a>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="logo">
+                    <i class="fas fa-crown" style="color: #e53e3e;"></i>
+                    <h2>Age of Empires IV Brasil</h2>
+                </div>
+                <div class="footer-links">
+                    <a href="index.html">Início</a>
+                    <a href="forum.html">Fórum</a>
+                    <a href="leaderboard.html">Tabela de classificação</a>
+                    <a href="torneios.html">Torneios</a>
+                    <a href="about.html">Sobre</a>
+                </div>
+                <div class="copyright">
+                    &copy; 2025 - Age of Empires IV Brasil. Dados de aoe4world.com. Este site não possui qualquer
+                    vínculo com a Microsoft ou a Relic Entertainment.
+                </div>
+            </div>
+        </div>
+    </footer>
+</body>
+
+</html>

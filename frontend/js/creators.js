@@ -1,24 +1,24 @@
 // Configuração dos canais
 const YOUTUBE_CHANNELS = [
     {
-        "id": "UClTZTtes7vCnMNbU_PTWFcQ",
-        "name": "UtinOwns",
-        "handle": "@utinowns9776"
+        id: 'UCd54zjiewBgbTQHV_jbmM-Q',  // CaioFora
+        name: 'CaioFora',
+        handle: '@caiofora'
     },
     {
-        "id": "UC68u_vTF3ynM1plO_kihJ0Q",
-        "name": "GKS",
-        "handle": "@gks_aoe"
+        id: 'UCXAmHA4lVgVY7ndp6lqaS7A',  // Gks AOE
+        name: 'Gks',
+        handle: '@gks_aoe'
     },
     {
-        "id": "UCd54zjiewBgbTQHV_jbmM-Q",
-        "name": "Caiofora",
-        "handle": "@caiofora"
+        id: 'UCrAbkIFpoh8EZWof6y6DfmA',  // Vicentin
+        name: 'VicentiN',
+        handle: '@vitorvicentin'
     },
     {
-        "id": "UCrAbkIFpoh8EZWof6y6DfmA",
-        "name": "VicentiN",
-        "handle": "@vitorvicentin"
+        id: 'UCv6KZ6z8h0ZJ0ZJZJZJZJZJZ',  // Utinowns (preciso do ID correto)
+        name: 'Utinowns',
+        handle: '@utinowns9776'
     }
 ];
 

@@ -207,6 +207,9 @@ class ForumAPI {
             throw new Error('Usuário não autenticado. Faça login com Discord para criar tópicos.');
         }
 
+        console.log('🔍 Dados do usuário atual:', this.currentUser);
+        console.log('📝 Dados do tópico recebidos:', topicData);
+
         const payload = {
             category_id: parseInt(topicData.categoryId),
             title: topicData.title.trim(),
@@ -216,7 +219,7 @@ class ForumAPI {
             author_avatar: this.currentUser.avatar
         };
 
-        console.log('📤 Criando tópico no PostgreSQL:', payload);
+        console.log('📤 Payload para API:', payload);
 
         try {
             const response = await fetch(`${this.baseURL}/api/forum/topics`, {
@@ -227,15 +230,28 @@ class ForumAPI {
                 body: JSON.stringify(payload)
             });
 
+            console.log('📊 Status da resposta:', response.status);
+            console.log('📊 Response OK:', response.ok);
+
             if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.error || `Erro ${response.status} ao criar tópico`);
+                const errorText = await response.text();
+                console.error('❌ Erro detalhado da API:', errorText);
+
+                let errorMessage = `Erro ${response.status} ao criar tópico`;
+                try {
+                    const errorData = JSON.parse(errorText);
+                    errorMessage = errorData.error || errorMessage;
+                } catch (e) {
+                    // Não é JSON, usar texto puro
+                    errorMessage = errorText || errorMessage;
+                }
+
+                throw new Error(errorMessage);
             }
 
             const newTopic = await response.json();
-            console.log('✅ Tópico criado com sucesso no PostgreSQL:', newTopic.id);
+            console.log('✅ Tópico criado com sucesso:', newTopic);
 
-            // Converter para formato compatível
             return {
                 id: newTopic.id,
                 categoryId: newTopic.category_id,
@@ -252,7 +268,7 @@ class ForumAPI {
             };
 
         } catch (error) {
-            console.error('❌ Erro ao criar tópico:', error);
+            console.error('❌ Erro completo ao criar tópico:', error);
             throw error;
         }
     }

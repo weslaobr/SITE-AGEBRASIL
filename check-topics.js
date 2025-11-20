@@ -1,62 +1,75 @@
-const { Pool } = require('pg');
-require('dotenv').config();
+// test-api-create.js - VERSÃO SEM node-fetch
+const https = require('https');
+const http = require('http');
 
-const pool = new Pool({
-    connectionString: process.env.DATABASE_URL,
-    ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
-});
-
-async function checkTopics() {
-    let client;
+async function testAPICreate() {
     try {
-        console.log('🔍 Verificando tópicos no PostgreSQL...\n');
-        client = await pool.connect();
+        console.log('🧪 TESTANDO CRIAÇÃO DE TÓPICO VIA API\n');
 
-        // Verificar tópicos
-        const topics = await client.query(`
-            SELECT 
-                t.id,
-                t.title,
-                t.author_name,
-                t.author_discord_id,
-                c.name as category_name,
-                t.created_at,
-                t.views
-            FROM forum_topics t
-            JOIN forum_categories c ON t.category_id = c.id
-            ORDER BY t.created_at DESC
-            LIMIT 10
-        `);
+        const testData = {
+            category_id: 1, // Estratégias e Dicas
+            title: 'TÓPICO TESTE - ' + Date.now(),
+            content: 'Este é um tópico de teste criado via API',
+            author_discord_id: 'test_user_123',
+            author_name: 'Usuário Teste API',
+            author_avatar: null
+        };
 
-        console.log('📝 TÓPICOS NO BANCO DE DADOS:');
-        console.log('================================');
+        console.log('📤 Enviando dados:', testData);
 
-        if (topics.rows.length === 0) {
-            console.log('❌ Nenhum tópico encontrado no PostgreSQL');
-        } else {
-            topics.rows.forEach((topic, index) => {
-                console.log(`${index + 1}. "${topic.title}"`);
-                console.log(`   👤 Autor: ${topic.author_name} (${topic.author_discord_id})`);
-                console.log(`   📂 Categoria: ${topic.category_name}`);
-                console.log(`   📅 Data: ${topic.created_at}`);
-                console.log(`   👀 Views: ${topic.views}`);
-                console.log('--------------------------------');
+        const data = JSON.stringify(testData);
+
+        const options = {
+            hostname: 'localhost',
+            port: 3000,
+            path: '/api/forum/topics',
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Content-Length': data.length
+            }
+        };
+
+        const req = http.request(options, (res) => {
+            console.log('📥 Status:', res.statusCode);
+            console.log('📥 Status Message:', res.statusMessage);
+
+            let responseData = '';
+
+            res.on('data', (chunk) => {
+                responseData += chunk;
             });
-        }
 
-        // Verificar respostas
-        const replies = await client.query(`
-            SELECT COUNT(*) as total_replies FROM forum_replies
-        `);
+            res.on('end', () => {
+                try {
+                    if (res.statusCode === 201) {
+                        const result = JSON.parse(responseData);
+                        console.log('✅ SUCESSO! Tópico criado:');
+                        console.log('   ID:', result.id);
+                        console.log('   Título:', result.title);
+                        console.log('   Autor:', result.author_name);
+                        console.log('   Categoria:', result.category_id);
+                        console.log('   Criado em:', result.created_at);
+                    } else {
+                        console.log('❌ ERRO:', responseData);
+                    }
+                } catch (error) {
+                    console.log('❌ Erro ao parsear resposta:', error.message);
+                    console.log('Resposta bruta:', responseData);
+                }
+            });
+        });
 
-        console.log(`\n💬 TOTAL DE RESPOSTAS: ${replies.rows[0].total_replies}`);
+        req.on('error', (error) => {
+            console.log('❌ Erro na requisição:', error.message);
+        });
+
+        req.write(data);
+        req.end();
 
     } catch (error) {
-        console.error('❌ Erro ao verificar tópicos:', error.message);
-    } finally {
-        if (client) client.release();
-        await pool.end();
+        console.error('❌ Erro no teste:', error.message);
     }
 }
 
-checkTopics();
+testAPICreate();

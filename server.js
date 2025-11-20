@@ -84,358 +84,137 @@ pool.on('error', (err, client) => {
 // ROTAS DO FÓRUM
 // =============================================
 
-// Obter categorias
-app.get('/api/forum/categories', async (req, res) => {
-    try {
-        const result = await pool.query(`
-            SELECT * FROM forum_categories 
-            WHERE is_active = true 
-            ORDER BY display_order, name
-        `);
-        res.json(result.rows);
-    } catch (error) {
-        console.error('Erro ao buscar categorias:', error);
-        res.status(500).json({ error: 'Erro interno do servidor' });
-    }
-});
-
-// Obter tópicos por categoria
-app.get('/api/forum/categories/:slug/topics', async (req, res) => {
-    try {
-        const { slug } = req.params;
-        const { page = 1, limit = 20 } = req.query;
-        const offset = (page - 1) * limit;
-
-        const result = await pool.query(`
-            SELECT 
-                t.*,
-                c.name as category_name,
-                c.slug as category_slug,
-                COUNT(r.id) as reply_count
-            FROM forum_topics t
-            JOIN forum_categories c ON t.category_id = c.id
-            LEFT JOIN forum_replies r ON t.id = r.topic_id
-            WHERE c.slug = $1
-            GROUP BY t.id, c.id
-            ORDER BY t.is_pinned DESC, t.last_reply_at DESC
-            LIMIT $2 OFFSET $3
-        `, [slug, limit, offset]);
-
-        res.json(result.rows);
-    } catch (error) {
-        console.error('Erro ao buscar tópicos:', error);
-        res.status(500).json({ error: 'Erro interno do servidor' });
-    }
-});
-
-// Criar novo tópico
+// 📝 CRIAR NOVO TÓPICO
 app.post('/api/forum/topics', async (req, res) => {
+    console.log('📥 Recebendo requisição para criar tópico:', req.body);
+
+    const client = await pool.connect();
+
     try {
-        const { category_id, title, content, author_discord_id, author_name, author_avatar } = req.body;
+        const {
+            category_id,
+            title,
+            content,
+            author_discord_id,
+            author_name,
+            author_avatar
+        } = req.body;
 
-        const result = await pool.query(`
-            INSERT INTO forum_topics 
-            (category_id, title, content, author_discord_id, author_name, author_avatar)
-            VALUES ($1, $2, $3, $4, $5, $6)
-            RETURNING *
-        `, [category_id, title, content, author_discord_id, author_name, author_avatar]);
-
-        // Atualizar contador da categoria
-        await pool.query(`
-            UPDATE forum_categories 
-            SET topic_count = topic_count + 1, updated_at = CURRENT_TIMESTAMP
-            WHERE id = $1
-        `, [category_id]);
-
-        res.status(201).json(result.rows[0]);
-    } catch (error) {
-        console.error('Erro ao criar tópico:', error);
-        res.status(500).json({ error: 'Erro interno do servidor' });
-    }
-});
-
-// Obter um tópico específico
-app.get('/api/forum/topics/:id', async (req, res) => {
-    try {
-        const { id } = req.params;
-
-        // Incrementar views
-        await pool.query(`
-            UPDATE forum_topics 
-            SET views = views + 1 
-            WHERE id = $1
-        `, [id]);
-
-        const result = await pool.query(`
-            SELECT 
-                t.*,
-                c.name as category_name,
-                c.slug as category_slug
-            FROM forum_topics t
-            JOIN forum_categories c ON t.category_id = c.id
-            WHERE t.id = $1
-        `, [id]);
-
-        if (result.rows.length === 0) {
-            return res.status(404).json({ error: 'Tópico não encontrado' });
+        // Validações
+        if (!category_id || !title || !content || !author_discord_id || !author_name) {
+            return res.status(400).json({
+                error: 'Dados incompletos',
+                required: ['category_id', 'title', 'content', 'author_discord_id', 'author_name']
+            });
         }
 
-        res.json(result.rows[0]);
-    } catch (error) {
-        console.error('Erro ao buscar tópico:', error);
-        res.status(500).json({ error: 'Erro interno do servidor' });
-    }
-});
+        // Verificar se a categoria existe
+        const categoryCheck = await client.query(
+            'SELECT id FROM forum_categories WHERE id = $1 AND is_active = true',
+            [category_id]
+        );
 
-// Obter respostas de um tópico
-app.get('/api/forum/topics/:id/replies', async (req, res) => {
-    try {
-        const { id } = req.params;
-
-        const result = await pool.query(`
-            SELECT * FROM forum_replies 
-            WHERE topic_id = $1 
-            ORDER BY created_at ASC
-        `, [id]);
-
-        res.json(result.rows);
-    } catch (error) {
-        console.error('Erro ao buscar respostas:', error);
-        res.status(500).json({ error: 'Erro interno do servidor' });
-    }
-});
-
-// Adicionar resposta
-app.post('/api/forum/replies', async (req, res) => {
-    try {
-        const { topic_id, content, author_discord_id, author_name, author_avatar } = req.body;
-
-        const result = await pool.query(`
-            INSERT INTO forum_replies 
-            (topic_id, content, author_discord_id, author_name, author_avatar)
-            VALUES ($1, $2, $3, $4, $5)
-            RETURNING *
-        `, [topic_id, content, author_discord_id, author_name, author_avatar]);
-
-        // Atualizar último reply do tópico
-        await pool.query(`
-            UPDATE forum_topics 
-            SET last_reply_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP
-            WHERE id = $1
-        `, [topic_id]);
-
-        // Atualizar contador da categoria
-        await pool.query(`
-            UPDATE forum_categories 
-            SET reply_count = reply_count + 1, updated_at = CURRENT_TIMESTAMP
-            WHERE id = (SELECT category_id FROM forum_topics WHERE id = $1)
-        `, [topic_id]);
-
-        res.status(201).json(result.rows[0]);
-    } catch (error) {
-        console.error('Erro ao criar resposta:', error);
-        res.status(500).json({ error: 'Erro interno do servidor' });
-    }
-});
-
-// Verificar se usuário é admin
-app.get('/api/forum/admins/:discord_id', async (req, res) => {
-    try {
-        const { discord_id } = req.params;
-
-        const result = await pool.query(`
-            SELECT * FROM forum_admins 
-            WHERE discord_user_id = $1 AND is_active = true
-        `, [discord_id]);
-
-        res.json({ isAdmin: result.rows.length > 0 });
-    } catch (error) {
-        console.error('Erro ao verificar admin:', error);
-        res.status(500).json({ error: 'Erro interno do servidor' });
-    }
-});
-
-// Estatísticas do fórum
-app.get('/api/forum/stats', async (req, res) => {
-    try {
-        const stats = await pool.query(`
-            SELECT 
-                (SELECT COUNT(*) FROM forum_topics) as total_topics,
-                (SELECT COUNT(*) FROM forum_replies) as total_replies,
-                (SELECT COUNT(DISTINCT author_discord_id) FROM forum_topics) as total_members,
-                (SELECT COUNT(*) FROM forum_user_stats WHERE last_activity > NOW() - INTERVAL '1 hour') as online_now
-        `);
-
-        res.json(stats.rows[0]);
-    } catch (error) {
-        console.error('Erro ao buscar estatísticas:', error);
-        res.status(500).json({ error: 'Erro interno do servidor' });
-    }
-});
-
-// Pesquisar tópicos
-app.get('/api/forum/search', async (req, res) => {
-    try {
-        const { q, category } = req.query;
-
-        let query = `
-            SELECT 
-                t.*,
-                c.name as category_name,
-                c.slug as category_slug,
-                COUNT(r.id) as reply_count
-            FROM forum_topics t
-            JOIN forum_categories c ON t.category_id = c.id
-            LEFT JOIN forum_replies r ON t.id = r.topic_id
-            WHERE t.title ILIKE $1 OR t.content ILIKE $1
-        `;
-
-        const params = [`%${q}%`];
-
-        if (category) {
-            query += ` AND c.slug = $2`;
-            params.push(category);
+        if (categoryCheck.rows.length === 0) {
+            return res.status(404).json({ error: 'Categoria não encontrada' });
         }
 
-        query += ` GROUP BY t.id, c.id ORDER BY t.last_reply_at DESC LIMIT 20`;
+        // Inserir tópico
+        const result = await client.query(
+            `INSERT INTO forum_topics 
+             (category_id, title, content, author_discord_id, author_name, author_avatar, 
+              views, is_pinned, is_locked, created_at, updated_at) 
+             VALUES ($1, $2, $3, $4, $5, $6, 0, false, false, NOW(), NOW()) 
+             RETURNING *`,
+            [category_id, title.trim(), content.trim(), author_discord_id, author_name, author_avatar]
+        );
 
-        const result = await pool.query(query, params);
-        res.json(result.rows);
-    } catch (error) {
-        console.error('Erro ao pesquisar:', error);
-        res.status(500).json({ error: 'Erro interno do servidor' });
-    }
-});
+        const newTopic = result.rows[0];
+        console.log('✅ Tópico criado com ID:', newTopic.id);
 
-// Deletar resposta
-app.delete('/api/forum/replies/:id', async (req, res) => {
-    try {
-        const { id } = req.params;
+        // Atualizar contagem de tópicos na categoria
+        await client.query(
+            'UPDATE forum_categories SET topic_count = topic_count + 1, updated_at = NOW() WHERE id = $1',
+            [category_id]
+        );
 
-        // Verificar se a resposta existe e obter o topic_id
-        const replyResult = await pool.query('SELECT * FROM forum_replies WHERE id = $1', [id]);
-        if (replyResult.rows.length === 0) {
-            return res.status(404).json({ error: 'Resposta não encontrada' });
-        }
+        // Atualizar estatísticas do usuário
+        await updateUserStats(author_discord_id, author_name, 'topic');
 
-        const reply = replyResult.rows[0];
-
-        // Deletar resposta
-        await pool.query('DELETE FROM forum_replies WHERE id = $1', [id]);
-
-        // Atualizar contador da categoria
-        await pool.query(`
-            UPDATE forum_categories 
-            SET reply_count = GREATEST(0, reply_count - 1), 
-                updated_at = CURRENT_TIMESTAMP
-            WHERE id = (
-                SELECT category_id FROM forum_topics WHERE id = $1
-            )
-        `, [reply.topic_id]);
-
-        res.json({ success: true, message: 'Resposta deletada com sucesso' });
-    } catch (error) {
-        console.error('Erro ao deletar resposta:', error);
-        res.status(500).json({ error: 'Erro interno do servidor' });
-    }
-});
-
-// Atualizar tópico (pin/lock)
-app.patch('/api/forum/topics/:id', async (req, res) => {
-    try {
-        const { id } = req.params;
-        const { is_pinned, is_locked } = req.body;
-
-        const updates = [];
-        const values = [];
-        let paramCount = 1;
-
-        if (is_pinned !== undefined) {
-            updates.push(`is_pinned = $${paramCount}`);
-            values.push(is_pinned);
-            paramCount++;
-        }
-
-        if (is_locked !== undefined) {
-            updates.push(`is_locked = $${paramCount}`);
-            values.push(is_locked);
-            paramCount++;
-        }
-
-        if (updates.length === 0) {
-            return res.status(400).json({ error: 'Nenhum campo para atualizar' });
-        }
-
-        updates.push(`updated_at = CURRENT_TIMESTAMP`);
-        values.push(id);
-
-        const query = `
-            UPDATE forum_topics 
-            SET ${updates.join(', ')}
-            WHERE id = $${paramCount}
-            RETURNING *
-        `;
-
-        const result = await pool.query(query, values);
-
-        if (result.rows.length === 0) {
-            return res.status(404).json({ error: 'Tópico não encontrado' });
-        }
-
-        res.json(result.rows[0]);
-    } catch (error) {
-        console.error('Erro ao atualizar tópico:', error);
-        res.status(500).json({ error: 'Erro interno do servidor' });
-    }
-});
-
-// ROTA: Debug da conexão com o banco
-app.get('/api/debug/database-connection', async (req, res) => {
-    try {
-        // Testar conexão
-        const dbTest = await pool.query('SELECT NOW() as time, current_database() as db_name');
-
-        // Verificar dados
-        const dataCheck = await pool.query(`
-      SELECT 
-        COUNT(*) as total_players,
-        COUNT(CASE WHEN rm_solo_points > 0 THEN 1 END) as players_with_points,
-        COUNT(CASE WHEN clan_tag IS NOT NULL AND clan_tag != '' THEN 1 END) as players_with_clan
-      FROM leaderboard_cache 
-      WHERE name IS NOT NULL AND name != ''
-    `);
-
-        res.json({
-            success: true,
-            connection: {
-                connected: true,
-                database: dbTest.rows[0].db_name,
-                time: dbTest.rows[0].time,
-                connection_string: process.env.DATABASE_URL ? '✅ Configurada' : '❌ Não configurada'
-            },
-            data: dataCheck.rows[0],
-            environment: {
-                node_env: process.env.NODE_ENV,
-                railway_environment: true
-            }
+        res.status(201).json({
+            id: newTopic.id,
+            category_id: newTopic.category_id,
+            title: newTopic.title,
+            content: newTopic.content,
+            author_name: newTopic.author_name,
+            author_discord_id: newTopic.author_discord_id,
+            author_avatar: newTopic.author_avatar,
+            views: newTopic.views,
+            is_pinned: newTopic.is_pinned,
+            is_locked: newTopic.is_locked,
+            created_at: newTopic.created_at,
+            updated_at: newTopic.updated_at
         });
 
     } catch (error) {
-        res.json({
-            success: false,
-            error: error.message,
-            connection: {
-                connected: false,
-                connection_string: process.env.DATABASE_URL ? '✅ Configurada' : '❌ Não configurada',
-                error: error.message
-            },
-            environment: {
-                node_env: process.env.NODE_ENV,
-                railway_environment: true
-            }
+        console.error('❌ Erro ao criar tópico:', error);
+        res.status(500).json({
+            error: 'Erro interno do servidor',
+            details: error.message
         });
+    } finally {
+        client.release();
     }
 });
+
+// 🔧 FUNÇÃO AUXILIAR PARA ATUALIZAR ESTATÍSTICAS DO USUÁRIO
+async function updateUserStats(discordUserId, discordUsername, type) {
+    const client = await pool.connect();
+
+    try {
+        const userStats = await client.query(
+            'SELECT id FROM forum_user_stats WHERE discord_user_id = $1',
+            [discordUserId]
+        );
+
+        if (userStats.rows.length === 0) {
+            // Criar novo registro
+            await client.query(
+                `INSERT INTO forum_user_stats 
+                 (discord_user_id, discord_username, topics_created, replies_created, 
+                  likes_received, last_activity, joined_at, updated_at) 
+                 VALUES ($1, $2, $3, $4, 0, NOW(), NOW(), NOW())`,
+                [
+                    discordUserId,
+                    discordUsername,
+                    type === 'topic' ? 1 : 0,
+                    type === 'reply' ? 1 : 0
+                ]
+            );
+        } else {
+            // Atualizar registro existente
+            if (type === 'topic') {
+                await client.query(
+                    'UPDATE forum_user_stats SET topics_created = topics_created + 1, last_activity = NOW(), updated_at = NOW() WHERE discord_user_id = $1',
+                    [discordUserId]
+                );
+            } else if (type === 'reply') {
+                await client.query(
+                    'UPDATE forum_user_stats SET replies_created = replies_created + 1, last_activity = NOW(), updated_at = NOW() WHERE discord_user_id = $1',
+                    [discordUserId]
+                );
+            }
+        }
+    } catch (error) {
+        console.error('❌ Erro ao atualizar estatísticas do usuário:', error);
+    } finally {
+        client.release();
+    }
+}
+
+// =============================================
+// ROTAS DO FÓRUM
+// =============================================
+
 
 // Função para converter pontos em classe/rank
 function pointsToClass(points) {

@@ -10,6 +10,12 @@
     <link rel="icon" type="image/png" href="https://i.postimg.cc/3JT4W3hz/favicon.png">
 
     <style>
+        /* Pequeno ajuste para garantir padding igual ao restante do site */
+        main {
+            padding-top: 2rem;
+            padding-bottom: 2rem;
+        }
+
         /* ESTILOS PARA HEADER CORRIGIDO */
         .header-content {
             display: flex;
@@ -692,43 +698,45 @@
     </header>
     <!-- ======= FIM HEADER ======= -->
 
-    <main class="container">
-        <!-- Mensagem para usuários não autenticados -->
-        <div id="noAuthMessage" data-no-auth class="no-auth-message" style="display: none;">
-            <i class="fab fa-discord"></i>
-            <h3>Faça login para acessar o fórum</h3>
-            <p>Conecte-se com sua conta Discord para participar das discussões da comunidade</p>
-            <button class="login-btn" onclick="window.forumUI.redirectToLogin()">
+    <main>
+        <div class="container">
+            <!-- Mensagem para usuários não autenticados -->
+            <div id="noAuthMessage" data-no-auth class="no-auth-message" style="display: none;">
                 <i class="fab fa-discord"></i>
-                Entrar com Discord
-            </button>
-        </div>
+                <h3>Faça login para acessar o fórum</h3>
+                <p>Conecte-se com sua conta Discord para participar das discussões da comunidade</p>
+                <button class="login-btn" onclick="window.forumUI && window.forumUI.redirectToLogin()">
+                    <i class="fab fa-discord"></i>
+                    Entrar com Discord
+                </button>
+            </div>
 
-        <!-- Conteúdo principal (visível apenas para usuários autenticados) -->
-        <div id="forumContent" data-auth-only style="display: none;">
-            <section class="forum-hero">
-                <h1>Fórum da Comunidade</h1>
-                <p>Converse, compartilhe estratégias e faça parte da comunidade Age of Empires IV Brasil</p>
+            <!-- Conteúdo principal (visível apenas para usuários autenticados) -->
+            <div id="forumContent" data-auth-only style="display: none;">
+                <section class="forum-hero">
+                    <h1>Fórum da Comunidade</h1>
+                    <p>Converse, compartilhe estratégias e faça parte da comunidade Age of Empires IV Brasil</p>
 
-                <div class="forum-stats" id="forum-stats">
-                    <!-- Stats carregados via JavaScript -->
-                </div>
-            </section>
+                    <div class="forum-stats" id="forum-stats">
+                        <!-- Stats carregados via JavaScript -->
+                    </div>
+                </section>
 
-            <section class="forum-categories" id="categories-list">
-                <!-- Categorias carregadas via JavaScript -->
-            </section>
+                <section class="forum-categories" id="categories-list">
+                    <!-- Categorias carregadas via JavaScript -->
+                </section>
 
-            <section class="recent-topics">
-                <div class="topics-header">
-                    <h3>Tópicos Recentes</h3>
+                <section class="recent-topics">
+                    <div class="topics-header">
+                        <h3>Tópicos Recentes</h3>
+                        <!-- você pode colocar um botão "ver todos" aqui -->
+                    </div>
 
-                </div>
-
-                <div class="topics-list" id="recent-topics-list">
-                    <!-- Tópicos carregados via JavaScript -->
-                </div>
-            </section>
+                    <div class="topics-list" id="recent-topics-list">
+                        <!-- Tópicos carregados via JavaScript -->
+                    </div>
+                </section>
+            </div>
         </div>
     </main>
 
@@ -801,6 +809,7 @@
             const forumContent = document.getElementById('forumContent');
 
             function renderHeader() {
+                // tenta obter usuário via discordAuth (se existir) ou via forumAPI (fallback)
                 const user = window.discordAuth && typeof window.discordAuth.getCurrentUser === 'function'
                     ? window.discordAuth.getCurrentUser()
                     : (window.forumAPI && window.forumAPI.currentUser) || null;
@@ -811,12 +820,14 @@
                         ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.webp?size=64`
                         : `https://cdn.discordapp.com/embed/avatars/${user.discriminator % 5}.png`;
 
-                    userInfo.style.display = '';
-                    userInfo.innerHTML = `
-                        <div class="user-avatar"><img src="${avatar}" alt="${user.username}"></div>
-                        <div class="user-name">${user.global_name || user.username}</div>
-                        ${isAdmin ? '<span class="admin-badge">ADMIN</span>' : ''}
-                    `;
+                    if (userInfo) {
+                        userInfo.style.display = '';
+                        userInfo.innerHTML = `
+                            <div class="user-avatar"><img src="${avatar}" alt="${user.username}"></div>
+                            <div class="user-name">${user.global_name || user.username}</div>
+                            ${isAdmin ? '<span class="admin-badge">ADMIN</span>' : ''}
+                        `;
+                    }
 
                     if (loginBtn) loginBtn.style.display = 'none';
                     if (logoutBtn) logoutBtn.style.display = '';

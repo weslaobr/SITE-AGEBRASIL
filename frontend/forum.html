@@ -16,7 +16,7 @@
             padding-bottom: 2rem;
         }
 
-        /* ESTILOS PARA HEADER - PADRÃO IDÊNTICO AO forum-category.html */
+        /* ESTILOS PARA HEADER CORRIGIDO */
         .header-content {
             display: flex;
             justify-content: space-between;
@@ -67,9 +67,13 @@
             display: flex;
             align-items: center;
             gap: 1rem;
+            margin-left: auto;
+            /* Mantém à direita */
         }
 
-        #userInfo {
+        /* ESTILO PARA BOTÃO DE LOGIN QUANDO NÃO ESTÁ LOGADO */
+        #userInfo,
+        .login-btn {
             display: flex;
             align-items: center;
             gap: 0.5rem;
@@ -121,6 +125,35 @@
 
         .logout-btn:hover {
             background: #2d3748;
+        }
+
+        /* ESTILO ESPECÍFICO PARA O BOTÃO DE LOGIN QUANDO NÃO LOGADO */
+        .login-container {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: var(--secondary-color);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            border: 1px solid var(--border-color);
+        }
+
+        /* Adicione esta regra CSS */
+        #loginBtn[data-no-auth] {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: var(--secondary-color);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
+            font-weight: 600;
+        }
+
+        #loginBtn[data-no-auth]:hover {
+            background: var(--accent-color);
+            color: white;
         }
 
         /* ESTADO SEM AUTENTICAÇÃO */

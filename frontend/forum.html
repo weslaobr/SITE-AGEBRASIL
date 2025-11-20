@@ -16,7 +16,7 @@
             padding-bottom: 2rem;
         }
 
-        /* ESTILOS PARA HEADER CORRIGIDO */
+        /* ESTILOS PARA HEADER CORRIGIDO - PADRÃO IGUAL AO LOGADO */
         .header-content {
             display: flex;
             justify-content: space-between;
@@ -68,12 +68,10 @@
             align-items: center;
             gap: 1rem;
             margin-left: auto;
-            /* Mantém à direita */
         }
 
-        /* ESTILO PARA BOTÃO DE LOGIN QUANDO NÃO ESTÁ LOGADO */
-        #userInfo,
-        .login-btn {
+        /* CONTAINER PARA AMBOS OS ESTADOS (LOGADO E NÃO LOGADO) */
+        .user-info-container {
             display: flex;
             align-items: center;
             gap: 0.5rem;
@@ -81,6 +79,12 @@
             padding: 0.5rem 1rem;
             border-radius: 20px;
             border: 1px solid var(--border-color);
+        }
+
+        /* ESTILO PARA QUANDO ESTÁ LOGADO */
+        #userInfo {
+            display: none;
+            /* Inicialmente escondido */
         }
 
         .user-avatar img {
@@ -96,9 +100,33 @@
             font-size: 0.9rem;
         }
 
-        .login-btn,
+        /* ESTILO PARA QUANDO NÃO ESTÁ LOGADO */
+        #loginContainer {
+            display: none;
+            /* Inicialmente escondido */
+        }
+
+        .login-btn {
+            background: none;
+            border: none;
+            color: var(--text-color);
+            font-weight: 600;
+            cursor: pointer;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+            transition: color 0.3s ease;
+        }
+
+        .login-btn:hover {
+            color: var(--accent-color);
+        }
+
+        /* BOTÃO DE LOGOUT (separado) */
         .logout-btn {
-            background: var(--accent-color);
+            background: #4a5568;
             color: white;
             border: none;
             padding: 0.7rem 1.2rem;
@@ -110,21 +138,11 @@
             align-items: center;
             gap: 0.5rem;
             font-size: 0.9rem;
-            white-space: nowrap;
-        }
-
-        .login-btn:hover,
-        .logout-btn:hover {
-            background: #c53030;
-            transform: translateY(-1px);
-        }
-
-        .logout-btn {
-            background: #4a5568;
         }
 
         .logout-btn:hover {
             background: #2d3748;
+            transform: translateY(-1px);
         }
 
         /* ESTILO ESPECÍFICO PARA O BOTÃO DE LOGIN QUANDO NÃO LOGADO */
@@ -710,15 +728,27 @@
                     </ul>
                 </nav>
 
-                <!-- Controles de Autenticação (padronizado) -->
+                <!-- Controles de Autenticação (CORRIGIDO) -->
                 <div class="user-actions">
-                    <div id="userInfo" data-auth-only style="display: none;">
-                        <!-- Informações do usuário serão carregadas aqui -->
+                    <!-- Container do usuário logado -->
+                    <div id="userInfo" data-auth-only class="user-info-container" style="display: none;">
+                        <div class="user-avatar">
+                            <!-- Avatar será carregado via JavaScript -->
+                        </div>
+                        <div class="user-name">
+                            <!-- Nome será carregado via JavaScript -->
+                        </div>
                     </div>
-                    <button id="loginBtn" data-no-auth class="login-btn">
-                        <i class="fab fa-discord"></i>
-                        Entrar com Discord
-                    </button>
+
+                    <!-- Container do botão de login (não logado) -->
+                    <div id="loginContainer" data-no-auth class="user-info-container" style="display: none;">
+                        <i class="fab fa-discord" style="color: #5865F2;"></i>
+                        <button id="loginBtn" class="login-btn">
+                            Entrar com Discord
+                        </button>
+                    </div>
+
+                    <!-- Botão de logout -->
                     <button id="logoutBtn" data-auth-only style="display: none;" class="logout-btn">
                         <i class="fas fa-sign-out-alt"></i>
                         Sair
@@ -831,75 +861,71 @@
     </footer>
 
     <script>
-        // RENDERIZAÇÃO PADRONIZADA DO HEADER (compatível com seu discord-login.js e forum-api.js)
+        // RENDERIZAÇÃO CORRIGIDA DO HEADER
         document.addEventListener('DOMContentLoaded', () => {
             const userInfo = document.getElementById('userInfo');
+            const loginContainer = document.getElementById('loginContainer');
             const loginBtn = document.getElementById('loginBtn');
             const logoutBtn = document.getElementById('logoutBtn');
-            const noAuthMessage = document.getElementById('noAuthMessage');
-            const forumContent = document.getElementById('forumContent');
 
             function renderHeader() {
-                // tenta obter usuário via discordAuth (se existir) ou via forumAPI (fallback)
                 const user = window.discordAuth && typeof window.discordAuth.getCurrentUser === 'function'
                     ? window.discordAuth.getCurrentUser()
                     : (window.forumAPI && window.forumAPI.currentUser) || null;
-                const isAdmin = window.forumAPI && window.forumAPI.isAdmin;
 
                 if (user) {
-                    const avatar = user.avatar
-                        ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.webp?size=64`
-                        : `https://cdn.discordapp.com/embed/avatars/${user.discriminator % 5}.png`;
-
+                    // USUÁRIO LOGADO
                     if (userInfo) {
-                        userInfo.style.display = '';
-                        userInfo.innerHTML = `
-                            <div class="user-avatar"><img src="${avatar}" alt="${user.username}"></div>
-                            <div class="user-name">${user.global_name || user.username}</div>
-                            ${isAdmin ? '<span class="admin-badge">ADMIN</span>' : ''}
-                        `;
-                    }
+                        userInfo.style.display = 'flex';
+                        const avatar = user.avatar
+                            ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.webp?size=64`
+                            : `https://cdn.discordapp.com/embed/avatars/${user.discriminator % 5}.png`;
 
-                    if (loginBtn) loginBtn.style.display = 'none';
-                    if (logoutBtn) logoutBtn.style.display = '';
-                    if (noAuthMessage) noAuthMessage.style.display = 'none';
-                    if (forumContent) forumContent.style.display = '';
+                        userInfo.innerHTML = `
+                        <div class="user-avatar"><img src="${avatar}" alt="${user.username}"></div>
+                        <div class="user-name">${user.global_name || user.username}</div>
+                    `;
+                    }
+                    if (loginContainer) loginContainer.style.display = 'none';
+                    if (logoutBtn) logoutBtn.style.display = 'flex';
                 } else {
+                    // USUÁRIO NÃO LOGADO
                     if (userInfo) userInfo.style.display = 'none';
-                    if (loginBtn) loginBtn.style.display = '';
+                    if (loginContainer) loginContainer.style.display = 'flex';
                     if (logoutBtn) logoutBtn.style.display = 'none';
-                    if (noAuthMessage) noAuthMessage.style.display = '';
-                    if (forumContent) forumContent.style.display = 'none';
                 }
             }
 
-            if (loginBtn) loginBtn.addEventListener('click', (e) => {
-                e.preventDefault();
-                if (window.discordAuth && typeof window.discordAuth.login === 'function') {
-                    window.discordAuth.login();
-                } else {
-                    console.warn('discordAuth.login não disponível');
-                }
-            });
+            // Event listeners
+            if (loginBtn) {
+                loginBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    if (window.discordAuth && typeof window.discordAuth.login === 'function') {
+                        window.discordAuth.login();
+                    } else {
+                        console.warn('discordAuth.login não disponível');
+                    }
+                });
+            }
 
-            if (logoutBtn) logoutBtn.addEventListener('click', (e) => {
-                e.preventDefault();
-                if (window.discordAuth && typeof window.discordAuth.logout === 'function') {
-                    window.discordAuth.logout();
-                } else {
-                    // fallback clear
-                    localStorage.removeItem('discord_user');
-                    localStorage.removeItem('discord_access_token');
-                    setTimeout(() => location.reload(), 300);
-                }
-            });
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    if (window.discordAuth && typeof window.discordAuth.logout === 'function') {
+                        window.discordAuth.logout();
+                    } else {
+                        localStorage.removeItem('discord_user');
+                        localStorage.removeItem('discord_access_token');
+                        setTimeout(() => location.reload(), 300);
+                    }
+                });
+            }
 
-            // inicializa após libs carregarem (tenta 3x rapidamente)
+            // Inicializar
             setTimeout(renderHeader, 250);
             setTimeout(renderHeader, 800);
             setTimeout(renderHeader, 1500);
 
-            // se forumAPI emitir algum evento, você pode chamar renderHeader() depois de login
             window.renderForumHeader = renderHeader;
         });
     </script>

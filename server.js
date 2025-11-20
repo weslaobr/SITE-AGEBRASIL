@@ -458,8 +458,152 @@ app.get('/api/debug/forum', async (req, res) => {
     }
 });
 
+// 🗑️ DELETAR TÓPICO
+app.delete('/api/forum/topics/:id', async (req, res) => {
+    const { id } = req.params;
+    console.log(`🗑️ Solicitação para deletar tópico ID: ${id}`);
+
+    const client = await pool.connect();
+
+    try {
+        // Checar se o tópico existe
+        const topicCheck = await client.query(
+            'SELECT id, category_id FROM forum_topics WHERE id = $1',
+            [id]
+        );
+
+        if (topicCheck.rows.length === 0) {
+            return res.status(404).json({ error: 'Tópico não encontrado' });
+        }
+
+        const categoryId = topicCheck.rows[0].category_id;
+
+        // Deletar respostas do tópico
+        await client.query('DELETE FROM forum_replies WHERE topic_id = $1', [id]);
+
+        // Deletar o tópico
+        await client.query('DELETE FROM forum_topics WHERE id = $1', [id]);
+
+        // Atualizar contagem
+        await client.query(
+            'UPDATE forum_categories SET topic_count = topic_count - 1 WHERE id = $1',
+            [categoryId]
+        );
+
+        console.log(`✅ Tópico ${id} deletado`);
+        res.json({ success: true });
+
+    } catch (error) {
+        console.error('❌ Erro ao deletar tópico:', error);
+        res.status(500).json({ error: 'Erro interno do servidor' });
+    } finally {
+        client.release();
+    }
+});
+
+
+// 🗑️ DELETAR RESPOSTA
+app.delete('/api/forum/replies/:id', async (req, res) => {
+    const { id } = req.params;
+    console.log(`🗑️ Deletando resposta ID: ${id}`);
+
+    const client = await pool.connect();
+
+    try {
+        const replyCheck = await client.query(
+            'SELECT topic_id FROM forum_replies WHERE id = $1',
+            [id]
+        );
+
+        if (replyCheck.rows.length === 0) {
+            return res.status(404).json({ error: 'Resposta não encontrada' });
+        }
+
+        const topicId = replyCheck.rows[0].topic_id;
+
+        // Deletar resposta
+        await client.query('DELETE FROM forum_replies WHERE id = $1', [id]);
+
+        // Atualizar contagem
+        await client.query(
+            `UPDATE forum_categories 
+             SET reply_count = reply_count - 1 
+             WHERE id = (SELECT category_id FROM forum_topics WHERE id = $1)`,
+            [topicId]
+        );
+
+        console.log(`✅ Resposta ${id} deletada`);
+        res.json({ success: true });
+
+    } catch (error) {
+        console.error('❌ Erro ao deletar resposta:', error);
+        res.status(500).json({ error: 'Erro interno do servidor' });
+    } finally {
+        client.release();
+    }
+});
+
+// 📌 ALTERAR PIN DO TÓPICO
+app.patch('/api/forum/topics/:id/pin', async (req, res) => {
+    const { id } = req.params;
+    const { is_pinned } = req.body;
+
+    const client = await pool.connect();
+
+    try {
+        const result = await client.query(
+            `UPDATE forum_topics 
+             SET is_pinned = $1, updated_at = NOW() 
+             WHERE id = $2 
+             RETURNING *`,
+            [is_pinned, id]
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'Tópico não encontrado' });
+        }
+
+        res.json(result.rows[0]);
+
+    } catch (err) {
+        res.status(500).json({ error: 'Erro ao atualizar pin' });
+    } finally {
+        client.release();
+    }
+});
+
+// 🔒 ALTERAR BLOQUEIO DO TÓPICO
+app.patch('/api/forum/topics/:id/lock', async (req, res) => {
+    const { id } = req.params;
+    const { is_locked } = req.body;
+
+    const client = await pool.connect();
+
+    try {
+        const result = await client.query(
+            `UPDATE forum_topics 
+             SET is_locked = $1, updated_at = NOW() 
+             WHERE id = $2 
+             RETURNING *`,
+            [is_locked, id]
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'Tópico não encontrado' });
+        }
+
+        res.json(result.rows[0]);
+
+    } catch (err) {
+        res.status(500).json({ error: 'Erro ao atualizar bloqueio' });
+    } finally {
+        client.release();
+    }
+});
+
+
 // =============================================
-// ROTAS DO FÓRUM
+// ROTAS DO FINAL FÓRUM
 // =============================================
 
 const corsOptions = {

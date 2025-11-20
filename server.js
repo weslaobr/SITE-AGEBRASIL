@@ -51,10 +51,10 @@ app.get('/admin.html', (req, res) => {
 // CONFIGURAÇÃO DE ATUALIZAÇÃO AUTOMÁTICA
 const AUTO_UPDATE_CONFIG = {
     enabled: true,
-    interval: 15 * 60 * 1000,
+    interval: 30 * 60 * 1000,
     playersPerBatch: 10,
     delayBetweenRequests: 2000,
-    maxPlayersPerUpdate: 15
+    maxPlayersPerUpdate: 20
 };
 
 // Configuração do PostgreSQL - CORRIGIDA
@@ -303,6 +303,88 @@ app.get('/api/forum/search', async (req, res) => {
         res.json(result.rows);
     } catch (error) {
         console.error('Erro ao pesquisar:', error);
+        res.status(500).json({ error: 'Erro interno do servidor' });
+    }
+});
+
+// Deletar resposta
+app.delete('/api/forum/replies/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        // Verificar se a resposta existe e obter o topic_id
+        const replyResult = await pool.query('SELECT * FROM forum_replies WHERE id = $1', [id]);
+        if (replyResult.rows.length === 0) {
+            return res.status(404).json({ error: 'Resposta não encontrada' });
+        }
+
+        const reply = replyResult.rows[0];
+
+        // Deletar resposta
+        await pool.query('DELETE FROM forum_replies WHERE id = $1', [id]);
+
+        // Atualizar contador da categoria
+        await pool.query(`
+            UPDATE forum_categories 
+            SET reply_count = GREATEST(0, reply_count - 1), 
+                updated_at = CURRENT_TIMESTAMP
+            WHERE id = (
+                SELECT category_id FROM forum_topics WHERE id = $1
+            )
+        `, [reply.topic_id]);
+
+        res.json({ success: true, message: 'Resposta deletada com sucesso' });
+    } catch (error) {
+        console.error('Erro ao deletar resposta:', error);
+        res.status(500).json({ error: 'Erro interno do servidor' });
+    }
+});
+
+// Atualizar tópico (pin/lock)
+app.patch('/api/forum/topics/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { is_pinned, is_locked } = req.body;
+
+        const updates = [];
+        const values = [];
+        let paramCount = 1;
+
+        if (is_pinned !== undefined) {
+            updates.push(`is_pinned = $${paramCount}`);
+            values.push(is_pinned);
+            paramCount++;
+        }
+
+        if (is_locked !== undefined) {
+            updates.push(`is_locked = $${paramCount}`);
+            values.push(is_locked);
+            paramCount++;
+        }
+
+        if (updates.length === 0) {
+            return res.status(400).json({ error: 'Nenhum campo para atualizar' });
+        }
+
+        updates.push(`updated_at = CURRENT_TIMESTAMP`);
+        values.push(id);
+
+        const query = `
+            UPDATE forum_topics 
+            SET ${updates.join(', ')}
+            WHERE id = $${paramCount}
+            RETURNING *
+        `;
+
+        const result = await pool.query(query, values);
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'Tópico não encontrado' });
+        }
+
+        res.json(result.rows[0]);
+    } catch (error) {
+        console.error('Erro ao atualizar tópico:', error);
         res.status(500).json({ error: 'Erro interno do servidor' });
     }
 });

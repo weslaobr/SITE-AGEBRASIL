@@ -10,13 +10,20 @@
     <link rel="icon" type="image/png" href="https://i.postimg.cc/3JT4W3hz/favicon.png">
 
     <style>
-        /* ESTILOS PARA HEADER */
-        .header-content {
+        /* HEADER COM DUAS LINHAS - PADRONIZADO */
+        .header-top {
             display: flex;
             justify-content: space-between;
             align-items: center;
             flex-wrap: wrap;
             gap: 1rem;
+            padding-bottom: 1rem;
+        }
+
+        .header-bottom {
+            display: flex;
+            justify-content: flex-end;
+            padding-top: 1rem;
         }
 
         .logo {
@@ -61,10 +68,9 @@
             display: flex;
             align-items: center;
             gap: 1rem;
-            margin-left: auto;
         }
 
-        #userInfo {
+        .user-info-container {
             display: flex;
             align-items: center;
             gap: 0.5rem;
@@ -87,9 +93,26 @@
             font-size: 0.9rem;
         }
 
-        .login-btn,
+        .login-btn-header {
+            background: none;
+            border: none;
+            color: var(--text-color);
+            font-weight: 600;
+            cursor: pointer;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+            transition: color 0.3s ease;
+        }
+
+        .login-btn-header:hover {
+            color: var(--accent-color);
+        }
+
         .logout-btn {
-            background: var(--accent-color);
+            background: #4a5568;
             color: white;
             border: none;
             padding: 0.7rem 1.2rem;
@@ -101,21 +124,42 @@
             align-items: center;
             gap: 0.5rem;
             font-size: 0.9rem;
-            white-space: nowrap;
-        }
-
-        .login-btn:hover,
-        .logout-btn:hover {
-            background: #c53030;
-            transform: translateY(-1px);
-        }
-
-        .logout-btn {
-            background: #4a5568;
         }
 
         .logout-btn:hover {
             background: #2d3748;
+            transform: translateY(-1px);
+        }
+
+        .admin-badge {
+            background: var(--accent-color);
+            color: white;
+            padding: 0.2rem 0.6rem;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+
+        @media (max-width: 768px) {
+            .header-top {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+            }
+
+            .header-bottom {
+                justify-content: center;
+            }
+
+            nav ul {
+                gap: 1rem;
+                flex-wrap: wrap;
+            }
+
+            .user-actions {
+                width: 100%;
+                justify-content: center;
+            }
         }
 
         /* ESTILOS DA CATEGORIA */
@@ -524,23 +568,6 @@
 
         /* RESPONSIVIDADE */
         @media (max-width: 768px) {
-            .header-content {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 1rem;
-            }
-
-            .user-actions {
-                margin-left: 0;
-                width: 100%;
-                justify-content: center;
-            }
-
-            nav ul {
-                gap: 1rem;
-                flex-wrap: wrap;
-            }
-
             .category-title {
                 font-size: 1.8rem;
             }
@@ -789,18 +816,19 @@
     </script>
 
     <script>
-        // GERENCIADOR DE AUTENTICAÇÃO PARA forum-category.html
+        // GERENCIADOR PADRONIZADO DO HEADER
         document.addEventListener('DOMContentLoaded', () => {
             const userInfo = document.getElementById('userInfo');
             const loginContainer = document.getElementById('loginContainer');
             const loginBtn = document.getElementById('loginBtn');
             const logoutBtn = document.getElementById('logoutBtn');
             const noAuthMessage = document.getElementById('noAuthMessage');
-            const categoryContent = document.getElementById('categoryContent');
+            const content = document.getElementById('categoryContent');
 
-            function renderAuth() {
+            function renderHeader() {
                 // Tenta obter usuário de várias fontes
                 let user = null;
+                let isAdmin = false;
 
                 if (window.discordAuth && typeof window.discordAuth.getCurrentUser === 'function') {
                     user = window.discordAuth.getCurrentUser();
@@ -816,8 +844,7 @@
                     }
                 }
 
-                // Verifica se é admin (exemplo - ajuste conforme sua lógica)
-                let isAdmin = false;
+                // Verifica se é admin
                 if (user && user.username === 'BRO.WESLAO') {
                     isAdmin = true;
                 }
@@ -839,14 +866,14 @@
                     if (loginContainer) loginContainer.style.display = 'none';
                     if (logoutBtn) logoutBtn.style.display = 'flex';
                     if (noAuthMessage) noAuthMessage.style.display = 'none';
-                    if (categoryContent) categoryContent.style.display = '';
+                    if (content) content.style.display = '';
                 } else {
                     // USUÁRIO NÃO LOGADO
                     if (userInfo) userInfo.style.display = 'none';
                     if (loginContainer) loginContainer.style.display = 'flex';
                     if (logoutBtn) logoutBtn.style.display = 'none';
                     if (noAuthMessage) noAuthMessage.style.display = '';
-                    if (categoryContent) categoryContent.style.display = 'none';
+                    if (content) content.style.display = 'none';
                 }
             }
 
@@ -876,9 +903,9 @@
             }
 
             // Inicializar
-            renderAuth();
-            setTimeout(renderAuth, 500);
-            setTimeout(renderAuth, 1000);
+            renderHeader();
+            setTimeout(renderHeader, 500);
+            setTimeout(renderHeader, 1000);
         });
     </script>
 

@@ -1,4 +1,4 @@
-// forum-category.js - VERSÃO POSTGRESQL COMPLETA
+// forum-category.js - VERSÃO POSTGRESQL COMPLETA (COM AVATAR CORRIGIDO)
 class ForumCategoryUI {
     constructor() {
         this.api = window.forumAPI;
@@ -106,7 +106,6 @@ class ForumCategoryUI {
         console.log('📂 Carregando categoria:', this.currentCategorySlug);
 
         try {
-            // Aguardar categorias carregarem
             if (!this.api.categories || this.api.categories.length === 0) {
                 await this.api.loadCategories();
             }
@@ -139,9 +138,11 @@ class ForumCategoryUI {
         document.getElementById('categoryTitle').textContent = this.currentCategory.name;
         document.getElementById('categoryDescription').textContent = this.currentCategory.description;
 
-        // Usar contagens do PostgreSQL
-        document.getElementById('topicCount').textContent = this.currentCategory.topic_count || this.currentCategory.topicCount || 0;
-        document.getElementById('replyCount').textContent = this.currentCategory.reply_count || this.currentCategory.replyCount || 0;
+        document.getElementById('topicCount').textContent =
+            this.currentCategory.topic_count || this.currentCategory.topicCount || 0;
+
+        document.getElementById('replyCount').textContent =
+            this.currentCategory.reply_count || this.currentCategory.replyCount || 0;
 
         const categoryMembers = await this.calculateCategoryMembers();
         document.getElementById('categoryMembers').textContent = categoryMembers;
@@ -160,8 +161,15 @@ class ForumCategoryUI {
 
     async loadTopics() {
         try {
-            const topics = await this.api.getTopics(this.currentCategorySlug);
+            let topics = await this.api.getTopics(this.currentCategorySlug);
             const topicsList = document.getElementById('topicsList');
+
+            // 🔥 PADRONIZAR CAMPOS DO SERVIDOR
+            topics = topics.map(t => ({
+                ...t,
+                authorAvatar: t.authorAvatar || t.author_avatar,
+                authorId: t.authorId || t.author_discord_id
+            }));
 
             if (!topics || topics.length === 0) {
                 topicsList.innerHTML = `
@@ -177,6 +185,7 @@ class ForumCategoryUI {
             const topicsHTML = await Promise.all(topics.map(async (topic) => {
                 const replies = await this.api.getReplies(topic.id);
                 const replyCount = replies.length;
+
                 const isPinned = topic.isPinned;
                 const isLocked = topic.isLocked;
 
@@ -184,23 +193,26 @@ class ForumCategoryUI {
                     <div class="topic-item ${isPinned ? 'pinned' : ''}" onclick="forumCategoryUI.viewTopic(${topic.id})">
                         <div class="topic-avatar">
                             ${topic.authorAvatar ?
-                        `<img src="https://cdn.discordapp.com/avatars/${topic.authorId}/${topic.authorAvatar}.webp?size=45" 
-                                      alt="${topic.author}"
-                                      onerror="this.src='https://cdn.discordapp.com/embed/avatars/${topic.authorId % 5}.png'">` :
+                        `<img src="https://cdn.discordapp.com/avatars/${topic.authorId}/${topic.authorAvatar}.webp?size=45"
+                                      onerror="this.src='https://cdn.discordapp.com/embed/avatars/${topic.authorId % 5}.png'">`
+                        :
                         `<span>${topic.author.charAt(0)}</span>`
                     }
                         </div>
+
                         <div class="topic-content">
                             <div class="topic-title">
                                 ${isPinned ? '<i class="fas fa-thumbtack" style="color: #e53e3e; margin-right: 5px;"></i>' : ''}
                                 ${isLocked ? '<i class="fas fa-lock" style="color: #a0aec0; margin-right: 5px;"></i>' : ''}
                                 ${topic.title}
                             </div>
+
                             <div class="topic-meta">
                                 <span>por ${topic.author}</span>
                                 <span>${this.formatDate(topic.updatedAt || topic.createdAt)}</span>
                             </div>
                         </div>
+
                         <div class="topic-stats">
                             <div class="stat">
                                 <i class="fas fa-reply"></i>
@@ -257,8 +269,8 @@ class ForumCategoryUI {
         try {
             const topicData = {
                 categoryId: this.currentCategory.id,
-                title: title,
-                content: content
+                title,
+                content
             };
 
             await this.api.createTopic(topicData);
@@ -290,22 +302,22 @@ class ForumCategoryUI {
 
         const date = new Date(dateString);
         const now = new Date();
-        const diffMs = now - date;
-        const diffMins = Math.floor(diffMs / 60000);
-        const diffHours = Math.floor(diffMs / 3600000);
-        const diffDays = Math.floor(diffMs / 86400000);
+        const diff = now - date;
 
-        if (diffMins < 1) return 'Agora mesmo';
-        if (diffMins < 60) return `${diffMins} min atrás`;
-        if (diffHours < 24) return `${diffHours} h atrás`;
-        if (diffDays < 7) return `${diffDays} dias atrás`;
+        const mins = Math.floor(diff / 60000);
+        const hours = Math.floor(diff / 3600000);
+        const days = Math.floor(diff / 86400000);
+
+        if (mins < 1) return 'Agora mesmo';
+        if (mins < 60) return `${mins} min atrás`;
+        if (hours < 24) return `${hours} h atrás`;
+        if (days < 7) return `${days} dias atrás`;
 
         return date.toLocaleDateString('pt-BR');
     }
 
     showNotification(message, type = 'info') {
         const notification = document.createElement('div');
-        notification.className = `notification ${type === 'error' ? 'notification-error' : type === 'warning' ? 'notification-warning' : ''}`;
 
         const icon = type === 'success' ? 'check-circle' :
             type === 'error' ? 'exclamation-triangle' : 'info-circle';
@@ -338,39 +350,32 @@ class ForumCategoryUI {
 
         setTimeout(() => {
             notification.style.animation = 'slideOutRight 0.3s ease';
-            setTimeout(() => {
-                if (notification.parentNode) {
-                    notification.parentNode.removeChild(notification);
-                }
-            }, 300);
+            setTimeout(() => notification.remove(), 300);
         }, 5000);
     }
 
     showError(message) {
-        const categoryContent = document.getElementById('categoryContent');
-        if (categoryContent) {
-            categoryContent.innerHTML = `
-                <div class="no-auth-message">
-                    <i class="fas fa-exclamation-triangle"></i>
-                    <h3>Erro</h3>
-                    <p>${message}</p>
-                    <div style="display: flex; gap: 1rem; justify-content: center; margin-top: 1.5rem;">
-                        <button class="login-btn" onclick="window.location.href = 'forum.html'">
-                            <i class="fas fa-arrow-left"></i>
-                            Voltar ao Fórum
-                        </button>
-                        <button class="login-btn" onclick="window.location.reload()">
-                            <i class="fas fa-redo"></i>
-                            Recarregar
-                        </button>
-                    </div>
+        const container = document.getElementById('categoryContent');
+        if (!container) return;
+
+        container.innerHTML = `
+            <div class="no-auth-message">
+                <i class="fas fa-exclamation-triangle"></i>
+                <h3>Erro</h3>
+                <p>${message}</p>
+                <div style="display: flex; gap: 1rem; justify-content: center; margin-top: 1.5rem;">
+                    <button class="login-btn" onclick="window.location.href = 'forum.html'">
+                        <i class="fas fa-arrow-left"></i> Voltar ao Fórum
+                    </button>
+                    <button class="login-btn" onclick="window.location.reload()">
+                        <i class="fas fa-redo"></i> Recarregar
+                    </button>
                 </div>
-            `;
-        }
+            </div>
+        `;
     }
 }
 
-// Inicializar quando DOM estiver pronto
 document.addEventListener('DOMContentLoaded', () => {
     console.log('🚀 DOM carregado, inicializando ForumCategoryUI...');
     window.forumCategoryUI = new ForumCategoryUI();

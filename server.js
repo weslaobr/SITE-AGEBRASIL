@@ -84,7 +84,34 @@ pool.on('error', (err, client) => {
 // ROTAS DO FÓRUM
 // =============================================
 
-// 📝 CRIAR NOVO TÓPICO
+
+
+// =============================================
+// 📝 ENDPOINTS DO FÓRUM - ADICIONE ESTE BLOCO
+// =============================================
+
+// 📂 GET CATEGORIAS
+app.get('/api/forum/categories', async (req, res) => {
+    console.log('📥 Buscando categorias do fórum...');
+    const client = await pool.connect();
+
+    try {
+        const result = await client.query(
+            'SELECT * FROM forum_categories WHERE is_active = true ORDER BY display_order ASC'
+        );
+
+        console.log(`✅ ${result.rows.length} categorias encontradas`);
+        res.json(result.rows);
+
+    } catch (error) {
+        console.error('❌ Erro ao buscar categorias:', error);
+        res.status(500).json({ error: 'Erro interno do servidor' });
+    } finally {
+        client.release();
+    }
+});
+
+// 📝 CRIAR TÓPICO
 app.post('/api/forum/topics', async (req, res) => {
     console.log('📥 Recebendo requisição para criar tópico:', req.body);
 
@@ -137,9 +164,6 @@ app.post('/api/forum/topics', async (req, res) => {
             [category_id]
         );
 
-        // Atualizar estatísticas do usuário
-        await updateUserStats(author_discord_id, author_name, 'topic');
-
         res.status(201).json({
             id: newTopic.id,
             category_id: newTopic.category_id,
@@ -166,50 +190,49 @@ app.post('/api/forum/topics', async (req, res) => {
     }
 });
 
-// 🔧 FUNÇÃO AUXILIAR PARA ATUALIZAR ESTATÍSTICAS DO USUÁRIO
-async function updateUserStats(discordUserId, discordUsername, type) {
+// 📊 ESTATÍSTICAS DO FÓRUM
+app.get('/api/forum/stats', async (req, res) => {
+    console.log('📊 Buscando estatísticas do fórum...');
     const client = await pool.connect();
 
     try {
-        const userStats = await client.query(
-            'SELECT id FROM forum_user_stats WHERE discord_user_id = $1',
-            [discordUserId]
-        );
+        // Contar tópicos
+        const topicsResult = await client.query('SELECT COUNT(*) as count FROM forum_topics');
+        const totalTopics = parseInt(topicsResult.rows[0].count);
 
-        if (userStats.rows.length === 0) {
-            // Criar novo registro
-            await client.query(
-                `INSERT INTO forum_user_stats 
-                 (discord_user_id, discord_username, topics_created, replies_created, 
-                  likes_received, last_activity, joined_at, updated_at) 
-                 VALUES ($1, $2, $3, $4, 0, NOW(), NOW(), NOW())`,
-                [
-                    discordUserId,
-                    discordUsername,
-                    type === 'topic' ? 1 : 0,
-                    type === 'reply' ? 1 : 0
-                ]
-            );
-        } else {
-            // Atualizar registro existente
-            if (type === 'topic') {
-                await client.query(
-                    'UPDATE forum_user_stats SET topics_created = topics_created + 1, last_activity = NOW(), updated_at = NOW() WHERE discord_user_id = $1',
-                    [discordUserId]
-                );
-            } else if (type === 'reply') {
-                await client.query(
-                    'UPDATE forum_user_stats SET replies_created = replies_created + 1, last_activity = NOW(), updated_at = NOW() WHERE discord_user_id = $1',
-                    [discordUserId]
-                );
-            }
-        }
+        // Contar respostas
+        const repliesResult = await client.query('SELECT COUNT(*) as count FROM forum_replies');
+        const totalReplies = parseInt(repliesResult.rows[0].count);
+
+        // Contar membros únicos
+        const membersResult = await client.query(
+            'SELECT COUNT(DISTINCT author_discord_id) as count FROM forum_topics UNION SELECT COUNT(DISTINCT author_discord_id) FROM forum_replies'
+        );
+        const totalMembers = membersResult.rows.length > 0 ? parseInt(membersResult.rows[0].count) : 0;
+
+        // Online agora (simulação - poderia ser baseado em última atividade)
+        const onlineNow = Math.floor(Math.random() * 20) + 5; // Número fictício
+
+        const stats = {
+            totalTopics,
+            totalReplies,
+            totalMembers,
+            onlineNow
+        };
+
+        console.log('✅ Estatísticas:', stats);
+        res.json(stats);
+
     } catch (error) {
-        console.error('❌ Erro ao atualizar estatísticas do usuário:', error);
+        console.error('❌ Erro ao buscar estatísticas:', error);
+        res.status(500).json({ error: 'Erro interno do servidor' });
     } finally {
         client.release();
     }
-}
+});
+
+// 🔄 Reinicie o servidor depois de adicionar estes endpoints
+console.log('✅ Endpoints do fórum carregados!');
 
 // =============================================
 // ROTAS DO FÓRUM

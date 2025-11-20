@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/responsive.css">
+    <link rel="stylesheet" href="css/streamers.css">
     <link rel="icon" type="image/png" href="https://i.postimg.cc/3JT4W3hz/favicon.png">
 
     <style>
@@ -501,72 +502,104 @@
         </div>
     </section>
 
+    <!-- Seção de Streams Ao Vivo Destaque -->
+    <section class="live-streams-highlight">
+        <div class="container">
+            <h2 class="section-title">🎥 <span class="live-pulse">●</span> TRANSMISSÕES AO VIVO</h2>
+            <p class="section-subtitle">Acompanhe os criadores brasileiros de Age of Empires IV em tempo real</p>
 
-
-    <main class="container">
-        <!-- Top Players -->
-        <section class="featured-players">
-            <div class="container">
-                <h2 class="section-title">🏆 Os 5 melhores jogadores - Temporada 12</h2>
-                <div class="players-grid" id="top-players">
-                    <div class="loading">
-                        <i class="fas fa-spinner fa-spin"></i> Carregando top players...
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Estatísticas Rápidas -->
-        <section class="quick-stats">
-            <h2 class="section-title">📈 Estatísticas da Comunidade</h2>
-            <div class="quick-stats-grid" id="community-stats">
+            <div class="live-streams-container" id="live-streams-container">
                 <div class="loading">
-                    <i class="fas fa-chart-bar"></i> Carregando estatísticas...
+                    <i class="fas fa-spinner fa-spin"></i> Buscando streams ao vivo...
                 </div>
             </div>
-        </section>
+        </div>
+    </section>
 
-        <!-- Clans em Destaque -->
-        <section class="featured-clans">
-            <h2 class="section-title">👑 Clans em Destaque</h2>
-            <div class="clans-grid" id="top-clans">
+    <!-- Seção de Criadores de Conteúdo (Abaixo) -->
+    <section class="all-creators-section">
+        <div class="container">
+            <div class="creators-header">
+                <h2 class="section-title">📺 Todos os Criadores</h2>
+                <div class="view-toggle">
+                    <button class="toggle-btn active" data-view="all">Todos</button>
+                    <button class="toggle-btn" data-view="youtube">YouTube</button>
+                    <button class="toggle-btn" data-view="twitch">Twitch</button>
+                </div>
+            </div>
+
+            <div class="all-creators-grid" id="all-creators-grid">
                 <div class="loading">
-                    <i class="fas fa-users"></i> Carregando clans...
+                    <i class="fas fa-spinner fa-spin"></i> Carregando criadores...
                 </div>
             </div>
-        </section>
+        </div>
+    </section>
 
-        <!-- Atividade Recente -->
-        <section class="recent-activity">
-            <h2 class="section-title">🔄 Atividade Recente</h2>
-            <div class="activity-feed" id="recent-activity">
+
+    <!-- Top Players -->
+    <section class="featured-players">
+        <div class="container">
+            <h2 class="section-title">🏆 Os 5 melhores jogadores - Temporada 12</h2>
+            <div class="players-grid" id="top-players">
                 <div class="loading">
-                    <i class="fas fa-sync-alt fa-spin"></i> Carregando atividade...
+                    <i class="fas fa-spinner fa-spin"></i> Carregando top players...
                 </div>
             </div>
-        </section>
+        </div>
+    </section>
 
-        <!-- Call-to-Action -->
-        <section class="cta-section">
-            <h2 class="section-title">Explorar Mais</h2>
-            <div class="cta-grid">
-                <a href="leaderboard.html" class="cta-card">
-                    <i class="fas fa-trophy"></i>
-                    <h3>Classificação completa</h3>
-                    <p>Classificações ranqueados solo e em equipe</p>
-                </a>
-                <a href="leaderboard.html" class="cta-card">
-                    <i class="fas fa-search"></i>
-                    <h3>Buscar jogadores</h3>
-                    <p>Encontre jogadores específicos e compare estatísticas</p>
-                </a>
-                <a href="leaderboard.html" class="cta-card">
-                    <i class="fas fa-chart-bar"></i>
-                    <h3>Estatísticas avançadas</h3>
-                    <p>Dados detalhados, gráficos e análises</p>
-                </a>
+    <!-- Estatísticas Rápidas -->
+    <section class="quick-stats">
+        <h2 class="section-title">📈 Estatísticas da Comunidade</h2>
+        <div class="quick-stats-grid" id="community-stats">
+            <div class="loading">
+                <i class="fas fa-chart-bar"></i> Carregando estatísticas...
             </div>
-        </section>
+        </div>
+    </section>
+
+    <!-- Clans em Destaque -->
+    <section class="featured-clans">
+        <h2 class="section-title">👑 Clans em Destaque</h2>
+        <div class="clans-grid" id="top-clans">
+            <div class="loading">
+                <i class="fas fa-users"></i> Carregando clans...
+            </div>
+        </div>
+    </section>
+
+    <!-- Atividade Recente -->
+    <section class="recent-activity">
+        <h2 class="section-title">🔄 Atividade Recente</h2>
+        <div class="activity-feed" id="recent-activity">
+            <div class="loading">
+                <i class="fas fa-sync-alt fa-spin"></i> Carregando atividade...
+            </div>
+        </div>
+    </section>
+
+    <!-- Call-to-Action -->
+    <section class="cta-section">
+        <h2 class="section-title">Explorar Mais</h2>
+        <div class="cta-grid">
+            <a href="leaderboard.html" class="cta-card">
+                <i class="fas fa-trophy"></i>
+                <h3>Classificação completa</h3>
+                <p>Classificações ranqueados solo e em equipe</p>
+            </a>
+            <a href="leaderboard.html" class="cta-card">
+                <i class="fas fa-search"></i>
+                <h3>Buscar jogadores</h3>
+                <p>Encontre jogadores específicos e compare estatísticas</p>
+            </a>
+            <a href="leaderboard.html" class="cta-card">
+                <i class="fas fa-chart-bar"></i>
+                <h3>Estatísticas avançadas</h3>
+                <p>Dados detalhados, gráficos e análises</p>
+            </a>
+        </div>
+    </section>
     </main>
 
     <footer>
@@ -592,6 +625,7 @@
     </footer>
 
     <script src="js/api.js"></script>
+    <script src="js/creators.js"></script>
     <script src="js/home.js"></script>
 
 </body>

@@ -1,4 +1,4 @@
-// forum.js - VERSÃO POSTGRESQL COMPLETA
+// forum.js - VERSÃO CORRIGIDA COM AVATARES
 class ForumUI {
     constructor() {
         this.api = window.forumAPI;
@@ -7,6 +7,10 @@ class ForumUI {
 
     async init() {
         console.log('🔧 Inicializando ForumUI...');
+
+        // Aguardar carregamento do usuário
+        await this.api.loadCurrentUser();
+
         console.log('👤 Estado de autenticação:', this.api.currentUser ? 'Logado' : 'Não logado');
 
         this.checkAuthState();
@@ -15,8 +19,20 @@ class ForumUI {
         await this.loadRecentTopics();
         this.setupEventListeners();
         this.loadCategoryOptions();
+        this.setupAuthListener();
 
         console.log('✅ ForumUI inicializado');
+    }
+
+    setupAuthListener() {
+        document.addEventListener('authStateChanged', (event) => {
+            console.log('🔄 Auth state changed no ForumUI');
+            this.checkAuthState();
+            if (event.detail.user) {
+                this.loadRecentTopics();
+                this.loadStats();
+            }
+        });
     }
 
     checkAuthState() {
@@ -36,11 +52,11 @@ class ForumUI {
 
     updateUserInfo(user) {
         const userInfoElement = document.getElementById('userInfo');
-        if (userInfoElement) {
+        if (userInfoElement && user) {
+            const avatarUrl = this.getAvatarUrl(user.id, user.avatar);
             userInfoElement.innerHTML = `
                 <div class="user-avatar">
-                    <img src="https://cdn.discordapp.com/embed/avatars/${user.discriminator % 5}.png" 
-                         alt="${user.username}">
+                    <img src="${avatarUrl}" alt="${user.username}">
                 </div>
                 <span class="user-name">${user.global_name || user.username}</span>
             `;
@@ -159,15 +175,15 @@ class ForumUI {
                 const replies = await this.api.getReplies(topic.id);
                 const replyCount = replies.length;
 
+                // 🔥 CORREÇÃO: Usar método padronizado para avatar
+                const avatarUrl = this.getAvatarUrl(topic.authorId, topic.authorAvatar);
+
                 return `
                     <div class="topic-item" onclick="forumUI.viewTopic(${topic.id})">
                         <div class="topic-avatar">
-                            ${topic.authorAvatar ?
-                        `<img src="https://cdn.discordapp.com/avatars/${topic.authorId}/${topic.authorAvatar}.webp?size=40" 
-                                      alt="${topic.author}"
-                                      onerror="this.src='https://cdn.discordapp.com/embed/avatars/${topic.authorId % 5}.png'">` :
-                        `<span>${topic.author.charAt(0)}</span>`
-                    }
+                            <img src="${avatarUrl}" 
+                                  alt="${topic.author}"
+                                  onerror="this.src='https://cdn.discordapp.com/embed/avatars/${topic.authorId % 5}.png'">
                         </div>
                         <div class="topic-content">
                             <div class="topic-title">
@@ -251,6 +267,19 @@ class ForumUI {
         return date.toLocaleDateString('pt-BR');
     }
 
+    // 🔥 NOVO MÉTODO: Gerar URL do avatar
+    getAvatarUrl(userId, avatarHash) {
+        if (!userId) {
+            return 'https://cdn.discordapp.com/embed/avatars/0.png';
+        }
+
+        if (avatarHash) {
+            return `https://cdn.discordapp.com/avatars/${userId}/${avatarHash}.webp?size=40`;
+        } else {
+            return `https://cdn.discordapp.com/embed/avatars/${userId % 5}.png`;
+        }
+    }
+
     setupEventListeners() {
         const form = document.getElementById('newTopicForm');
         if (form) {
@@ -306,10 +335,7 @@ class ForumUI {
         if (window.discordAuth) {
             window.discordAuth.logout();
         } else {
-            localStorage.removeItem('discord_user');
-            localStorage.removeItem('discord_access_token');
-            localStorage.removeItem('discord_refresh_token');
-            window.location.reload();
+            window.authManager.clearAuth();
         }
     }
 

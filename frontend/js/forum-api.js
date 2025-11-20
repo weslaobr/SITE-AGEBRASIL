@@ -1,35 +1,57 @@
-// forum-api.js - VERSÃO COMPLETA POSTGRESQL
+// forum-api.js - VERSÃO CORRIGIDA COM AVATARES
 class ForumAPI {
     constructor() {
         this.baseURL = "https://ageivbrasil.up.railway.app";
-
         this.currentUser = null;
         this.isAdmin = false;
         this.categories = [];
-
-        this.admins = [
-            "407624932101455873" // WESLEY
-        ];
+        this.admins = ["407624932101455873"]; // WESLEY
 
         console.log("🚀 ForumAPI inicializado");
-        this.loadCurrentUser();
-        this.loadCategories();
+        this.init();
     }
 
-    /* ====================== AUTH ====================== */
+    async init() {
+        await this.loadCurrentUser();
+        await this.loadCategories();
+    }
 
     async loadCurrentUser() {
-        if (window.discordAuth && window.discordAuth.isLoggedIn()) {
+        // Usar o AuthManager como fonte principal
+        if (window.authManager && window.authManager.currentUser) {
+            this.currentUser = window.authManager.currentUser;
+            this.isAdmin = window.authManager.isAdmin;
+        }
+        // Fallback para discordAuth
+        else if (window.discordAuth && window.discordAuth.isLoggedIn()) {
             this.currentUser = window.discordAuth.getCurrentUser();
-
             this.isAdmin = this.admins.includes(String(this.currentUser.id));
 
-            console.log("👤 Usuário carregado:", {
-                id: this.currentUser.id,
-                nome: this.currentUser.global_name || this.currentUser.username,
-                admin: this.isAdmin
-            });
+            // Sincronizar com AuthManager
+            if (window.authManager) {
+                const token = localStorage.getItem('discord_access_token');
+                window.authManager.setUser(this.currentUser, token);
+            }
         }
+        // Fallback final: localStorage
+        else {
+            try {
+                const userData = localStorage.getItem('discord_user');
+                if (userData) {
+                    this.currentUser = JSON.parse(userData);
+                    this.isAdmin = this.admins.includes(String(this.currentUser.id));
+                }
+            } catch (error) {
+                console.error('Erro ao carregar usuário do localStorage:', error);
+            }
+        }
+
+        console.log("👤 Usuário carregado no ForumAPI:", {
+            id: this.currentUser?.id,
+            nome: this.currentUser?.global_name || this.currentUser?.username,
+            admin: this.isAdmin,
+            avatar: this.currentUser?.avatar ? 'Sim' : 'Não'
+        });
     }
 
     /* ====================== CATEGORIES ====================== */
@@ -270,7 +292,7 @@ class ForumAPI {
     /* ====================== FORMAT topic ====================== */
 
     formatTopic(t) {
-        return {
+        const formattedTopic = {
             id: t.id,
             categoryId: t.category_id,
             categorySlug: t.category_slug,
@@ -291,10 +313,27 @@ class ForumAPI {
             updatedAt: t.updated_at,
             lastReplyAt: t.last_reply_at
         };
+
+        console.log('📝 Tópico formatado:', {
+            id: formattedTopic.id,
+            author: formattedTopic.author,
+            authorAvatar: formattedTopic.authorAvatar,
+            hasAvatar: !!formattedTopic.authorAvatar
+        });
+
+        return formattedTopic;
+    }
+
+    getAvatarUrl(userId, avatarHash) {
+        if (!userId) return null;
+
+        if (avatarHash) {
+            return `https://cdn.discordapp.com/avatars/${userId}/${avatarHash}.webp?size=64`;
+        } else {
+            return `https://cdn.discordapp.com/embed/avatars/${userId % 5}.png`;
+        }
     }
 }
-
-/* ====================== INSTÂNCIA GLOBAL ====================== */
 
 console.log("🌐 ForumAPI carregado");
 window.forumAPI = new ForumAPI();

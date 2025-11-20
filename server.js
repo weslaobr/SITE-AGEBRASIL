@@ -21,7 +21,11 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 
 // Middleware
-app.use(cors());
+app.use(cors({
+    origin: ["https://aoe4.com.br", "https://ageivbrasil.up.railway.app"],
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
+    credentials: true
+}));
 app.use(express.json());
 
 // Servir arquivos estáticos do frontend

@@ -1,4 +1,4 @@
-// forum-category.js - SISTEMA COMPLETO DE CATEGORIAS
+// forum-category.js - VERSÃO POSTGRESQL COMPLETA
 class ForumCategoryUI {
     constructor() {
         this.api = window.forumAPI;
@@ -7,10 +7,9 @@ class ForumCategoryUI {
         this.init();
     }
 
-    init() {
+    async init() {
         console.log('🔧 Inicializando ForumCategoryUI...');
 
-        // Obter slug da categoria da URL
         this.currentCategorySlug = this.getCategorySlugFromURL();
         console.log('📌 Categoria Slug:', this.currentCategorySlug);
 
@@ -23,7 +22,7 @@ class ForumCategoryUI {
         this.setupEventListeners();
 
         if (this.api.currentUser) {
-            this.loadCategory();
+            await this.loadCategory();
         }
     }
 
@@ -103,116 +102,131 @@ class ForumCategoryUI {
         }
     }
 
-    loadCategory() {
+    async loadCategory() {
         console.log('📂 Carregando categoria:', this.currentCategorySlug);
 
-        // Encontrar a categoria pelo slug
-        this.currentCategory = this.api.categories.find(
-            cat => cat.slug === this.currentCategorySlug
-        );
+        try {
+            // Aguardar categorias carregarem
+            if (!this.api.categories || this.api.categories.length === 0) {
+                await this.api.loadCategories();
+            }
 
-        if (!this.currentCategory) {
-            this.showError('Categoria não encontrada');
-            return;
+            this.currentCategory = this.api.categories.find(
+                cat => cat.slug === this.currentCategorySlug
+            );
+
+            if (!this.currentCategory) {
+                this.showError('Categoria não encontrada');
+                return;
+            }
+
+            console.log('✅ Categoria encontrada:', this.currentCategory.name);
+            await this.displayCategory();
+            await this.loadTopics();
+        } catch (error) {
+            console.error('Erro ao carregar categoria:', error);
+            this.showError('Erro ao carregar categoria');
         }
-
-        console.log('✅ Categoria encontrada:', this.currentCategory.name);
-        this.displayCategory();
-        this.loadTopics();
     }
 
-    displayCategory() {
-        // Atualizar breadcrumb
+    async displayCategory() {
         document.getElementById('categoryNameBreadcrumb').textContent = this.currentCategory.name;
 
-        // Atualizar ícone
         const categoryIcon = document.getElementById('categoryIconLarge');
         categoryIcon.innerHTML = `<i class="${this.currentCategory.icon}"></i>`;
         categoryIcon.style.background = `linear-gradient(135deg, ${this.currentCategory.color}, #3e8ce5)`;
 
-        // Atualizar título
         document.getElementById('categoryTitle').textContent = this.currentCategory.name;
-
-        // Atualizar descrição
         document.getElementById('categoryDescription').textContent = this.currentCategory.description;
 
-        // Atualizar estatísticas
-        document.getElementById('topicCount').textContent = this.currentCategory.topicCount;
-        document.getElementById('replyCount').textContent = this.currentCategory.replyCount;
+        // Usar contagens do PostgreSQL
+        document.getElementById('topicCount').textContent = this.currentCategory.topic_count || this.currentCategory.topicCount || 0;
+        document.getElementById('replyCount').textContent = this.currentCategory.reply_count || this.currentCategory.replyCount || 0;
 
-        // Calcular membros únicos nesta categoria
-        const categoryMembers = this.calculateCategoryMembers();
+        const categoryMembers = await this.calculateCategoryMembers();
         document.getElementById('categoryMembers').textContent = categoryMembers;
     }
 
-    calculateCategoryMembers() {
-        const topicsInCategory = this.api.topics.filter(
-            topic => topic.categoryId == this.currentCategory.id
-        );
-
-        const authors = [...new Set(topicsInCategory.map(topic => topic.authorId))];
-        return authors.length;
+    async calculateCategoryMembers() {
+        try {
+            const topics = await this.api.getTopics(this.currentCategorySlug);
+            const authors = [...new Set(topics.map(topic => topic.authorId))];
+            return authors.length;
+        } catch (error) {
+            console.error('Erro ao calcular membros:', error);
+            return 0;
+        }
     }
 
-    loadTopics() {
-        const topics = this.api.getTopics().filter(
-            topic => topic.categoryId == this.currentCategory.id
-        );
+    async loadTopics() {
+        try {
+            const topics = await this.api.getTopics(this.currentCategorySlug);
+            const topicsList = document.getElementById('topicsList');
 
-        const topicsList = document.getElementById('topicsList');
+            if (!topics || topics.length === 0) {
+                topicsList.innerHTML = `
+                    <div class="no-topics">
+                        <i class="fas fa-comments"></i>
+                        <h3>Nenhum tópico encontrado</h3>
+                        <p>Seja o primeiro a criar um tópico nesta categoria!</p>
+                    </div>
+                `;
+                return;
+            }
 
-        if (topics.length === 0) {
+            const topicsHTML = await Promise.all(topics.map(async (topic) => {
+                const replies = await this.api.getReplies(topic.id);
+                const replyCount = replies.length;
+                const isPinned = topic.isPinned;
+                const isLocked = topic.isLocked;
+
+                return `
+                    <div class="topic-item ${isPinned ? 'pinned' : ''}" onclick="forumCategoryUI.viewTopic(${topic.id})">
+                        <div class="topic-avatar">
+                            ${topic.authorAvatar ?
+                        `<img src="https://cdn.discordapp.com/avatars/${topic.authorId}/${topic.authorAvatar}.webp?size=45" 
+                                      alt="${topic.author}"
+                                      onerror="this.src='https://cdn.discordapp.com/embed/avatars/${topic.authorId % 5}.png'">` :
+                        `<span>${topic.author.charAt(0)}</span>`
+                    }
+                        </div>
+                        <div class="topic-content">
+                            <div class="topic-title">
+                                ${isPinned ? '<i class="fas fa-thumbtack" style="color: #e53e3e; margin-right: 5px;"></i>' : ''}
+                                ${isLocked ? '<i class="fas fa-lock" style="color: #a0aec0; margin-right: 5px;"></i>' : ''}
+                                ${topic.title}
+                            </div>
+                            <div class="topic-meta">
+                                <span>por ${topic.author}</span>
+                                <span>${this.formatDate(topic.updatedAt || topic.createdAt)}</span>
+                            </div>
+                        </div>
+                        <div class="topic-stats">
+                            <div class="stat">
+                                <i class="fas fa-reply"></i>
+                                <span>${replyCount}</span>
+                            </div>
+                            <div class="stat">
+                                <i class="fas fa-eye"></i>
+                                <span>${topic.views || 0}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }));
+
+            topicsList.innerHTML = topicsHTML.join('');
+        } catch (error) {
+            console.error('Erro ao carregar tópicos:', error);
+            const topicsList = document.getElementById('topicsList');
             topicsList.innerHTML = `
                 <div class="no-topics">
-                    <i class="fas fa-comments"></i>
-                    <h3>Nenhum tópico encontrado</h3>
-                    <p>Seja o primeiro a criar um tópico nesta categoria!</p>
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <h3>Erro ao carregar tópicos</h3>
+                    <p>Tente recarregar a página</p>
                 </div>
             `;
-            return;
         }
-
-        const topicsHTML = topics.map(topic => {
-            const replyCount = this.api.getReplies(topic.id).length;
-            const isPinned = topic.isPinned;
-            const isLocked = topic.isLocked;
-
-            return `
-                <div class="topic-item ${isPinned ? 'pinned' : ''}" onclick="forumCategoryUI.viewTopic(${topic.id})">
-                    <div class="topic-avatar">
-                        ${topic.authorAvatar ?
-                    `<img src="https://cdn.discordapp.com/avatars/${topic.authorId}/${topic.authorAvatar}.webp?size=45" 
-                                  alt="${topic.author}"
-                                  onerror="this.src='https://cdn.discordapp.com/embed/avatars/${topic.authorId % 5}.png'">` :
-                    `<span>${topic.author.charAt(0)}</span>`
-                }
-                    </div>
-                    <div class="topic-content">
-                        <div class="topic-title">
-                            ${isPinned ? '<i class="fas fa-thumbtack" style="color: #e53e3e; margin-right: 5px;"></i>' : ''}
-                            ${isLocked ? '<i class="fas fa-lock" style="color: #a0aec0; margin-right: 5px;"></i>' : ''}
-                            ${topic.title}
-                        </div>
-                        <div class="topic-meta">
-                            <span>por ${topic.author}</span>
-                            <span>${this.formatDate(topic.updatedAt)}</span>
-                        </div>
-                    </div>
-                    <div class="topic-stats">
-                        <div class="stat">
-                            <i class="fas fa-reply"></i>
-                            <span>${replyCount}</span>
-                        </div>
-                        <div class="stat">
-                            <i class="fas fa-eye"></i>
-                            <span>${topic.views || 0}</span>
-                        </div>
-                    </div>
-                </div>
-            `;
-        }).join('');
-
-        topicsList.innerHTML = topicsHTML;
     }
 
     async createNewTopic() {
@@ -247,15 +261,11 @@ class ForumCategoryUI {
                 content: content
             };
 
-            const newTopic = await this.api.createTopic(topicData);
+            await this.api.createTopic(topicData);
 
-            // Fechar modal e limpar formulário
             closeNewTopicModal();
-
-            // Mostrar sucesso
             this.showNotification('Tópico criado com sucesso!', 'success');
 
-            // Recarregar a página após 1 segundo
             setTimeout(() => {
                 window.location.reload();
             }, 1000);
@@ -272,12 +282,12 @@ class ForumCategoryUI {
             this.redirectToLogin();
             return;
         }
-
-        // Redirecionar para a página do tópico
         window.location.href = `forum-topic.html?id=${topicId}`;
     }
 
     formatDate(dateString) {
+        if (!dateString) return 'Data desconhecida';
+
         const date = new Date(dateString);
         const now = new Date();
         const diffMs = now - date;

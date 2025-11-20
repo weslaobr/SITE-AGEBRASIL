@@ -32,7 +32,7 @@ const mockPlayers = [
 // Function to render players with real data - ATUALIZADA
 function renderPlayers(players) {
     const container = document.getElementById('players-container');
-    
+
     if (!players || players.length === 0) {
         container.innerHTML = `
             <div class="loading">
@@ -43,38 +43,38 @@ function renderPlayers(players) {
         `;
         return;
     }
-    
+
     container.innerHTML = '';
-    
+
     // DEBUG: Verificar estrutura dos dados
     console.log('🔍 DEBUG - Estrutura do primeiro player:', players[0]);
-    
+
     // Contar estatísticas
     const withData = players.filter(p => p.has_data).length;
     const withoutData = players.filter(p => !p.has_data).length;
-    
+
     console.log(`📊 Renderizando: ${withData} com dados, ${withoutData} sem dados`);
-    
+
     players.forEach((player, index) => {
         const row = document.createElement('div');
-        
+
         // ✅ DIFERENCIAR visualmente quem tem e quem não tem dados
         const hasData = player.has_data;
         const isTeamMode = player.game_mode === 'rm_team';
-        
+
         // ✅ CORREÇÃO: Buscar clan tag UMA VEZ e decidir onde mostrar
         const clanTag = player.clan || player.clan_tag || player.clan_name || '';
         console.log(`🔍 Player ${player.name} - Clan tag: "${clanTag}"`);
-        
+
         // ✅ DECISÃO: Mostrar clan badge APENAS se tiver tag, NÃO mostrar clan tag separadamente
- const clanBadge = clanTag ? `
+        const clanBadge = clanTag ? `
     <div class="clan-badge-minimal" title="Clan: ${clanTag}">
         ${clanTag}
     </div>
 ` : '';
-        
+
         row.className = `player-row ${player.rank <= 3 && hasData ? 'top-3' : ''} ${!hasData ? 'no-team-data' : ''}`;
-        
+
         // Determine rank display
         let rankDisplay = player.rank;
         if (hasData && rankDisplay === 1) {
@@ -86,37 +86,37 @@ function renderPlayers(players) {
         } else {
             rankDisplay = `<div class="rank-number ${!hasData ? 'no-data-rank' : ''}">${rankDisplay}</div>`;
         }
-        
+
         // Player avatar with fallback
-        const avatarContent = player.avatar_url ? 
+        const avatarContent = player.avatar_url ?
             `<img src="${player.avatar_url}" alt="${player.name}" 
                   onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
-                  loading="lazy">` : 
+                  loading="lazy">` :
             '';
-        
+
         // Winrate color (apenas se tiver dados)
         const winrateClass = hasData ? (player.winrate >= 60 ? 'positive' : player.winrate >= 40 ? '' : 'negative') : 'no-data';
-        
+
         // Last game relative time
         const lastGame = hasData ? formatLastGame(player.last_game) : 'Sem dados';
-        
+
         // Level badge - tratamento especial para quem não tem dados
         const levelClass = hasData ? (player.level ? player.level.toLowerCase().replace(' ', '-') : 'no-data') : 'no-team-data';
-        const levelDisplay = hasData ? 
-            (player.level ? 
-                `<div class="level-badge ${levelClass}">${player.level}</div>` : 
+        const levelDisplay = hasData ?
+            (player.level ?
+                `<div class="level-badge ${levelClass}">${player.level}</div>` :
                 `<div class="level-badge no-data">Sem dados</div>`) :
             `<div class="level-badge no-team-data" title="Player não joga Team Ranked">SEM TEAM</div>`;
-        
+
         // ✅ BADGE para mostrar status do Team Ranked
-        const teamStatusBadge = isTeamMode ? 
-            (hasData ? 
-                '<div class="data-badge team-badge" title="Tem dados de Team Ranked"><i class="fas fa-users"></i></div>' : 
-                '<div class="warning-badge no-team-badge" title="Não tem dados de Team Ranked"><i class="fas fa-user-times"></i></div>') : 
+        const teamStatusBadge = isTeamMode ?
+            (hasData ?
+                '<div class="data-badge team-badge" title="Tem dados de Team Ranked"><i class="fas fa-users"></i></div>' :
+                '<div class="warning-badge no-team-badge" title="Não tem dados de Team Ranked"><i class="fas fa-user-times"></i></div>') :
             '';
-        
+
         // ✅ COMPARAÇÃO Solo vs Team (apenas no modo team)
-        const comparisonInfo = isTeamMode && player.solo_points > 0 ? 
+        const comparisonInfo = isTeamMode && player.solo_points > 0 ?
             `<div class="player-stats">
                 <span class="solo-comparison">Solo: ${player.solo_points} pts</span>
             </div>` : '';
@@ -139,7 +139,6 @@ function renderPlayers(players) {
                     </a>
                 </div>
                 ${clanBadge}
-                ${teamStatusBadge}
                 ${!hasData && isTeamMode ? '<div class="unranked-badge" title="Player não ranqueado no Team Ranked"><i class="fas fa-minus-circle"></i></div>' : ''}
             </div>
             <div class="player-stats">
@@ -164,15 +163,15 @@ function renderPlayers(players) {
     <div class="games ${!hasData ? 'no-team-points' : ''}">${hasData ? player.total_games : '-'}</div>
     <div class="last-game ${!hasData ? 'no-team-points' : ''}">${lastGame}</div>
 `;
-        
+
         // Add click event to view player details
         row.addEventListener('click', () => {
             viewPlayerDetails(player);
         });
-        
+
         container.appendChild(row);
     });
-    
+
     console.log(`✅ ${players.length} players renderizados`);
     console.log(`📝 ${withoutData} jogadores sem Team Ranked`);
 }
@@ -180,8 +179,8 @@ function renderPlayers(players) {
 // ✅ FUNÇÃO CORRIGIDA: Formatar última partida
 function formatLastGame(lastGame) {
     // Verificar se é um valor inválido ou nulo
-    if (!lastGame || 
-        lastGame === 'Sem dados' || 
+    if (!lastGame ||
+        lastGame === 'Sem dados' ||
         lastGame === 'null' ||
         lastGame === 'NULL' ||
         lastGame === '' ||
@@ -189,30 +188,30 @@ function formatLastGame(lastGame) {
         lastGame === 'Nunca') {
         return 'Sem dados';
     }
-    
+
     // Se já estiver formatado em português, manter
-    if (typeof lastGame === 'string' && 
-        (lastGame.includes('há') || lastGame.includes('dias') || 
-         lastGame.includes('horas') || lastGame.includes('meses'))) {
+    if (typeof lastGame === 'string' &&
+        (lastGame.includes('há') || lastGame.includes('dias') ||
+            lastGame.includes('horas') || lastGame.includes('meses'))) {
         return lastGame;
     }
-    
+
     try {
         // Converter para Date - pode ser string ISO ou timestamp
         const gameDate = new Date(lastGame);
-        
+
         // Verificar se é uma data válida
         if (isNaN(gameDate.getTime())) {
             console.log(`⚠️ Data inválida no frontend: ${lastGame}`);
             return 'Sem dados';
         }
-        
+
         const now = new Date();
         const diffMs = now - gameDate;
         const diffMinutes = Math.floor(diffMs / (1000 * 60));
         const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
         const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-        
+
         // Formatar de forma mais inteligente
         if (diffDays > 365) {
             const years = Math.floor(diffDays / 365);
@@ -231,7 +230,7 @@ function formatLastGame(lastGame) {
         } else {
             return 'Agora mesmo';
         }
-        
+
     } catch (error) {
         console.log(`💥 Erro ao formatar data no frontend: ${lastGame}`, error);
         return 'Sem dados';

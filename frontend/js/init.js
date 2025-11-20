@@ -179,7 +179,7 @@ function updateSectionTitle(mode, season, totalPlayers) {
     if (sectionTitle) {
         const modeName = mode === 'rm_team' ? 'Classificação em equipe' : 'Classificação solo';
         const modeIcon = mode === 'rm_team' ? '👥' : '👤';
-        const seasonText = season === 'current' ? 'Temporada atual' : `Season ${season}`;
+        const seasonText = season === 'current' ? 'Temporada atual' : `Temporada ${season}`;
 
         sectionTitle.innerHTML = `
             Classificações dos jogadores - ${modeName} ${modeIcon} 
@@ -224,9 +224,9 @@ function updateHeroStats(totalPlayers, detailedStats, topPlayer, mode = 'rm_solo
     const hero = document.querySelector('.hero p');
     if (!hero) return;
 
-    const modeName = mode === 'rm_team' ? 'Team Ranked' : 'Solo Ranked';
+    const modeName = mode === 'rm_team' ? 'Classificação em equipe' : 'Classificação solo';
     const modeIcon = mode === 'rm_team' ? '👥' : '👤';
-    const seasonText = season === 'current' ? 'Current Season' : `Season ${season}`;
+    const seasonText = season === 'current' ? 'Temporada atual' : `Temporada ${season}`;
     let statsHTML = `Acompanhe as estatísticas, classificações e histórico de partidas dos jogadores em Age of Empires IV.`;
 
     if (detailedStats) {

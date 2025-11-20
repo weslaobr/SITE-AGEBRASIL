@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,7 +8,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/responsive.css">
-<link rel="icon" type="image/png" href="https://i.postimg.cc/3JT4W3hz/favicon.png">
+    <link rel="icon" type="image/png" href="https://i.postimg.cc/3JT4W3hz/favicon.png">
 
     <style>
         /* Estilos específicos para a home */
@@ -174,12 +175,33 @@
             transform: scale(1.05);
         }
 
-        .conquer { background: linear-gradient(135deg, #ff0000, #cc0000); }
-        .diamond { background: linear-gradient(135deg, #b9f2ff, #7aeaff); color: #0066cc; }
-        .platinum { background: linear-gradient(135deg, #e5e4e2, #d0cfcc); color: #333; }
-        .gold { background: linear-gradient(135deg, #ffd700, #e6c200); color: #333; }
-        .silver { background: linear-gradient(135deg, #c0c0c0, #a8a8a8); color: #333; }
-        .bronze { background: linear-gradient(135deg, #cd7f32, #b87333); }
+        .conquer {
+            background: linear-gradient(135deg, #ff0000, #cc0000);
+        }
+
+        .diamond {
+            background: linear-gradient(135deg, #b9f2ff, #7aeaff);
+            color: #0066cc;
+        }
+
+        .platinum {
+            background: linear-gradient(135deg, #e5e4e2, #d0cfcc);
+            color: #333;
+        }
+
+        .gold {
+            background: linear-gradient(135deg, #ffd700, #e6c200);
+            color: #333;
+        }
+
+        .silver {
+            background: linear-gradient(135deg, #c0c0c0, #a8a8a8);
+            color: #333;
+        }
+
+        .bronze {
+            background: linear-gradient(135deg, #cd7f32, #b87333);
+        }
 
         .clans-grid {
             display: grid;
@@ -224,18 +246,33 @@
             color: #a0aec0;
         }
 
+        /* ===== ATIVIDADE RECENTE - CORRIGIDO ===== */
         .activity-feed {
             max-height: 400px;
             overflow-y: auto;
             margin-top: 1rem;
+            background: var(--card-bg);
+            border-radius: 8px;
+            padding: 1rem;
+            border: 1px solid var(--border-color);
         }
 
         .activity-item {
             padding: 1rem;
             border-bottom: 1px solid var(--border-color);
             display: flex;
-            align-items: center;
+            align-items: flex-start;
             gap: 1rem;
+            transition: background-color 0.3s ease;
+        }
+
+        .activity-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 6px;
+        }
+
+        .activity-item:last-child {
+            border-bottom: none;
         }
 
         .activity-icon {
@@ -247,15 +284,76 @@
             align-items: center;
             justify-content: center;
             color: var(--accent-color);
+            flex-shrink: 0;
+            font-size: 1rem;
+            margin-top: 2px;
         }
 
         .activity-content {
             flex: 1;
+            min-width: 0;
+        }
+
+        .activity-text {
+            color: var(--text-color);
+            margin: 0 0 0.5rem 0;
+            line-height: 1.4;
+            word-wrap: break-word;
+        }
+
+        .activity-player {
+            color: var(--accent-color);
+            font-weight: 600;
+        }
+
+        .activity-details {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 0.5rem;
         }
 
         .activity-time {
             color: #a0aec0;
             font-size: 0.8rem;
+            white-space: nowrap;
+        }
+
+        .activity-meta {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .activity-badge {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            color: #a0aec0;
+        }
+
+        .no-activity {
+            text-align: center;
+            padding: 3rem 2rem;
+            color: #a0aec0;
+        }
+
+        .no-activity i {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            color: #718096;
+        }
+
+        .no-activity h3 {
+            margin: 0 0 0.5rem 0;
+            color: #a0aec0;
+        }
+
+        .no-activity p {
+            margin: 0;
+            font-size: 0.9rem;
         }
 
         .cta-grid {
@@ -301,30 +399,74 @@
             .hero-stats {
                 gap: 1rem;
             }
-            
+
             .hero-stat .number {
                 font-size: 2rem;
             }
-            
+
             .players-grid {
                 grid-template-columns: 1fr;
+            }
+
+            .activity-item {
+                padding: 0.8rem;
+                gap: 0.8rem;
+            }
+
+            .activity-icon {
+                width: 35px;
+                height: 35px;
+                font-size: 0.9rem;
+            }
+
+            .activity-details {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.3rem;
+            }
+
+            .activity-time {
+                font-size: 0.75rem;
+            }
+
+            .activity-meta {
+                justify-content: flex-start;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .activity-item {
+                flex-direction: column;
+                text-align: center;
+                gap: 0.5rem;
+            }
+
+            .activity-icon {
+                align-self: center;
+            }
+
+            .activity-details {
+                justify-content: center;
+                text-align: center;
             }
         }
     </style>
 </head>
+
 <body>
     <header>
         <div class="container">
             <div class="header-content">
                 <div class="logo">
-    <img src="https://i.postimg.cc/rFNdr7FV/logo.png" alt="Age of Empires IV Brasil" class="logo-img">
-    <h1>Age of Empires IV Brasil</h1>
-</div>
+                    <img src="https://i.postimg.cc/rFNdr7FV/logo.png" alt="Age of Empires IV Brasil" class="logo-img">
+                    <h1>Age of Empires IV Brasil</h1>
+                </div>
                 <nav>
                     <ul>
                         <li><a href="index.html" class="active">Início</a></li>
                         <li><a href="leaderboard.html">Tabela de classificação</a></li>
                         <li><a href="torneios.html">Torneios</a></li>
+                        <li><a href="forum.html">Fórum</a></li>
                         <li><a href="about.html">Sobre</a></li>
                     </ul>
                 </nav>
@@ -335,8 +477,9 @@
     <section class="hero">
         <div class="container">
             <h2>Age of Empires IV <span style="color: #ffee00;"> Brasil</span></h2>
-            <p>A plataforma definitiva para acompanhar estatísticas, rankings e histórico de partidas do Age of Empires IV em tempo real</p>
-            
+            <p>A plataforma definitiva para acompanhar estatísticas, rankings e histórico de partidas do Age of Empires
+                IV em tempo real</p>
+
             <div class="hero-stats" id="hero-stats">
                 <div class="hero-stat">
                     <span class="number">0</span>
@@ -357,6 +500,9 @@
             </div>
         </div>
     </section>
+
+    <!-- No seu forum.html -->
+
 
     <main class="container">
         <!-- Top Players -->
@@ -438,7 +584,8 @@
                     <a href="#">Sobre</a>
                 </div>
                 <div class="copyright">
-                    &copy; 2025 - Age of Empires IV Brasil. Dados de aoe4world.com. Este site não possui qualquer vínculo com a Microsoft ou a Relic Entertainment.
+                    &copy; 2025 - Age of Empires IV Brasil. Dados de aoe4world.com. Este site não possui qualquer
+                    vínculo com a Microsoft ou a Relic Entertainment.
                 </div>
             </div>
         </div>
@@ -446,6 +593,7 @@
 
     <script src="js/api.js"></script>
     <script src="js/home.js"></script>
-    
+
 </body>
+
 </html>

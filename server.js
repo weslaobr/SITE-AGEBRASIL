@@ -80,6 +80,233 @@ pool.on('error', (err, client) => {
     console.error('💥 Erro inesperado no pool PostgreSQL:', err);
 });
 
+// =============================================
+// ROTAS DO FÓRUM
+// =============================================
+
+// Obter categorias
+app.get('/api/forum/categories', async (req, res) => {
+    try {
+        const result = await pool.query(`
+            SELECT * FROM forum_categories 
+            WHERE is_active = true 
+            ORDER BY display_order, name
+        `);
+        res.json(result.rows);
+    } catch (error) {
+        console.error('Erro ao buscar categorias:', error);
+        res.status(500).json({ error: 'Erro interno do servidor' });
+    }
+});
+
+// Obter tópicos por categoria
+app.get('/api/forum/categories/:slug/topics', async (req, res) => {
+    try {
+        const { slug } = req.params;
+        const { page = 1, limit = 20 } = req.query;
+        const offset = (page - 1) * limit;
+
+        const result = await pool.query(`
+            SELECT 
+                t.*,
+                c.name as category_name,
+                c.slug as category_slug,
+                COUNT(r.id) as reply_count
+            FROM forum_topics t
+            JOIN forum_categories c ON t.category_id = c.id
+            LEFT JOIN forum_replies r ON t.id = r.topic_id
+            WHERE c.slug = $1
+            GROUP BY t.id, c.id
+            ORDER BY t.is_pinned DESC, t.last_reply_at DESC
+            LIMIT $2 OFFSET $3
+        `, [slug, limit, offset]);
+
+        res.json(result.rows);
+    } catch (error) {
+        console.error('Erro ao buscar tópicos:', error);
+        res.status(500).json({ error: 'Erro interno do servidor' });
+    }
+});
+
+// Criar novo tópico
+app.post('/api/forum/topics', async (req, res) => {
+    try {
+        const { category_id, title, content, author_discord_id, author_name, author_avatar } = req.body;
+
+        const result = await pool.query(`
+            INSERT INTO forum_topics 
+            (category_id, title, content, author_discord_id, author_name, author_avatar)
+            VALUES ($1, $2, $3, $4, $5, $6)
+            RETURNING *
+        `, [category_id, title, content, author_discord_id, author_name, author_avatar]);
+
+        // Atualizar contador da categoria
+        await pool.query(`
+            UPDATE forum_categories 
+            SET topic_count = topic_count + 1, updated_at = CURRENT_TIMESTAMP
+            WHERE id = $1
+        `, [category_id]);
+
+        res.status(201).json(result.rows[0]);
+    } catch (error) {
+        console.error('Erro ao criar tópico:', error);
+        res.status(500).json({ error: 'Erro interno do servidor' });
+    }
+});
+
+// Obter um tópico específico
+app.get('/api/forum/topics/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        // Incrementar views
+        await pool.query(`
+            UPDATE forum_topics 
+            SET views = views + 1 
+            WHERE id = $1
+        `, [id]);
+
+        const result = await pool.query(`
+            SELECT 
+                t.*,
+                c.name as category_name,
+                c.slug as category_slug
+            FROM forum_topics t
+            JOIN forum_categories c ON t.category_id = c.id
+            WHERE t.id = $1
+        `, [id]);
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'Tópico não encontrado' });
+        }
+
+        res.json(result.rows[0]);
+    } catch (error) {
+        console.error('Erro ao buscar tópico:', error);
+        res.status(500).json({ error: 'Erro interno do servidor' });
+    }
+});
+
+// Obter respostas de um tópico
+app.get('/api/forum/topics/:id/replies', async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const result = await pool.query(`
+            SELECT * FROM forum_replies 
+            WHERE topic_id = $1 
+            ORDER BY created_at ASC
+        `, [id]);
+
+        res.json(result.rows);
+    } catch (error) {
+        console.error('Erro ao buscar respostas:', error);
+        res.status(500).json({ error: 'Erro interno do servidor' });
+    }
+});
+
+// Adicionar resposta
+app.post('/api/forum/replies', async (req, res) => {
+    try {
+        const { topic_id, content, author_discord_id, author_name, author_avatar } = req.body;
+
+        const result = await pool.query(`
+            INSERT INTO forum_replies 
+            (topic_id, content, author_discord_id, author_name, author_avatar)
+            VALUES ($1, $2, $3, $4, $5)
+            RETURNING *
+        `, [topic_id, content, author_discord_id, author_name, author_avatar]);
+
+        // Atualizar último reply do tópico
+        await pool.query(`
+            UPDATE forum_topics 
+            SET last_reply_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP
+            WHERE id = $1
+        `, [topic_id]);
+
+        // Atualizar contador da categoria
+        await pool.query(`
+            UPDATE forum_categories 
+            SET reply_count = reply_count + 1, updated_at = CURRENT_TIMESTAMP
+            WHERE id = (SELECT category_id FROM forum_topics WHERE id = $1)
+        `, [topic_id]);
+
+        res.status(201).json(result.rows[0]);
+    } catch (error) {
+        console.error('Erro ao criar resposta:', error);
+        res.status(500).json({ error: 'Erro interno do servidor' });
+    }
+});
+
+// Verificar se usuário é admin
+app.get('/api/forum/admins/:discord_id', async (req, res) => {
+    try {
+        const { discord_id } = req.params;
+
+        const result = await pool.query(`
+            SELECT * FROM forum_admins 
+            WHERE discord_user_id = $1 AND is_active = true
+        `, [discord_id]);
+
+        res.json({ isAdmin: result.rows.length > 0 });
+    } catch (error) {
+        console.error('Erro ao verificar admin:', error);
+        res.status(500).json({ error: 'Erro interno do servidor' });
+    }
+});
+
+// Estatísticas do fórum
+app.get('/api/forum/stats', async (req, res) => {
+    try {
+        const stats = await pool.query(`
+            SELECT 
+                (SELECT COUNT(*) FROM forum_topics) as total_topics,
+                (SELECT COUNT(*) FROM forum_replies) as total_replies,
+                (SELECT COUNT(DISTINCT author_discord_id) FROM forum_topics) as total_members,
+                (SELECT COUNT(*) FROM forum_user_stats WHERE last_activity > NOW() - INTERVAL '1 hour') as online_now
+        `);
+
+        res.json(stats.rows[0]);
+    } catch (error) {
+        console.error('Erro ao buscar estatísticas:', error);
+        res.status(500).json({ error: 'Erro interno do servidor' });
+    }
+});
+
+// Pesquisar tópicos
+app.get('/api/forum/search', async (req, res) => {
+    try {
+        const { q, category } = req.query;
+
+        let query = `
+            SELECT 
+                t.*,
+                c.name as category_name,
+                c.slug as category_slug,
+                COUNT(r.id) as reply_count
+            FROM forum_topics t
+            JOIN forum_categories c ON t.category_id = c.id
+            LEFT JOIN forum_replies r ON t.id = r.topic_id
+            WHERE t.title ILIKE $1 OR t.content ILIKE $1
+        `;
+
+        const params = [`%${q}%`];
+
+        if (category) {
+            query += ` AND c.slug = $2`;
+            params.push(category);
+        }
+
+        query += ` GROUP BY t.id, c.id ORDER BY t.last_reply_at DESC LIMIT 20`;
+
+        const result = await pool.query(query, params);
+        res.json(result.rows);
+    } catch (error) {
+        console.error('Erro ao pesquisar:', error);
+        res.status(500).json({ error: 'Erro interno do servidor' });
+    }
+});
+
 // ROTA: Debug da conexão com o banco
 app.get('/api/debug/database-connection', async (req, res) => {
     try {
@@ -3131,13 +3358,68 @@ app.get('/api/seasons', async (req, res) => {
     }
 });
 
+// server.js - Adicione esta rota
+app.get('/api/players/search', async (req, res) => {
+    try {
+        const { q: searchTerm, season = '12', mode = 'rm_solo' } = req.query;
+
+        if (!searchTerm || searchTerm.length < 2) {
+            return res.status(400).json({ error: 'Termo de busca muito curto (mínimo 2 caracteres)' });
+        }
+
+        console.log(`🔍 Buscando por: "${searchTerm}" (Season: ${season}, Mode: ${mode})`);
+
+        // Determinar as colunas baseadas no modo
+        const eloColumn = mode === 'rm_team' ? 'rm_team_elo' : 'rm_solo_elo';
+        const pointsColumn = mode === 'rm_team' ? 'rm_team_points' : 'rm_solo_points';
+        const winsColumn = mode === 'rm_team' ? 'rm_team_wins' : 'rm_solo_wins';
+        const totalMatchesColumn = mode === 'rm_team' ? 'rm_team_total_matches' : 'rm_solo_total_matches';
+
+        const { rows } = await pool.query(`
+            SELECT 
+                user_id, 
+                aoe4_world_id, 
+                name, 
+                clan_tag,
+                ${eloColumn} as elo,
+                ${pointsColumn} as points,
+                ${winsColumn} as wins,
+                ${totalMatchesColumn} as total_matches,
+                level, 
+                season_id, 
+                avatar_url, 
+                region, 
+                civilization,
+                last_solo_game,
+                last_team_game
+            FROM leaderboard_cache 
+            WHERE season_id = $1
+            AND name IS NOT NULL
+            AND (
+                LOWER(name) LIKE LOWER($2) OR
+                LOWER(clan_tag) LIKE LOWER($2) OR
+                aoe4_world_id::TEXT LIKE $2
+            )
+            ORDER BY ${eloColumn} DESC NULLS LAST
+            LIMIT 100
+        `, [season, `%${searchTerm}%`]);
+
+        console.log(`✅ Encontrados ${rows.length} jogadores para "${searchTerm}"`);
+        res.json(rows);
+
+    } catch (error) {
+        console.error('❌ Erro na busca global:', error);
+        res.status(500).json({ error: 'Erro interno do servidor' });
+    }
+});
+
 // ROTA: Game modes
 app.get('/api/game-modes', (req, res) => {
     res.json({
         success: true,
         game_modes: [
-            { id: 'rm_solo', name: 'Classificação solo', description: 'Ranked 1v1' },
-            { id: 'rm_team', name: 'Classificação em equipe', description: 'Ranked em equipe' }
+            { id: 'rm_solo', name: 'Classificação solo', description: 'Classificação solo' },
+            { id: 'rm_team', name: 'Classificação em equipe', description: 'Classificação em equipe' }
         ]
     });
 });

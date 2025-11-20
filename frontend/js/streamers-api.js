@@ -1,140 +1,35 @@
-// streamers-api.js - VERSÃO COM FALLBACKS
+// streamers-api.js - AVATARS SINCRONIZADOS
 class StreamersManager {
     constructor() {
         this.creators = [];
         this.twitchAccessToken = null;
         this.currentFilter = 'all';
-        this.cacheDuration = 10 * 60 * 1000; // 10 minutos
-        this.useFallback = false;
+        this.avatarCache = new Map(); // Cache para avatares
     }
 
     async init() {
         console.log('🚀 Iniciando StreamersManager...');
 
-        // Mostrar UI instantaneamente
         this.renderSkeletonUI();
 
         try {
             await this.getTwitchAccessToken();
-            await this.loadAllCreatorsFast();
+            await this.loadTwitchData();
         } catch (error) {
-            console.error('❌ Erro crítico, usando fallback:', error);
-            this.useFallback = true;
-            await this.loadFallbackData();
+            console.warn('⚠️ Twitch falhou, usando dados estáticos:', error);
+            this.loadStaticData();
         }
 
         this.renderAllViews();
         this.setupEventListeners();
     }
 
-    // Sistema de Fallback para quando APIs falham
-    async loadFallbackData() {
-        console.log('🛡️ Usando dados fallback...');
-
-        this.creators = CREATORS_CONFIG.map(creator => ({
-            ...creator,
-            avatar: this.getFallbackAvatar(creator.name),
-            isLive: false, // Não sabemos online
-            youtubeData: creator.platforms.youtube ? {
-                statistics: {
-                    subscriberCount: 'N/A',
-                    videoCount: 'N/A'
-                }
-            } : null,
-            liveViewers: 0,
-            liveTitle: 'Age of Empires IV',
-            lastStream: 'Indisponível'
-        }));
-
-        this.saveToCache('creators_fallback', this.creators);
-    }
-
-    getFallbackAvatar(name) {
-        const avatars = {
-            'Gks': 'https://static-cdn.jtvnw.net/jtv_user_pictures/asmongold-profile_image-f7ddcbd0332f5d28-300x300.png',
-            'CaioFora': 'https://static-cdn.jtvnw.net/jtv_user_pictures/xqcow-profile_image-9298dca608632101-300x300.jpeg',
-            'VicentiN': 'https://static-cdn.jtvnw.net/jtv_user_pictures/summit1g-profile_image-7e7d2f64e08cae0a-300x300.png',
-            'Utinowns': 'https://static-cdn.jtvnw.net/jtv_user_pictures/tfue-profile_image-7e7d2f64e08cae0a-300x300.png',
-            'EricBR': 'https://static-cdn.jtvnw.net/jtv_user_pictures/nickmercs-profile_image-5e7d2f64e08cae0a-300x300.png',
-            'Vitruvius TV': 'https://static-cdn.jtvnw.net/jtv_user_pictures/timthetatman-profile_image-5e7d2f64e08cae0a-300x300.png',
-            'Nyxel TV': 'https://static-cdn.jtvnw.net/jtv_user_pictures/lirik-profile_image-5e7d2f64e08cae0a-300x300.png',
-            'LegoWzz': 'https://static-cdn.jtvnw.net/jtv_user_pictures/shodan-profile_image-5e7d2f64e08cae0a-300x300.png'
-        };
-        return avatars[name] || 'https://static-cdn.jtvnw.net/jtv_user_pictures/unknown-user-300x300.png';
-    }
-
-    // YouTube com Proxy/fallback
-    async fetchAllYouTubeData() {
-        // Tentar cache primeiro
-        const cached = this.getFromCache('youtube_data');
-        if (cached) return cached;
-
-        const youtubeChannels = CREATORS_CONFIG
-            .filter(creator => creator.platforms.youtube)
-            .map(creator => creator.platforms.youtube.id);
-
-        if (youtubeChannels.length === 0) return [];
+    // Carregar dados Twitch (AGORA COM AVATARS)
+    async loadTwitchData() {
+        const twitchUsernames = CREATORS_CONFIG.map(creator => creator.twitch);
 
         try {
-            console.log('📺 Buscando dados YouTube...');
-
-            // Tentar método direto primeiro
-            const response = await fetch(
-                `https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics&id=${youtubeChannels.join(',')}&key=${CONFIG.YOUTUBE.API_KEY}`,
-                {
-                    method: 'GET',
-                    mode: 'cors',
-                    headers: {
-                        'Accept': 'application/json',
-                    }
-                }
-            );
-
-            if (!response.ok) {
-                throw new Error(`YouTube API error: ${response.status}`);
-            }
-
-            const data = await response.json();
-            const result = data.items || [];
-
-            this.saveToCache('youtube_data', result);
-            return result;
-
-        } catch (error) {
-            console.warn('⚠️ YouTube API falhou, usando fallback:', error);
-
-            // Criar dados fallback para YouTube
-            return youtubeChannels.map(channelId => ({
-                id: channelId,
-                statistics: {
-                    subscriberCount: 'N/A',
-                    videoCount: 'N/A'
-                },
-                snippet: {
-                    title: 'Canal YouTube',
-                    thumbnails: {
-                        default: { url: this.getFallbackAvatar('YouTube') }
-                    }
-                }
-            }));
-        }
-    }
-
-    // Twitch com fallback
-    async fetchAllTwitchData() {
-        if (!this.twitchAccessToken) {
-            return { streams: [], users: [] };
-        }
-
-        const twitchUsernames = CREATORS_CONFIG
-            .filter(creator => creator.platforms.twitch)
-            .map(creator => creator.platforms.twitch);
-
-        if (twitchUsernames.length === 0) return { streams: [], users: [] };
-
-        try {
-            console.log('🎮 Buscando dados Twitch...');
-
+            // Buscar streams ao vivo E informações dos usuários
             const [streamsResponse, usersResponse] = await Promise.all([
                 fetch(`https://api.twitch.tv/helix/streams?${twitchUsernames.map(u => `user_login=${u}`).join('&')}&first=100`, {
                     headers: {
@@ -150,99 +45,132 @@ class StreamersManager {
                 })
             ]);
 
-            if (!streamsResponse.ok || !usersResponse.ok) {
-                throw new Error('Twitch API error');
-            }
-
             const [streamsData, usersData] = await Promise.all([
                 streamsResponse.json(),
                 usersResponse.json()
             ]);
 
-            return {
-                streams: streamsData.data || [],
-                users: usersData.data || []
-            };
+            // Criar mapas para acesso rápido
+            const streamsMap = new Map();
+            streamsData.data?.forEach(stream => {
+                streamsMap.set(stream.user_login.toLowerCase(), stream);
+            });
+
+            const usersMap = new Map();
+            usersData.data?.forEach(user => {
+                usersMap.set(user.login.toLowerCase(), user);
+                // Cache do avatar
+                this.avatarCache.set(user.login.toLowerCase(), user.profile_image_url);
+            });
+
+            // Combinar dados - AGORA COM AVATARS REAIS
+            this.creators = CREATORS_CONFIG.map(creator => {
+                const twitchUser = usersMap.get(creator.twitch.toLowerCase());
+                const twitchStream = streamsMap.get(creator.twitch.toLowerCase());
+
+                // Avatar REAL da Twitch
+                const avatar = twitchUser?.profile_image_url || this.getFallbackAvatar(creator.name);
+
+                return {
+                    ...creator,
+                    avatar: avatar,
+                    isLive: !!twitchStream,
+                    liveViewers: twitchStream?.viewer_count || 0,
+                    liveTitle: twitchStream?.title || 'Age of Empires IV',
+                    lastStream: this.formatRelativeTime(twitchStream?.started_at)
+                };
+            });
 
         } catch (error) {
-            console.warn('⚠️ Twitch API falhou, usando fallback:', error);
-
-            // Fallback para Twitch
-            return {
-                streams: [],
-                users: twitchUsernames.map(username => ({
-                    login: username,
-                    profile_image_url: this.getFallbackAvatar(username),
-                    display_name: username
-                }))
-            };
+            console.error('❌ Erro ao carregar dados Twitch:', error);
+            this.loadStaticData();
         }
     }
 
-    // Renderização com tratamento de erros
-    createCompactCard(creator) {
-        const isLive = creator.isLive && !this.useFallback;
-        const hasYouTube = !!creator.platforms.youtube;
-        const hasTwitch = !!creator.platforms.twitch;
+    // Fallback avatares (apenas se Twitch falhar)
+    getFallbackAvatar(name) {
+        const fallbackAvatars = {
+            'Gks': 'https://static-cdn.jtvnw.net/jtv_user_pictures/asmongold-profile_image-f7ddcbd0332f5d28-300x300.png',
+            'CaioFora': 'https://static-cdn.jtvnw.net/jtv_user_pictures/xqcow-profile_image-9298dca608632101-300x300.jpeg',
+            'VicentiN': 'https://static-cdn.jtvnw.net/jtv_user_pictures/summit1g-profile_image-7e7d2f64e08cae0a-300x300.png',
+            'Utinowns': 'https://static-cdn.jtvnw.net/jtv_user_pictures/tfue-profile_image-7e7d2f64e08cae0a-300x300.png',
+            'EricBR': 'https://static-cdn.jtvnw.net/jtv_user_pictures/nickmercs-profile_image-5e7d2f64e08cae0a-300x300.png',
+            'Vitruvius TV': 'https://static-cdn.jtvnw.net/jtv_user_pictures/timthetatman-profile_image-5e7d2f64e08cae0a-300x300.png',
+            'Nyxel TV': 'https://static-cdn.jtvnw.net/jtv_user_pictures/lirik-profile_image-5e7d2f64e08cae0a-300x300.png',
+            'LegoWzz': 'https://static-cdn.jtvnw.net/jtv_user_pictures/shodan-profile_image-5e7d2f64e08cae0a-300x300.png'
+        };
+        return fallbackAvatars[name] || 'https://static-cdn.jtvnw.net/jtv_user_pictures/unknown-user-300x300.png';
+    }
 
-        // Dados YouTube com fallback
-        const subscribers = creator.youtubeData?.statistics?.subscriberCount;
-        const videos = creator.youtubeData?.statistics?.videoCount;
+    // Dados estáticos com fallback
+    loadStaticData() {
+        this.creators = CREATORS_CONFIG.map(creator => ({
+            ...creator,
+            avatar: this.getFallbackAvatar(creator.name),
+            isLive: false,
+            liveViewers: 0,
+            liveTitle: 'Age of Empires IV',
+            lastStream: 'Offline'
+        }));
+    }
 
-        const showYouTubeStats = hasYouTube && subscribers && videos && subscribers !== 'N/A';
+    // Card ATUALIZADO com avatar sincronizado
+    createCreatorCard(creator) {
+        const isLive = creator.isLive;
+        const hasYouTube = !!creator.youtube;
+        const hasTwitch = !!creator.twitch;
 
         return `
-            <div class="creator-card-compact ${isLive ? 'live' : ''} ${this.useFallback ? 'fallback' : ''}">
-                <div class="creator-avatar-compact">
-                    <img src="${creator.avatar}" alt="${creator.name}" 
-                         loading="lazy"
-                         onerror="this.src='https://static-cdn.jtvnw.net/jtv_user_pictures/unknown-user-300x300.png'">
-                    ${isLive ? '<div class="live-indicator"></div>' : ''}
-                    ${this.useFallback ? '<div class="fallback-badge">⚠️</div>' : ''}
+            <div class="creator-card ${isLive ? 'live' : ''}">
+                <div class="creator-header">
+                    <div class="creator-avatar">
+                        <img src="${creator.avatar}" alt="${creator.name}" 
+                             loading="lazy"
+                             onerror="this.src='https://static-cdn.jtvnw.net/jtv_user_pictures/unknown-user-300x300.png'">
+                        ${isLive ? '<div class="live-indicator"></div>' : ''}
+                    </div>
+                    <div class="platform-icons">
+                        ${hasTwitch ? '<span class="platform-icon twitch" title="Twitch">🎮</span>' : ''}
+                        ${hasYouTube ? '<span class="platform-icon youtube" title="YouTube">📺</span>' : ''}
+                    </div>
                 </div>
-                
-                <div class="creator-info-compact">
-                    <h4 class="creator-name-compact">${creator.name}</h4>
-                    <p class="creator-description-compact">${creator.description}</p>
+
+                <div class="creator-info">
+                    <h4 class="creator-name">${creator.name}</h4>
+                    <p class="creator-handle">@${creator.twitch}</p>
+                    <p class="creator-description">${creator.description}</p>
                     
-                    <div class="specialty-tags-compact">
+                    <div class="specialty-tags">
                         ${creator.specialty.map(spec =>
-            `<span class="tag-compact">${spec}</span>`
+            `<span class="tag">${spec}</span>`
         ).join('')}
                     </div>
 
-                    <div class="stats-compact">
+                    <div class="creator-stats">
                         ${isLive ? `
-                            <div class="live-stats-compact">
-                                <span class="viewers">👁️ ${this.formatNumber(creator.liveViewers)}</span>
-                                <span class="live-badge-small">● LIVE</span>
+                            <div class="live-stats">
+                                <span class="viewers">👁️ ${this.formatNumber(creator.liveViewers)} viewers</span>
+                                <span class="live-status">● AO VIVO</span>
                             </div>
-                        ` : ''}
-                        
-                        ${showYouTubeStats ? `
-                            <div class="youtube-stats-compact">
-                                <span>👥 ${this.formatNumber(subscribers)}</span>
-                                <span>🎬 ${this.formatNumber(videos)}</span>
+                        ` : `
+                            <div class="offline-stats">
+                                <span class="offline-text">📡 Offline</span>
                             </div>
-                        ` : hasYouTube ? `
-                            <div class="youtube-stats-compact unavailable">
-                                <span>📺 YouTube conectado</span>
-                            </div>
-                        ` : ''}
+                        `}
                     </div>
                 </div>
 
-                <div class="actions-compact">
+                <div class="creator-actions">
                     ${hasTwitch ? `
-                        <a href="https://twitch.tv/${creator.platforms.twitch}" target="_blank" 
-                           class="action-btn-compact twitch ${isLive ? 'live' : ''}">
+                        <a href="https://twitch.tv/${creator.twitch}" target="_blank" 
+                           class="action-btn twitch ${isLive ? 'live' : ''}">
                             ${isLive ? '🔴 Assistir' : 'Twitch'}
                         </a>
                     ` : ''}
                     
                     ${hasYouTube ? `
-                        <a href="https://youtube.com/${creator.platforms.youtube?.handle || 'channel/' + creator.platforms.youtube?.id}" 
-                           target="_blank" class="action-btn-compact youtube">
+                        <a href="${creator.youtube}" target="_blank" 
+                           class="action-btn youtube">
                             YouTube
                         </a>
                     ` : ''}
@@ -251,9 +179,9 @@ class StreamersManager {
         `;
     }
 
-    // Utilitários (mantidos)
+    // Utilitários
     formatNumber(num) {
-        if (!num || num === 'N/A') return '0';
+        if (!num) return '0';
         const number = parseInt(num);
         if (isNaN(number)) return '0';
         if (number >= 1000000) return (number / 1000000).toFixed(1) + 'M';
@@ -263,7 +191,16 @@ class StreamersManager {
 
     formatRelativeTime(dateString) {
         if (!dateString) return '';
-        // ... mesmo código anterior
+        const date = new Date(dateString);
+        const now = new Date();
+        const diffMs = now - date;
+        const diffMins = Math.floor(diffMs / 60000);
+        const diffHours = Math.floor(diffMs / 3600000);
+
+        if (diffMins < 1) return 'Agora';
+        if (diffMins < 60) return `Há ${diffMins} min`;
+        if (diffHours < 24) return `Há ${diffHours} h`;
+        return 'Hoje';
     }
 
     setupEventListeners() {
@@ -276,36 +213,33 @@ class StreamersManager {
             });
         });
 
-        // Refresh manual
-        const refreshBtn = document.createElement('button');
-        refreshBtn.className = 'refresh-btn';
-        refreshBtn.innerHTML = '<i class="fas fa-sync-alt"></i>';
-        refreshBtn.title = 'Atualizar streams';
-        refreshBtn.onclick = () => this.refreshData();
-
-        const creatorsHeader = document.querySelector('.creators-header');
-        if (creatorsHeader) {
-            creatorsHeader.appendChild(refreshBtn);
-        }
-    }
-
-    async refreshData() {
-        const refreshBtn = document.querySelector('.refresh-btn');
-        if (refreshBtn) refreshBtn.classList.add('refreshing');
-
-        await this.loadAllCreatorsFast();
-        this.renderAllViews();
-
-        if (refreshBtn) {
-            refreshBtn.classList.remove('refreshing');
-            refreshBtn.classList.add('refreshed');
-            setTimeout(() => refreshBtn.classList.remove('refreshed'), 1000);
-        }
+        // Auto-refresh a cada 3 minutos
+        setInterval(() => {
+            this.loadTwitchData().then(() => {
+                this.renderAllViews();
+            });
+        }, 180000);
     }
 }
 
-// Inicialização RÁPIDA
+    // Função para forçar atualização de avatares
+    async refreshAvatars() {
+    try {
+        await this.loadTwitchData();
+        this.renderAllViews();
+        console.log('✅ Avatares atualizados');
+    } catch (error) {
+        console.error('❌ Erro ao atualizar avatares:', error);
+    }
+}
+
+// Inicialização
 document.addEventListener('DOMContentLoaded', () => {
     window.streamersManager = new StreamersManager();
     window.streamersManager.init();
+
+    // Atualizar avatares a cada 10 minutos (opcional)
+    setInterval(() => {
+        window.streamersManager.refreshAvatars();
+    }, 600000);
 });

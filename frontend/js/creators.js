@@ -192,123 +192,123 @@ class CreatorsManager {
         };
     }
 
-    // Buscar dados do Twitch - VERSÃO CORRIGIDA
-async function fetchTwitchData(username) {
-    if (!this.twitchAccessToken) return null;
+    // Buscar dados do Twitch - VERSÃO CORRIGIDA (método da classe)
+    async fetchTwitchData(username) {  // ⬅️ REMOVA a palavra "function"
+        if (!this.twitchAccessToken) return null;
 
-    try {
-        // Buscar informações do usuário
-        const userResponse = await fetch(
-            `https://api.twitch.tv/helix/users?login=${username}`,
-            {
-                headers: {
-                    'Client-ID': TWITCH_CLIENT_ID,
-                    'Authorization': `Bearer ${this.twitchAccessToken}`
+        try {
+            // Buscar informações do usuário
+            const userResponse = await fetch(
+                `https://api.twitch.tv/helix/users?login=${username}`,
+                {
+                    headers: {
+                        'Client-ID': TWITCH_CLIENT_ID,
+                        'Authorization': `Bearer ${this.twitchAccessToken}`
+                    }
                 }
-            }
-        );
-        const userData = await userResponse.json();
+            );
+            const userData = await userResponse.json();
 
-        if (!userData.data || userData.data.length === 0) {
-            throw new Error('Usuário não encontrado');
+            if (!userData.data || userData.data.length === 0) {
+                throw new Error('Usuário não encontrado');
+            }
+
+            const userInfo = userData.data[0];
+
+            // 🔥 CORREÇÃO: Buscar seguidores (precisa de uma chamada separada)
+            const followersResponse = await fetch(
+                `https://api.twitch.tv/helix/channels/followers?broadcaster_id=${userInfo.id}`,
+                {
+                    headers: {
+                        'Client-ID': TWITCH_CLIENT_ID,
+                        'Authorization': `Bearer ${this.twitchAccessToken}`
+                    }
+                }
+            );
+            const followersData = await followersResponse.json();
+
+            // Buscar informações de stream
+            const streamResponse = await fetch(
+                `https://api.twitch.tv/helix/streams?user_login=${username}`,
+                {
+                    headers: {
+                        'Client-ID': TWITCH_CLIENT_ID,
+                        'Authorization': `Bearer ${this.twitchAccessToken}`
+                    }
+                }
+            );
+            const streamData = await streamResponse.json();
+
+            const isLive = streamData.data && streamData.data.length > 0;
+            const streamInfo = isLive ? streamData.data[0] : null;
+
+            return {
+                platform: 'twitch',
+                name: userInfo.display_name,
+                handle: `@${userInfo.login}`,
+                avatar: userInfo.profile_image_url,
+                followers: this.formatNumber(followersData.total || 0), // 🔥 AGORA CORRETO
+                isLive: isLive,
+                stream: isLive ? {
+                    title: streamInfo.title,
+                    viewers: this.formatNumber(streamInfo.viewer_count),
+                    game: streamInfo.game_name,
+                    thumbnail: streamInfo.thumbnail_url.replace('{width}', '320').replace('{height}', '180')
+                } : null,
+                url: `https://twitch.tv/${username}`
+            };
+        } catch (error) {
+            console.error(`Erro ao buscar dados do Twitch para ${username}:`, error);
+            return null;
         }
-
-        const userInfo = userData.data[0];
-
-        // 🔥 CORREÇÃO: Buscar seguidores (precisa de uma chamada separada)
-        const followersResponse = await fetch(
-            `https://api.twitch.tv/helix/channels/followers?broadcaster_id=${userInfo.id}`,
-            {
-                headers: {
-                    'Client-ID': TWITCH_CLIENT_ID,
-                    'Authorization': `Bearer ${this.twitchAccessToken}`
-                }
-            }
-        );
-        const followersData = await followersResponse.json();
-
-        // Buscar informações de stream
-        const streamResponse = await fetch(
-            `https://api.twitch.tv/helix/streams?user_login=${username}`,
-            {
-                headers: {
-                    'Client-ID': TWITCH_CLIENT_ID,
-                    'Authorization': `Bearer ${this.twitchAccessToken}`
-                }
-            }
-        );
-        const streamData = await streamResponse.json();
-
-        const isLive = streamData.data && streamData.data.length > 0;
-        const streamInfo = isLive ? streamData.data[0] : null;
-
-        return {
-            platform: 'twitch',
-            name: userInfo.display_name,
-            handle: `@${userInfo.login}`,
-            avatar: userInfo.profile_image_url,
-            followers: this.formatNumber(followersData.total || 0), // 🔥 AGORA CORRETO
-            isLive: isLive,
-            stream: isLive ? {
-                title: streamInfo.title,
-                viewers: this.formatNumber(streamInfo.viewer_count),
-                game: streamInfo.game_name,
-                thumbnail: streamInfo.thumbnail_url.replace('{width}', '320').replace('{height}', '180')
-            } : null,
-            url: `https://twitch.tv/${username}`
-        };
-    } catch (error) {
-        console.error(`Erro ao buscar dados do Twitch para ${username}:`, error);
-        return null;
     }
-}
 
     // Carregar todos os criadores
     async loadAllCreators() {
-    this.creators = [];
+        this.creators = [];
 
-    // Carregar canais do YouTube
-    for (const channel of YOUTUBE_CHANNELS) {
-        const data = await this.fetchYouTubeData(channel);
-        if (data) this.creators.push(data);
-        await new Promise(resolve => setTimeout(resolve, 500)); // Delay entre requests
-    }
-
-    // Carregar canais do Twitch
-    for (const username of TWITCH_CHANNELS) {
-        const data = await this.fetchTwitchData(username);
-        if (data) this.creators.push(data);
-        await new Promise(resolve => setTimeout(resolve, 300)); // Delay entre requests
-    }
-
-    // Ordenar: YouTube primeiro, depois Twitch, e por nome
-    this.creators.sort((a, b) => {
-        if (a.platform !== b.platform) {
-            return a.platform === 'youtube' ? -1 : 1;
+        // Carregar canais do YouTube
+        for (const channel of YOUTUBE_CHANNELS) {
+            const data = await this.fetchYouTubeData(channel);
+            if (data) this.creators.push(data);
+            await new Promise(resolve => setTimeout(resolve, 500)); // Delay entre requests
         }
-        return a.name.localeCompare(b.name);
-    });
-}
 
-// Renderizar streams ao vivo em destaque
-renderLiveStreams() {
-    const container = document.getElementById('live-streams-container');
-    const liveStreams = this.creators.filter(creator =>
-        creator.platform === 'twitch' && creator.isLive
-    );
+        // Carregar canais do Twitch
+        for (const username of TWITCH_CHANNELS) {
+            const data = await this.fetchTwitchData(username);
+            if (data) this.creators.push(data);
+            await new Promise(resolve => setTimeout(resolve, 300)); // Delay entre requests
+        }
 
-    if (liveStreams.length === 0) {
-        container.innerHTML = `
+        // Ordenar: YouTube primeiro, depois Twitch, e por nome
+        this.creators.sort((a, b) => {
+            if (a.platform !== b.platform) {
+                return a.platform === 'youtube' ? -1 : 1;
+            }
+            return a.name.localeCompare(b.name);
+        });
+    }
+
+    // Renderizar streams ao vivo em destaque
+    renderLiveStreams() {
+        const container = document.getElementById('live-streams-container');
+        const liveStreams = this.creators.filter(creator =>
+            creator.platform === 'twitch' && creator.isLive
+        );
+
+        if (liveStreams.length === 0) {
+            container.innerHTML = `
                 <div class="no-live-streams">
                     <i class="fas fa-tv"></i>
                     <h3>Nenhuma transmissão ao vivo no momento</h3>
                     <p>Volte mais tarde para acompanhar os criadores brasileiros!</p>
                 </div>
             `;
-        return;
-    }
+            return;
+        }
 
-    container.innerHTML = liveStreams.map(stream => `
+        container.innerHTML = liveStreams.map(stream => `
             <div class="live-stream-card">
                 <div class="live-badge">AO VIVO</div>
                 <div class="stream-preview" onclick="window.open('${stream.url}', '_blank')">
@@ -332,48 +332,48 @@ renderLiveStreams() {
                 </div>
             </div>
         `).join('');
-}
-
-// Renderizar todos os criadores (layout compacto)
-renderAllCreators() {
-    const grid = document.getElementById('all-creators-grid');
-    let filteredCreators = this.creators;
-
-    // Aplicar filtro
-    if (this.currentView === 'youtube') {
-        filteredCreators = this.creators.filter(creator => creator.platform === 'youtube');
-    } else if (this.currentView === 'twitch') {
-        filteredCreators = this.creators.filter(creator => creator.platform === 'twitch');
     }
 
-    if (filteredCreators.length === 0) {
-        grid.innerHTML = `
+    // Renderizar todos os criadores (layout compacto)
+    renderAllCreators() {
+        const grid = document.getElementById('all-creators-grid');
+        let filteredCreators = this.creators;
+
+        // Aplicar filtro
+        if (this.currentView === 'youtube') {
+            filteredCreators = this.creators.filter(creator => creator.platform === 'youtube');
+        } else if (this.currentView === 'twitch') {
+            filteredCreators = this.creators.filter(creator => creator.platform === 'twitch');
+        }
+
+        if (filteredCreators.length === 0) {
+            grid.innerHTML = `
                 <div class="error" style="grid-column: 1 / -1;">
                     <i class="fas fa-exclamation-triangle"></i>
                     <p>Nenhum criador encontrado</p>
                 </div>
             `;
-        return;
+            return;
+        }
+
+        grid.innerHTML = filteredCreators.map(creator => this.createCompactCard(creator)).join('');
     }
 
-    grid.innerHTML = filteredCreators.map(creator => this.createCompactCard(creator)).join('');
-}
+    // Criar card compacto
+    createCompactCard(creator) {
+        const isLive = creator.platform === 'twitch' && creator.isLive;
+        const isFallback = creator.isFallback;
 
-// Criar card compacto
-createCompactCard(creator) {
-    const isLive = creator.platform === 'twitch' && creator.isLive;
-    const isFallback = creator.isFallback;
+        // Informações específicas por plataforma
+        let statsText = '';
+        if (creator.platform === 'youtube') {
+            statsText = `${creator.subscribers} inscritos`;
+        } else {
+            // Para Twitch, mostra viewers se estiver live, senão mostra "N/A"
+            statsText = isLive ? `${creator.stream.viewers} viewers` : 'Offline';
+        }
 
-    // Informações específicas por plataforma
-    let statsText = '';
-    if (creator.platform === 'youtube') {
-        statsText = `${creator.subscribers} inscritos`;
-    } else {
-        // Para Twitch, mostra viewers se estiver live, senão mostra "N/A"
-        statsText = isLive ? `${creator.stream.viewers} viewers` : 'Offline';
-    }
-
-    return `
+        return `
         <div class="creator-card-compact ${isLive ? 'live' : ''} ${isFallback ? 'fallback' : ''}">
             <div class="creator-avatar-compact">
                 <img src="${creator.avatar}" alt="${creator.name}">
@@ -397,67 +397,67 @@ createCompactCard(creator) {
             </a>
         </div>
     `;
-}
+    }
 
-// Configurar event listeners para os filtros
-setupEventListeners() {
-    const toggleButtons = document.querySelectorAll('.toggle-btn');
+    // Configurar event listeners para os filtros
+    setupEventListeners() {
+        const toggleButtons = document.querySelectorAll('.toggle-btn');
 
-    toggleButtons.forEach(button => {
-        button.addEventListener('click', () => {
-            // Remover classe active de todos
-            toggleButtons.forEach(btn => btn.classList.remove('active'));
-            // Adicionar classe active ao botão clicado
-            button.classList.add('active');
-            // Atualizar view atual
-            this.currentView = button.dataset.view;
-            // Re-renderizar
-            this.renderAllCreators();
+        toggleButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                // Remover classe active de todos
+                toggleButtons.forEach(btn => btn.classList.remove('active'));
+                // Adicionar classe active ao botão clicado
+                button.classList.add('active');
+                // Atualizar view atual
+                this.currentView = button.dataset.view;
+                // Re-renderizar
+                this.renderAllCreators();
+            });
         });
-    });
-}
+    }
 
-// Utilitários
-formatNumber(num) {
-    if (!num || num === 'N/A' || num === 0) return '0';
-    if (typeof num === 'string' && num.includes('N/A')) return 'N/A';
+    // Utilitários
+    formatNumber(num) {
+        if (!num || num === 'N/A' || num === 0) return '0';
+        if (typeof num === 'string' && num.includes('N/A')) return 'N/A';
 
-    return Intl.NumberFormat('pt-BR', {
-        notation: num >= 1000000 ? 'compact' : 'standard',
-        maximumFractionDigits: 1
-    }).format(num);
-}
+        return Intl.NumberFormat('pt-BR', {
+            notation: num >= 1000000 ? 'compact' : 'standard',
+            maximumFractionDigits: 1
+        }).format(num);
+    }
 
-formatTime(dateString) {
-    if (!dateString) return 'N/A';
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffMs = now - date;
-    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    formatTime(dateString) {
+        if (!dateString) return 'N/A';
+        const date = new Date(dateString);
+        const now = new Date();
+        const diffMs = now - date;
+        const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
-    if (diffDays === 0) return 'hoje';
-    if (diffDays === 1) return 'há 1 dia';
-    if (diffDays < 7) return `há ${diffDays} dias`;
-    if (diffDays < 30) return `há ${Math.floor(diffDays / 7)} semana${Math.floor(diffDays / 7) > 1 ? 's' : ''}`;
-    return `há ${Math.floor(diffDays / 30)} mês${Math.floor(diffDays / 30) > 1 ? 'es' : ''}`;
-}
+        if (diffDays === 0) return 'hoje';
+        if (diffDays === 1) return 'há 1 dia';
+        if (diffDays < 7) return `há ${diffDays} dias`;
+        if (diffDays < 30) return `há ${Math.floor(diffDays / 7)} semana${Math.floor(diffDays / 7) > 1 ? 's' : ''}`;
+        return `há ${Math.floor(diffDays / 30)} mês${Math.floor(diffDays / 30) > 1 ? 'es' : ''}`;
+    }
 
-// Método para adicionar novos canais
-addYouTubeChannel(channelId, name, handle) {
-    YOUTUBE_CHANNELS.push({ id: channelId, name, handle });
-    this.refreshData();
-}
+    // Método para adicionar novos canais
+    addYouTubeChannel(channelId, name, handle) {
+        YOUTUBE_CHANNELS.push({ id: channelId, name, handle });
+        this.refreshData();
+    }
 
-addTwitchChannel(username) {
-    TWITCH_CHANNELS.push(username);
-    this.refreshData();
-}
+    addTwitchChannel(username) {
+        TWITCH_CHANNELS.push(username);
+        this.refreshData();
+    }
 
     async refreshData() {
-    await this.loadAllCreators();
-    this.renderLiveStreams();
-    this.renderAllCreators();
-}
+        await this.loadAllCreators();
+        this.renderLiveStreams();
+        this.renderAllCreators();
+    }
 }
 
 // Inicializar quando a página carregar

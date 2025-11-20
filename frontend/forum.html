@@ -867,6 +867,8 @@
             const loginContainer = document.getElementById('loginContainer');
             const loginBtn = document.getElementById('loginBtn');
             const logoutBtn = document.getElementById('logoutBtn');
+            const noAuthMessage = document.getElementById('noAuthMessage');
+            const forumContent = document.getElementById('forumContent');
 
             function renderHeader() {
                 const user = window.discordAuth && typeof window.discordAuth.getCurrentUser === 'function'
@@ -882,17 +884,21 @@
                             : `https://cdn.discordapp.com/embed/avatars/${user.discriminator % 5}.png`;
 
                         userInfo.innerHTML = `
-                        <div class="user-avatar"><img src="${avatar}" alt="${user.username}"></div>
-                        <div class="user-name">${user.global_name || user.username}</div>
-                    `;
+                            <div class="user-avatar"><img src="${avatar}" alt="${user.username}"></div>
+                            <div class="user-name">${user.global_name || user.username}</div>
+                        `;
                     }
                     if (loginContainer) loginContainer.style.display = 'none';
                     if (logoutBtn) logoutBtn.style.display = 'flex';
+                    if (noAuthMessage) noAuthMessage.style.display = 'none';
+                    if (forumContent) forumContent.style.display = '';
                 } else {
                     // USUÁRIO NÃO LOGADO
                     if (userInfo) userInfo.style.display = 'none';
                     if (loginContainer) loginContainer.style.display = 'flex';
                     if (logoutBtn) logoutBtn.style.display = 'none';
+                    if (noAuthMessage) noAuthMessage.style.display = '';
+                    if (forumContent) forumContent.style.display = 'none';
                 }
             }
 

@@ -16,7 +16,7 @@
             padding-bottom: 2rem;
         }
 
-        /* ESTILOS PARA HEADER CORRIGIDO - PADRÃO IGUAL AO LOGADO */
+        /* ESTILOS PARA HEADER CORRIGIDO */
         .header-content {
             display: flex;
             justify-content: space-between;
@@ -70,7 +70,7 @@
             margin-left: auto;
         }
 
-        /* CONTAINER PARA AMBOS OS ESTADOS (LOGADO E NÃO LOGADO) */
+        /* CONTAINER PARA AMBOS OS ESTADOS */
         .user-info-container {
             display: flex;
             align-items: center;
@@ -79,12 +79,6 @@
             padding: 0.5rem 1rem;
             border-radius: 20px;
             border: 1px solid var(--border-color);
-        }
-
-        /* ESTILO PARA QUANDO ESTÁ LOGADO */
-        #userInfo {
-            display: none;
-            /* Inicialmente escondido */
         }
 
         .user-avatar img {
@@ -100,13 +94,8 @@
             font-size: 0.9rem;
         }
 
-        /* ESTILO PARA QUANDO NÃO ESTÁ LOGADO */
-        #loginContainer {
-            display: none;
-            /* Inicialmente escondido */
-        }
-
-        .login-btn {
+        /* BOTÃO DE LOGIN DENTRO DO CONTAINER */
+        .login-btn-header {
             background: none;
             border: none;
             color: var(--text-color);
@@ -120,11 +109,11 @@
             transition: color 0.3s ease;
         }
 
-        .login-btn:hover {
+        .login-btn-header:hover {
             color: var(--accent-color);
         }
 
-        /* BOTÃO DE LOGOUT (separado) */
+        /* BOTÃO DE LOGOUT */
         .logout-btn {
             background: #4a5568;
             color: white;
@@ -145,33 +134,13 @@
             transform: translateY(-1px);
         }
 
-        /* ESTILO ESPECÍFICO PARA O BOTÃO DE LOGIN QUANDO NÃO LOGADO */
+        /* REMOVA ESTES ESTILOS CONFLITANTES - ELES ESTÃO CRIANDO BOTÕES EXTRAS */
         .login-container {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            background: var(--secondary-color);
-            padding: 0.5rem 1rem;
-            border-radius: 20px;
-            border: 1px solid var(--border-color);
+            display: none;
         }
 
-        /* Adicione esta regra CSS */
         #loginBtn[data-no-auth] {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            background: var(--secondary-color);
-            padding: 0.5rem 1rem;
-            border-radius: 20px;
-            border: 1px solid var(--border-color);
-            color: var(--text-color);
-            font-weight: 600;
-        }
-
-        #loginBtn[data-no-auth]:hover {
-            background: var(--accent-color);
-            color: white;
+            display: none;
         }
 
         /* ESTADO SEM AUTENTICAÇÃO */
@@ -729,6 +698,7 @@
                 </nav>
 
                 <!-- Controles de Autenticação (CORRIGIDO) -->
+                <!-- Controles de Autenticação (SIMPLIFICADO) -->
                 <div class="user-actions">
                     <!-- Container do usuário logado -->
                     <div id="userInfo" data-auth-only class="user-info-container" style="display: none;">
@@ -743,7 +713,7 @@
                     <!-- Container do botão de login (não logado) -->
                     <div id="loginContainer" data-no-auth class="user-info-container" style="display: none;">
                         <i class="fab fa-discord" style="color: #5865F2;"></i>
-                        <button id="loginBtn" class="login-btn">
+                        <button id="loginBtn" class="login-btn-header">
                             Entrar com Discord
                         </button>
                     </div>
@@ -762,14 +732,12 @@
     <main>
         <div class="container">
             <!-- Mensagem para usuários não autenticados -->
+            <!-- Mensagem para usuários não autenticados -->
             <div id="noAuthMessage" data-no-auth class="no-auth-message" style="display: none;">
                 <i class="fab fa-discord"></i>
                 <h3>Faça login para acessar o fórum</h3>
                 <p>Conecte-se com sua conta Discord para participar das discussões da comunidade</p>
-                <button class="login-btn" onclick="window.forumUI && window.forumUI.redirectToLogin()">
-                    <i class="fab fa-discord"></i>
-                    Entrar com Discord
-                </button>
+                <!-- REMOVI O BOTÃO DUPLICADO DAQUI -->
             </div>
 
             <!-- Conteúdo principal (visível apenas para usuários autenticados) -->
@@ -861,7 +829,7 @@
     </footer>
 
     <script>
-        // RENDERIZAÇÃO CORRIGIDA DO HEADER
+        // RENDERIZAÇÃO SIMPLIFICADA DO HEADER
         document.addEventListener('DOMContentLoaded', () => {
             const userInfo = document.getElementById('userInfo');
             const loginContainer = document.getElementById('loginContainer');
@@ -874,6 +842,8 @@
                 const user = window.discordAuth && typeof window.discordAuth.getCurrentUser === 'function'
                     ? window.discordAuth.getCurrentUser()
                     : (window.forumAPI && window.forumAPI.currentUser) || null;
+
+                console.log('Usuário:', user); // Para debug
 
                 if (user) {
                     // USUÁRIO LOGADO
@@ -910,6 +880,8 @@
                         window.discordAuth.login();
                     } else {
                         console.warn('discordAuth.login não disponível');
+                        // Fallback
+                        window.location.href = 'forum-auth.html';
                     }
                 });
             }
@@ -928,11 +900,9 @@
             }
 
             // Inicializar
-            setTimeout(renderHeader, 250);
-            setTimeout(renderHeader, 800);
-            setTimeout(renderHeader, 1500);
-
-            window.renderForumHeader = renderHeader;
+            renderHeader();
+            setTimeout(renderHeader, 500);
+            setTimeout(renderHeader, 1000);
         });
     </script>
 

@@ -1,7 +1,7 @@
 // forum-api.js - VERSÃO 100% POSTGRESQL
 class ForumAPI {
     constructor() {
-        this.baseURL = window.location.origin;
+        this.baseURL = "https://ageivbrasil.up.railway.app";
         this.currentUser = null;
         this.isAdmin = false;
         this.categories = [];

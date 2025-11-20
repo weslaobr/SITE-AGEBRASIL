@@ -654,6 +654,7 @@
 </head>
 
 <body>
+    <!-- ======= HEADER SUBSTITUÍDO (PADRONIZADO) ======= -->
     <header>
         <div class="container">
             <div class="header-content">
@@ -672,7 +673,7 @@
                     </ul>
                 </nav>
 
-                <!-- Controles de Autenticação -->
+                <!-- Controles de Autenticação (padronizado) -->
                 <div class="user-actions">
                     <div id="userInfo" data-auth-only style="display: none;">
                         <!-- Informações do usuário serão carregadas aqui -->
@@ -689,6 +690,7 @@
             </div>
         </div>
     </header>
+    <!-- ======= FIM HEADER ======= -->
 
     <main class="container">
         <!-- Mensagem para usuários não autenticados -->
@@ -789,10 +791,80 @@
         </div>
     </footer>
 
+    <script>
+        // RENDERIZAÇÃO PADRONIZADA DO HEADER (compatível com seu discord-login.js e forum-api.js)
+        document.addEventListener('DOMContentLoaded', () => {
+            const userInfo = document.getElementById('userInfo');
+            const loginBtn = document.getElementById('loginBtn');
+            const logoutBtn = document.getElementById('logoutBtn');
+            const noAuthMessage = document.getElementById('noAuthMessage');
+            const forumContent = document.getElementById('forumContent');
+
+            function renderHeader() {
+                const user = window.discordAuth && typeof window.discordAuth.getCurrentUser === 'function'
+                    ? window.discordAuth.getCurrentUser()
+                    : (window.forumAPI && window.forumAPI.currentUser) || null;
+                const isAdmin = window.forumAPI && window.forumAPI.isAdmin;
+
+                if (user) {
+                    const avatar = user.avatar
+                        ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.webp?size=64`
+                        : `https://cdn.discordapp.com/embed/avatars/${user.discriminator % 5}.png`;
+
+                    userInfo.style.display = '';
+                    userInfo.innerHTML = `
+                        <div class="user-avatar"><img src="${avatar}" alt="${user.username}"></div>
+                        <div class="user-name">${user.global_name || user.username}</div>
+                        ${isAdmin ? '<span class="admin-badge">ADMIN</span>' : ''}
+                    `;
+
+                    if (loginBtn) loginBtn.style.display = 'none';
+                    if (logoutBtn) logoutBtn.style.display = '';
+                    if (noAuthMessage) noAuthMessage.style.display = 'none';
+                    if (forumContent) forumContent.style.display = '';
+                } else {
+                    if (userInfo) userInfo.style.display = 'none';
+                    if (loginBtn) loginBtn.style.display = '';
+                    if (logoutBtn) logoutBtn.style.display = 'none';
+                    if (noAuthMessage) noAuthMessage.style.display = '';
+                    if (forumContent) forumContent.style.display = 'none';
+                }
+            }
+
+            if (loginBtn) loginBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                if (window.discordAuth && typeof window.discordAuth.login === 'function') {
+                    window.discordAuth.login();
+                } else {
+                    console.warn('discordAuth.login não disponível');
+                }
+            });
+
+            if (logoutBtn) logoutBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                if (window.discordAuth && typeof window.discordAuth.logout === 'function') {
+                    window.discordAuth.logout();
+                } else {
+                    // fallback clear
+                    localStorage.removeItem('discord_user');
+                    localStorage.removeItem('discord_access_token');
+                    setTimeout(() => location.reload(), 300);
+                }
+            });
+
+            // inicializa após libs carregarem (tenta 3x rapidamente)
+            setTimeout(renderHeader, 250);
+            setTimeout(renderHeader, 800);
+            setTimeout(renderHeader, 1500);
+
+            // se forumAPI emitir algum evento, você pode chamar renderHeader() depois de login
+            window.renderForumHeader = renderHeader;
+        });
+    </script>
+
     <script src="js/discord-login.js"></script>
     <script src="js/forum-api.js"></script>
     <script src="js/forum.js"></script>
-
 
     <script>
         // Funções de debug
@@ -800,12 +872,14 @@
             const user = window.discordAuth ? window.discordAuth.getCurrentUser() : null;
             const statusElement = document.getElementById('debugStatus');
 
-            if (user) {
-                statusElement.innerHTML = `✅ Logado como: ${user.username}`;
-                statusElement.style.color = '#48bb78';
-            } else {
-                statusElement.innerHTML = '❌ Não logado';
-                statusElement.style.color = '#e53e3e';
+            if (statusElement) {
+                if (user) {
+                    statusElement.innerHTML = `✅ Logado como: ${user.username}`;
+                    statusElement.style.color = '#48bb78';
+                } else {
+                    statusElement.innerHTML = '❌ Não logado';
+                    statusElement.style.color = '#e53e3e';
+                }
             }
         }
 

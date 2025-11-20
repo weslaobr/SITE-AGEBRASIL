@@ -1,16 +1,17 @@
-// forum-api.js - VERSÃO 100% POSTGRESQL
 class ForumAPI {
     constructor() {
-        // ✅ CORREÇÃO PARA PRODUÇÃO
-        this.baseURL = (window.APP_CONFIG && window.APP_CONFIG.API_BASE_URL)
-            ? window.APP_CONFIG.API_BASE_URL
-            : 'https://aoe4.com.br:8080'; // Fallback para produção
+        // ✅ CORREÇÃO DE EMERGÊNCIA - FORÇAR URL CORRETA
+        this.baseURL = 'https://aoe4.com.br:3001';
+
+        // DEBUG IMEDIATO
+        console.log('🎯 FORUM API - URL FORÇADA:', this.baseURL);
+        console.log('📍 Site atual:', window.location.href);
+
         this.currentUser = null;
         this.isAdmin = false;
         this.categories = [];
         this.admins = this.getDefaultAdmins();
 
-        console.log('🔗 ForumAPI PostgreSQL inicializado');
         this.loadCurrentUser();
         this.loadCategories();
     }

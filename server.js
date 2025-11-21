@@ -189,9 +189,38 @@ app.get('/api/forum/topics/:id', async (req, res) => {
 
         await client.query('UPDATE forum_topics SET views = views + 1 WHERE id = $1', [id]);
 
+        // Mapear campos para camelCase que o frontend espera
+        const topicData = topic.rows[0];
         res.json({
-            ...topic.rows[0],
-            replies: replies.rows
+            id: topicData.id,
+            categoryId: topicData.category_id,
+            title: topicData.title,
+            content: topicData.content,
+            authorId: topicData.author_discord_id,
+            author: topicData.author_name,
+            authorAvatar: topicData.author_avatar,
+            views: topicData.views,
+            isPinned: topicData.is_pinned,
+            isLocked: topicData.is_locked,
+            createdAt: topicData.created_at,
+            updatedAt: topicData.updated_at,
+            lastReplyAt: topicData.last_reply_at,
+            categoryName: topicData.category_name,
+            categorySlug: topicData.category_slug,
+            replies: replies.rows.map(r => ({
+                id: r.id,
+                topicId: r.topic_id,
+                content: r.content,
+                authorId: r.author_discord_id,
+                author: r.author_name,
+                authorAvatar: r.author_avatar,
+                createdAt: r.created_at,
+                updatedAt: r.updated_at,
+                isEdited: r.is_edited,
+                lastEditedBy: r.last_edited_by,
+                lastEditedAt: r.last_edited_at,
+                likes: r.likes
+            }))
         });
     } catch (err) {
         console.error(err);

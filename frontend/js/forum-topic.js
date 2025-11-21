@@ -1,6 +1,52 @@
 // forum-topic.js - VERSÃO POSTGRESQL CORRIGIDA
 class ForumTopicUI {
     constructor() {
+        this.api = window.forumAPI;
+        this.currentTopicId = null;
+        this.currentTopic = null;
+        this.init();
+    }
+
+    async init() {
+        console.log('🔧 Inicializando ForumTopicUI...');
+        console.log('👤 Status Admin:', this.api.isAdmin ? '✅ ADMIN' : '❌ USUÁRIO');
+
+        this.currentTopicId = this.getTopicIdFromURL();
+        console.log('📌 Tópico ID:', this.currentTopicId);
+
+        if (!this.currentTopicId) {
+            this.showError('Tópico não encontrado');
+            return;
+        }
+
+        this.setupEventListeners();
+        await this.waitForAuthAndCategories();
+        this.checkAuthState();
+
+        if (this.api.currentUser) {
+            this.loadTopic();
+        }
+    }
+
+    getTopicIdFromURL() {
+        const urlParams = new URLSearchParams(window.location.search);
+        return urlParams.get('id');
+    }
+
+    async waitForAuthAndCategories() {
+        console.log('⏳ Aguardando carregamento...');
+        let attempts = 0;
+        const maxAttempts = 50;
+
+        while (attempts < maxAttempts) {
+            if (this.api.currentUser !== undefined && this.api.categories.length > 0) {
+                console.log('✅ Usuário e categorias carregados');
+                return true;
+            }
+            await new Promise(resolve => setTimeout(resolve, 100));
+            attempts++;
+        }
+        console.warn('⚠️ Timeout ao aguardar carregamento');
     }
 
     checkAuthState() {

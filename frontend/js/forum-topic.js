@@ -1,35 +1,6 @@
 // forum-topic.js - VERSÃO POSTGRESQL CORRIGIDA
 class ForumTopicUI {
     constructor() {
-        this.api = window.forumAPI;
-        this.currentTopicId = null;
-        this.currentTopic = null;
-        this.init();
-    }
-
-    init() {
-        console.log('🔧 Inicializando ForumTopicUI...');
-        console.log('👤 Status Admin:', this.api.isAdmin ? '✅ ADMIN' : '❌ USUÁRIO');
-
-        this.currentTopicId = this.getTopicIdFromURL();
-        console.log('📌 Tópico ID:', this.currentTopicId);
-
-        if (!this.currentTopicId) {
-            this.showError('Tópico não encontrado');
-            return;
-        }
-
-        this.checkAuthState();
-        this.setupEventListeners();
-
-        if (this.api.currentUser) {
-            this.loadTopic();
-        }
-    }
-
-    getTopicIdFromURL() {
-        const urlParams = new URLSearchParams(window.location.search);
-        return urlParams.get('id');
     }
 
     checkAuthState() {

@@ -198,7 +198,7 @@ class ForumCategoryUI {
 
                 return `
                     <div class="topic-item ${topic.isPinned ? 'pinned' : ''}" 
-                         onclick="window.location.href='forum-topic.html?id=${topic.id}'">
+                         data-id="${topic.id}">
                         <div class="topic-avatar">
                             ${topic.authorAvatar ?
                         `<img src="https://cdn.discordapp.com/avatars/${topic.authorId}/${topic.authorAvatar}.webp?size=45"
@@ -232,6 +232,16 @@ class ForumCategoryUI {
             }));
 
             topicsList.innerHTML = topicsHTML.join('');
+
+            // Adicionar event listeners para clique
+            document.querySelectorAll('.topic-item').forEach(item => {
+                item.addEventListener('click', (e) => {
+                    const id = item.dataset.id;
+                    console.log('🔹 Clicou no tópico:', id);
+                    window.location.href = `forum-topic.html?id=${id}`;
+                });
+            });
+
             console.log('✅ Tópicos carregados na interface');
 
         } catch (error) {

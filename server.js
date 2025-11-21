@@ -79,6 +79,10 @@ app.get('/forum-auth.html', (req, res) => {
     res.sendFile(path.join(__dirname, 'frontend/forum-auth.html'));
 });
 
+app.get('/login-temp.html', (req, res) => {
+    res.sendFile(path.join(__dirname, 'frontend/login-temp.html'));
+});
+
 // CONFIGURAÇÃO DE ATUALIZAÇÃO AUTOMÁTICA
 const AUTO_UPDATE_CONFIG = {
     enabled: true,

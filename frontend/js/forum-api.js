@@ -1,7 +1,14 @@
 // forum-api.js - VERSÃO 100% COMPATÍVEL COM SEU BANCO REAL (2025)
 class ForumAPI {
     constructor() {
-        this.baseURL = window.location.origin;
+        // Lógica robusta para definir a URL da API
+        if (window.location.hostname === 'localhost' && window.location.port !== '3001') {
+            this.baseURL = 'http://localhost:3001';
+            console.log('🔧 Modo Desenvolvimento: Forçando API para porta 3001');
+        } else {
+            this.baseURL = window.location.origin;
+        }
+
         this.currentUser = null;
         this.isAdmin = false;
         this.categories = [];
@@ -27,7 +34,7 @@ class ForumAPI {
         return headers;
     }
 
-    async loadUser() {
+    async loadCurrentUser() {
         try {
             const data = localStorage.getItem('discord_user');
             if (data) {
@@ -65,8 +72,19 @@ class ForumAPI {
             headers: this.getAuthHeaders()
         });
         if (!res.ok) throw new Error("Tópico não encontrado");
-        return await this.loadCategories(); // garante categoria no objeto
         return await res.json();
+    }
+
+    // ✅ NOVO MÉTODO: getReplies (necessário para forum-category.js)
+    async getReplies(topicId) {
+        try {
+            // Como não há endpoint direto de replies, usamos getTopic que retorna replies
+            const topic = await this.getTopic(topicId);
+            return topic.replies || [];
+        } catch (error) {
+            console.error(`Erro ao buscar replies para tópico ${topicId}:`, error);
+            return [];
+        }
     }
 
     async createTopic(data) {

@@ -10,154 +10,101 @@
     <link rel="icon" type="image/png" href="https://i.postimg.cc/3JT4W3hz/favicon.png">
 
     <style>
-        /* HEADER COM DUAS LINHAS - PADRONIZADO */
-        .header-top {
+        /* Top Bar Styles */
+        .top-bar {
+            background-color: #0f1218;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 0.5rem 0;
+            font-size: 0.9rem;
+        }
+
+        .top-bar .container {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+        }
+
+        /* Header Adjustments */
+        header {
+            background-color: var(--header-bg);
+            padding: 1rem 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .header-content {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            flex-wrap: wrap;
-            gap: 1rem;
-            padding-bottom: 1rem;
         }
 
-        .header-bottom {
-            display: flex;
-            justify-content: flex-end;
-            padding-top: 1rem;
-        }
-
-        .logo {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
-
-        .logo-img {
-            height: 40px;
-            width: auto;
-        }
-
-        .logo h1 {
-            color: var(--text-color);
-            font-size: 1.5rem;
-            margin: 0;
-        }
-
-        nav ul {
-            display: flex;
-            list-style: none;
-            margin: 0;
-            padding: 0;
-            gap: 2rem;
-        }
-
-        nav a {
-            color: var(--text-color);
-            text-decoration: none;
-            font-weight: 500;
-            transition: color 0.3s ease;
-            padding: 0.5rem 0;
-        }
-
-        nav a:hover,
-        nav a.active {
-            color: var(--accent-color);
-        }
-
+        /* User Actions in Top Bar */
         .user-actions {
             display: flex;
             align-items: center;
             gap: 1rem;
         }
 
-        .user-info-container {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            background: var(--secondary-color);
-            padding: 0.5rem 1rem;
-            border-radius: 20px;
-            border: 1px solid var(--border-color);
-        }
-
-        .user-avatar img {
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            border: 2px solid var(--accent-color);
-        }
-
-        .user-name {
-            color: var(--text-color);
-            font-weight: 600;
-            font-size: 0.9rem;
-        }
-
         .login-btn-header {
-            background: none;
-            border: none;
-            color: var(--text-color);
-            font-weight: 600;
-            cursor: pointer;
-            padding: 0;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            font-size: 0.9rem;
-            transition: color 0.3s ease;
-        }
-
-        .login-btn-header:hover {
+            background: transparent;
+            border: 1px solid var(--accent-color);
             color: var(--accent-color);
-        }
-
-        .logout-btn {
-            background: #4a5568;
-            color: white;
-            border: none;
-            padding: 0.7rem 1.2rem;
-            border-radius: 8px;
-            font-weight: 600;
+            padding: 0.3rem 1rem;
+            border-radius: 4px;
             cursor: pointer;
             transition: all 0.3s ease;
+            font-weight: 600;
+            font-size: 0.8rem;
+            text-decoration: none;
             display: inline-flex;
             align-items: center;
             gap: 0.5rem;
-            font-size: 0.9rem;
         }
 
-        .logout-btn:hover {
-            background: #2d3748;
-            transform: translateY(-1px);
+        .login-btn-header:hover {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .user-info-display {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            padding: 0.2rem 0.8rem;
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .user-info-display img {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+        }
+
+        .user-info-display span {
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: #e2e8f0;
         }
 
         .admin-badge {
             background: var(--accent-color);
             color: white;
-            padding: 0.2rem 0.6rem;
-            border-radius: 12px;
+            padding: 0.1rem 0.5rem;
+            border-radius: 10px;
             font-size: 0.7rem;
-            font-weight: 600;
+            margin-left: 0.5rem;
         }
 
         @media (max-width: 768px) {
-            .header-top {
+            .header-content {
                 flex-direction: column;
-                align-items: flex-start;
                 gap: 1rem;
             }
 
-            .header-bottom {
-                justify-content: center;
-            }
-
-            nav ul {
-                gap: 1rem;
-                flex-wrap: wrap;
-            }
-
-            .user-actions {
-                width: 100%;
+            .top-bar .container {
                 justify-content: center;
             }
         }
@@ -179,7 +126,7 @@
 
         .topic-meta {
             display: flex;
-            justify-content: between;
+            justify-content: space-between;
             align-items: center;
             margin-bottom: 1rem;
             flex-wrap: wrap;
@@ -539,15 +486,28 @@
 </head>
 
 <body>
+    <!-- Top Bar -->
+    <div class="top-bar">
+        <div class="container">
+            <div class="user-actions">
+                <div id="userInfo" style="display:none" class="user-info-display"></div>
+                <a id="loginBtn" href="login-temp.html" class="login-btn-header" style="display:none">
+                    <i class="fab fa-discord"></i> Entrar
+                </a>
+                <button id="logoutBtn" class="login-btn-header" style="display:none">
+                    <i class="fas fa-sign-out-alt"></i> Sair
+                </button>
+            </div>
+        </div>
+    </div>
+
     <header>
         <div class="container">
-            <!-- Primeira linha: Logo e Navegação -->
-            <div class="header-top">
+            <div class="header-content">
                 <div class="logo">
                     <img src="https://i.postimg.cc/rFNdr7FV/logo.png" alt="Age of Empires IV Brasil" class="logo-img">
                     <h1>Age of Empires IV Brasil</h1>
                 </div>
-
                 <nav>
                     <ul>
                         <li><a href="index.html">Início</a></li>
@@ -557,35 +517,6 @@
                         <li><a href="about.html">Sobre</a></li>
                     </ul>
                 </nav>
-            </div>
-
-            <!-- Segunda linha: Botão do Discord -->
-            <div class="header-bottom">
-                <div class="user-actions">
-                    <!-- Container do usuário logado -->
-                    <div id="userInfo" data-auth-only class="user-info-container" style="display: none;">
-                        <div class="user-avatar">
-                            <!-- Avatar será carregado via JavaScript -->
-                        </div>
-                        <div class="user-name">
-                            <!-- Nome será carregado via JavaScript -->
-                        </div>
-                    </div>
-
-                    <!-- Container do botão de login (não logado) -->
-                    <div id="loginContainer" data-no-auth class="user-info-container" style="display: none;">
-                        <i class="fab fa-discord" style="color: #5865F2;"></i>
-                        <button id="loginBtn" class="login-btn-header">
-                            Entrar com Discord
-                        </button>
-                    </div>
-
-                    <!-- Botão de logout -->
-                    <button id="logoutBtn" data-auth-only style="display: none;" class="logout-btn">
-                        <i class="fas fa-sign-out-alt"></i>
-                        Sair
-                    </button>
-                </div>
             </div>
         </div>
     </header>
@@ -605,7 +536,7 @@
             <i class="fab fa-discord"></i>
             <h3>Faça login para visualizar tópicos</h3>
             <p>Conecte-se com sua conta Discord para ler e participar das discussões</p>
-            <button class="login-btn" onclick="window.forumTopicUI.redirectToLogin()">
+            <button class="login-btn" onclick="window.location.href='login-temp.html'">
                 <i class="fab fa-discord"></i>
                 Entrar com Discord
             </button>
@@ -749,38 +680,28 @@
         // GERENCIADOR PADRONIZADO DO HEADER
         document.addEventListener('DOMContentLoaded', () => {
             const userInfo = document.getElementById('userInfo');
-            const loginContainer = document.getElementById('loginContainer');
             const loginBtn = document.getElementById('loginBtn');
             const logoutBtn = document.getElementById('logoutBtn');
             const noAuthMessage = document.getElementById('noAuthMessage');
             const content = document.getElementById('topicContent');
 
             function renderHeader() {
-                // Tenta obter usuário de várias fontes
                 let user = null;
                 let isAdmin = false;
 
-                if (window.discordAuth && typeof window.discordAuth.getCurrentUser === 'function') {
-                    user = window.discordAuth.getCurrentUser();
-                } else if (window.forumAPI && window.forumAPI.currentUser) {
-                    user = window.forumAPI.currentUser;
-                } else {
-                    // Fallback: verifica localStorage
-                    try {
-                        const userData = localStorage.getItem('discord_user');
-                        user = userData ? JSON.parse(userData) : null;
-                    } catch (e) {
-                        user = null;
-                    }
+                try {
+                    const userData = localStorage.getItem('discord_user');
+                    user = userData ? JSON.parse(userData) : null;
+                } catch (e) {
+                    user = null;
                 }
 
-                // Verifica se é admin
                 if (user && user.username === 'BRO.WESLAO') {
                     isAdmin = true;
                 }
 
                 if (user) {
-                    // USUÁRIO LOGADO
+                    // Logado
                     if (userInfo) {
                         userInfo.style.display = 'flex';
                         const avatar = user.avatar
@@ -788,54 +709,35 @@
                             : `https://cdn.discordapp.com/embed/avatars/${user.discriminator % 5}.png`;
 
                         userInfo.innerHTML = `
-                            <div class="user-avatar"><img src="${avatar}" alt="${user.username}"></div>
-                            <div class="user-name">${user.global_name || user.username}</div>
+                            <img src="${avatar}" alt="${user.username}">
+                            <span>${user.global_name || user.username}</span>
                             ${isAdmin ? '<span class="admin-badge">ADMIN</span>' : ''}
                         `;
                     }
-                    if (loginContainer) loginContainer.style.display = 'none';
+                    if (loginBtn) loginBtn.style.display = 'none';
                     if (logoutBtn) logoutBtn.style.display = 'flex';
                     if (noAuthMessage) noAuthMessage.style.display = 'none';
-                    if (content) content.style.display = '';
+                    if (content) content.style.display = 'block';
                 } else {
-                    // USUÁRIO NÃO LOGADO
+                    // Não Logado
                     if (userInfo) userInfo.style.display = 'none';
-                    if (loginContainer) loginContainer.style.display = 'flex';
+                    if (loginBtn) loginBtn.style.display = 'flex';
                     if (logoutBtn) logoutBtn.style.display = 'none';
-                    if (noAuthMessage) noAuthMessage.style.display = '';
+                    if (noAuthMessage) noAuthMessage.style.display = 'block';
                     if (content) content.style.display = 'none';
                 }
-            }
-
-            // Event listeners
-            if (loginBtn) {
-                loginBtn.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    if (window.discordAuth && typeof window.discordAuth.login === 'function') {
-                        window.discordAuth.login();
-                    } else {
-                        window.location.href = 'forum-auth.html';
-                    }
-                });
             }
 
             if (logoutBtn) {
                 logoutBtn.addEventListener('click', (e) => {
                     e.preventDefault();
-                    if (window.discordAuth && typeof window.discordAuth.logout === 'function') {
-                        window.discordAuth.logout();
-                    } else {
-                        localStorage.removeItem('discord_user');
-                        localStorage.removeItem('discord_access_token');
-                        setTimeout(() => location.reload(), 300);
-                    }
+                    localStorage.removeItem('discord_user');
+                    localStorage.removeItem('discord_access_token');
+                    location.reload();
                 });
             }
 
-            // Inicializar
             renderHeader();
-            setTimeout(renderHeader, 500);
-            setTimeout(renderHeader, 1000);
         });
     </script>
 </body>

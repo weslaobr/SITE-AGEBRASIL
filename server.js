@@ -119,6 +119,41 @@ app.get('/api/forum/categories', async (req, res) => {
     }
 });
 
+// 📝 GET TODOS OS TÓPICOS (ÚLTIMOS/RECENTES)
+app.get('/api/forum/topics', async (req, res) => {
+    console.log('📥 Buscando últimos tópicos do fórum...');
+    const { limit } = req.query;
+
+    const client = await pool.connect();
+
+    try {
+        const query = `
+            SELECT 
+                t.*, 
+                c.name as category_name, 
+                c.slug as category_slug,
+                c.color as category_color,
+                (SELECT COUNT(*) FROM forum_replies r WHERE r.topic_id = t.id) as reply_count
+            FROM forum_topics t
+            LEFT JOIN forum_categories c ON t.category_id = c.id
+            WHERE c.is_active = true
+            ORDER BY t.is_pinned DESC, t.updated_at DESC
+            ${limit ? `LIMIT ${parseInt(limit)}` : 'LIMIT 20'}
+        `;
+
+        const result = await client.query(query);
+
+        console.log(`✅ ${result.rows.length} tópicos encontrados (todos)`);
+        res.json(result.rows);
+
+    } catch (error) {
+        console.error('❌ Erro ao buscar tópicos:', error);
+        res.status(500).json({ error: 'Erro interno do servidor' });
+    } finally {
+        client.release();
+    }
+});
+
 // 📝 GET TÓPICOS POR CATEGORIA
 app.get('/api/forum/categories/:slug/topics', async (req, res) => {
     const { slug } = req.params;
@@ -543,59 +578,62 @@ app.delete('/api/forum/replies/:id', async (req, res) => {
     }
 });
 
-// 📌 ALTERAR PIN DO TÓPICO
-app.patch('/api/forum/topics/:id/pin', async (req, res) => {
+// ✅ ADICIONE ESTAS (com o endpoint correto que o frontend usa)
+app.patch('/api/forum/topics/:id', async (req, res) => {
     const { id } = req.params;
-    const { is_pinned } = req.body;
+    const { is_pinned, is_locked } = req.body;
+
+    console.log(`📌 Atualizando tópico ${id}:`, { is_pinned, is_locked });
 
     const client = await pool.connect();
 
     try {
-        const result = await client.query(
-            `UPDATE forum_topics 
-             SET is_pinned = $1, updated_at = NOW() 
-             WHERE id = $2 
-             RETURNING *`,
-            [is_pinned, id]
+        // Verificar se o tópico existe
+        const topicCheck = await client.query(
+            'SELECT id FROM forum_topics WHERE id = $1',
+            [id]
         );
 
-        if (result.rows.length === 0) {
+        if (topicCheck.rows.length === 0) {
             return res.status(404).json({ error: 'Tópico não encontrado' });
         }
 
-        res.json(result.rows[0]);
+        // Construir query dinamicamente baseada nos campos fornecidos
+        const updates = [];
+        const values = [];
+        let paramCount = 1;
 
-    } catch (err) {
-        res.status(500).json({ error: 'Erro ao atualizar pin' });
-    } finally {
-        client.release();
-    }
-});
-
-// 🔒 ALTERAR BLOQUEIO DO TÓPICO
-app.patch('/api/forum/topics/:id/lock', async (req, res) => {
-    const { id } = req.params;
-    const { is_locked } = req.body;
-
-    const client = await pool.connect();
-
-    try {
-        const result = await client.query(
-            `UPDATE forum_topics 
-             SET is_locked = $1, updated_at = NOW() 
-             WHERE id = $2 
-             RETURNING *`,
-            [is_locked, id]
-        );
-
-        if (result.rows.length === 0) {
-            return res.status(404).json({ error: 'Tópico não encontrado' });
+        if (is_pinned !== undefined) {
+            updates.push(`is_pinned = $${paramCount}`);
+            values.push(is_pinned);
+            paramCount++;
         }
 
+        if (is_locked !== undefined) {
+            updates.push(`is_locked = $${paramCount}`);
+            values.push(is_locked);
+            paramCount++;
+        }
+
+        // Sempre atualizar updated_at
+        updates.push(`updated_at = NOW()`);
+
+        values.push(id);
+
+        const result = await client.query(
+            `UPDATE forum_topics 
+             SET ${updates.join(', ')} 
+             WHERE id = $${paramCount} 
+             RETURNING *`,
+            values
+        );
+
+        console.log(`✅ Tópico ${id} atualizado`);
         res.json(result.rows[0]);
 
-    } catch (err) {
-        res.status(500).json({ error: 'Erro ao atualizar bloqueio' });
+    } catch (error) {
+        console.error('❌ Erro ao atualizar tópico:', error);
+        res.status(500).json({ error: 'Erro interno do servidor' });
     } finally {
         client.release();
     }

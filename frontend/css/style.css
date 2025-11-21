@@ -9,6 +9,47 @@
     --header-bg: rgba(15, 23, 42, 0.9);
 }
 
+/* ===== FORUM ===== */
+
+/* ADICIONAR AO forum-category.html - ESTILOS PARA DADOS REAIS */
+.real-data-badge {
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.05);
+    }
+
+    100% {
+        transform: scale(1);
+    }
+}
+
+.stat-updated {
+    animation: highlight 1s ease;
+}
+
+@keyframes highlight {
+    0% {
+        background-color: transparent;
+    }
+
+    50% {
+        background-color: rgba(72, 187, 120, 0.2);
+    }
+
+    100% {
+        background-color: transparent;
+    }
+}
+
+/* FIM AO forum-category.html - ESTILOS PARA DADOS REAIS */
+
 /* Adicione ao seu CSS existente */
 .search-results-header {
     background: #f8f9fa;

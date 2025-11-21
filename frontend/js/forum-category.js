@@ -32,6 +32,56 @@ class ForumCategoryUI {
         }
     }
 
+    // NO forum-category.js - ADICIONAR MÉTODO PARA FORÇAR ATUALIZAÇÃO
+    async forceRealDataUpdate() {
+        console.log('🔄 Forçando atualização com dados reais...');
+
+        try {
+            // Recarregar categoria
+            await this.loadCategory();
+
+            // Forçar recálculo das estatísticas
+            await this.displayCategory();
+
+            console.log('✅ Dados atualizados com sucesso');
+            this.showNotification('Dados atualizados com informações reais do banco!', 'success');
+
+        } catch (error) {
+            console.error('❌ Erro ao forçar atualização:', error);
+            this.showNotification('Erro ao atualizar dados: ' + error.message, 'error');
+        }
+    }
+
+    // ✅ CORREÇÃO: Chamar força de atualização na inicialização
+    async init() {
+        console.log('🔧 Inicializando ForumCategoryUI...');
+
+        this.currentCategorySlug = this.getCategorySlugFromURL();
+        console.log('📌 Categoria Slug da URL:', this.currentCategorySlug);
+
+        if (!this.currentCategorySlug) {
+            this.showError('Categoria não especificada na URL');
+            return;
+        }
+
+        this.checkAuthState();
+        this.setupEventListeners();
+
+        await this.waitForAuthAndCategories();
+
+        if (this.api.currentUser) {
+            await this.loadCategory();
+            this.addDebugButton();
+
+            // ✅ FORÇAR ATUALIZAÇÃO COM DADOS REAIS
+            setTimeout(() => {
+                this.forceRealDataUpdate();
+            }, 1000);
+
+        } else {
+            console.log('👤 Aguardando autenticação...');
+        }
+    }
 
     getCategorySlugFromURL() {
         const urlParams = new URLSearchParams(window.location.search);
@@ -142,31 +192,6 @@ class ForumCategoryUI {
         }
     }
 
-    // NO forum-category.js - ATUALIZAR O MÉTODO init()
-    async init() {
-        console.log('🔧 Inicializando ForumCategoryUI...');
-
-        this.currentCategorySlug = this.getCategorySlugFromURL();
-        console.log('📌 Categoria Slug da URL:', this.currentCategorySlug);
-
-        if (!this.currentCategorySlug) {
-            this.showError('Categoria não especificada na URL');
-            return;
-        }
-
-        this.checkAuthState();
-        this.setupEventListeners();
-
-        // ✅ CORREÇÃO: Aguardar carregamento completo
-        await this.waitForAuthAndCategories();
-
-        if (this.api.currentUser) {
-            await this.loadCategory();
-            this.addDebugButton(); // ✅ Adicionar botão debug
-        } else {
-            console.log('👤 Aguardando autenticação...');
-        }
-    }
 
     // NO forum-category.js - CORRIGIR O MÉTODO DE CRIAÇÃO DE TÓPICOS
     async createNewTopic() {
@@ -330,51 +355,99 @@ class ForumCategoryUI {
     async displayCategory() {
         if (!this.currentCategory) return;
 
-        console.log('🎨 Exibindo categoria:', this.currentCategory);
+        console.log('🎨 Exibindo categoria com dados reais:', this.currentCategory);
 
-        // ✅ CORREÇÃO: Calcular estatísticas reais
-        const topics = await this.api.getTopics(this.currentCategorySlug);
-        let totalReplies = 0;
+        try {
+            // ✅ CORREÇÃO: Buscar dados REAIS do banco
+            const topics = await this.api.getTopics(this.currentCategorySlug);
 
-        for (const topic of topics) {
-            const replies = await this.api.getReplies(topic.id);
-            totalReplies += replies.length;
-        }
+            // ✅ CORREÇÃO: Calcular estatísticas REAIS
+            let totalReplies = 0;
+            let uniqueMembers = new Set();
 
-        // Atualizar breadcrumb
-        const breadcrumbElement = document.getElementById('categoryNameBreadcrumb');
-        if (breadcrumbElement) {
-            breadcrumbElement.textContent = this.currentCategory.name;
-        }
+            for (const topic of topics) {
+                const replies = await this.api.getReplies(topic.id);
+                totalReplies += replies.length;
 
-        // Atualizar título da categoria
-        const titleElement = document.getElementById('categoryTitle');
-        const descriptionElement = document.getElementById('categoryDescription');
-        const iconElement = document.getElementById('categoryIconLarge');
+                // Adicionar autor do tópico aos membros
+                if (topic.authorId) uniqueMembers.add(topic.authorId);
 
-        if (titleElement) titleElement.textContent = this.currentCategory.name;
-        if (descriptionElement) descriptionElement.textContent = this.currentCategory.description;
-
-        if (iconElement) {
-            iconElement.innerHTML = `<i class="${this.currentCategory.icon || 'fas fa-folder'}"></i>`;
-            if (this.currentCategory.color) {
-                iconElement.style.background = `linear-gradient(135deg, ${this.currentCategory.color}, #3e8ce5)`;
+                // Adicionar autores das respostas aos membros
+                replies.forEach(reply => {
+                    if (reply.authorId) uniqueMembers.add(reply.authorId);
+                });
             }
-        }
 
-        // ✅ CORREÇÃO: Atualizar estatísticas com dados reais
+            const realTopicCount = topics.length;
+            const realReplyCount = totalReplies;
+            const realMemberCount = uniqueMembers.size;
+
+            console.log('📊 Dados reais calculados:', {
+                topics: realTopicCount,
+                replies: realReplyCount,
+                members: realMemberCount
+            });
+
+            // Atualizar breadcrumb
+            const breadcrumbElement = document.getElementById('categoryNameBreadcrumb');
+            if (breadcrumbElement) {
+                breadcrumbElement.textContent = this.currentCategory.name;
+            }
+
+            // Atualizar título da categoria
+            const titleElement = document.getElementById('categoryTitle');
+            const descriptionElement = document.getElementById('categoryDescription');
+            const iconElement = document.getElementById('categoryIconLarge');
+
+            if (titleElement) titleElement.textContent = this.currentCategory.name;
+            if (descriptionElement) descriptionElement.textContent = this.currentCategory.description;
+
+            if (iconElement) {
+                iconElement.innerHTML = `<i class="${this.currentCategory.icon || 'fas fa-folder'}"></i>`;
+                if (this.currentCategory.color) {
+                    iconElement.style.background = `linear-gradient(135deg, ${this.currentCategory.color}, #3e8ce5)`;
+                }
+            }
+
+            // ✅ CORREÇÃO: Atualizar estatísticas com dados REAIS do banco
+            const topicCountElement = document.getElementById('topicCount');
+            const replyCountElement = document.getElementById('replyCount');
+            const membersElement = document.getElementById('categoryMembers');
+
+            if (topicCountElement) {
+                topicCountElement.textContent = realTopicCount;
+                console.log('✅ Tópicos atualizados:', realTopicCount);
+            }
+
+            if (replyCountElement) {
+                replyCountElement.textContent = realReplyCount;
+                console.log('✅ Respostas atualizadas:', realReplyCount);
+            }
+
+            if (membersElement) {
+                membersElement.textContent = realMemberCount;
+                console.log('✅ Membros atualizados:', realMemberCount);
+            }
+
+            console.log('✅ Categoria exibida com dados REAIS do banco');
+
+        } catch (error) {
+            console.error('❌ Erro ao carregar dados reais:', error);
+            this.showFallbackStats();
+        }
+    }
+
+    // ✅ CORREÇÃO: Método fallback com dados mínimos
+    showFallbackStats() {
+        console.log('🔄 Usando fallback stats');
+
         const topicCountElement = document.getElementById('topicCount');
         const replyCountElement = document.getElementById('replyCount');
         const membersElement = document.getElementById('categoryMembers');
 
-        if (topicCountElement) topicCountElement.textContent = topics.length;
-        if (replyCountElement) replyCountElement.textContent = totalReplies;
-        if (membersElement) membersElement.textContent = topics.length > 0 ? 1 : 0;
-
-        console.log('✅ Categoria exibida com estatísticas reais:', {
-            topics: topics.length,
-            replies: totalReplies
-        });
+        if (topicCountElement) topicCountElement.textContent = '0';
+        if (replyCountElement) replyCountElement.textContent = '0';
+        if (membersElement) membersElement.textContent = '0';
     }
 
     async loadTopics() {
@@ -547,47 +620,5 @@ document.addEventListener('DOMContentLoaded', () => {
     window.forumCategoryUI = new ForumCategoryUI();
 });
 
-// ADICIONAR AO forum-category.js - MÉTODO DE DEBUG
-async debugCategoryData() {
-    console.log('🔍=== DEBUG CATEGORIA ===');
 
-    try {
-        // Testar API diretamente
-        const response = await fetch(`${this.api.baseURL}/api/forum/categories/${this.currentCategorySlug}/topics`);
-        const rawData = await response.json();
 
-        console.log('📊 Dados brutos da API:', rawData);
-        console.log('📋 Primeiro tópico bruto:', rawData[0]);
-
-        // Verificar estrutura
-        if (rawData.length > 0) {
-            const firstTopic = rawData[0];
-            console.log('🎯 Estrutura do tópico:', {
-                id: firstTopic.id,
-                title: firstTopic.title,
-                author: firstTopic.author,
-                author_name: firstTopic.author_name,
-                author_discord_id: firstTopic.author_discord_id,
-                replyCount: firstTopic.replyCount
-            });
-        }
-
-    } catch (error) {
-        console.error('❌ Erro no debug:', error);
-    }
-
-    console.log('🔚=== FIM DEBUG ===');
-}
-
-// Adicionar botão de debug temporário
-addDebugButton() {
-    const topicsHeader = document.querySelector('.topics-header');
-    if (topicsHeader) {
-        const debugBtn = document.createElement('button');
-        debugBtn.className = 'btn btn-secondary';
-        debugBtn.innerHTML = '<i class="fas fa-bug"></i> Debug Data';
-        debugBtn.onclick = () => this.debugCategoryData();
-        debugBtn.style.marginLeft = '1rem';
-        topicsHeader.appendChild(debugBtn);
-    }
-}

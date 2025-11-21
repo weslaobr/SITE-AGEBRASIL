@@ -47,6 +47,65 @@ class ForumAPI {
 
     /* ====================== CATEGORIES ====================== */
 
+    // NO forum-api.js - ADICIONAR MÉTODO PARA BUSCAR CATEGORIA POR SLUG
+    async getCategoryBySlug(slug) {
+        try {
+            console.log(`📂 Buscando categoria por slug: ${slug}`);
+            const response = await fetch(`${this.baseURL}/api/forum/categories`);
+
+            if (!response.ok) {
+                throw new Error(`Erro HTTP: ${response.status}`);
+            }
+
+            const categories = await response.json();
+            const category = categories.find(cat => cat.slug === slug);
+
+            if (!category) {
+                console.error(`❌ Categoria não encontrada com slug: ${slug}`);
+                return null;
+            }
+
+            console.log('✅ Categoria encontrada:', category);
+            return category;
+
+        } catch (error) {
+            console.error('❌ Erro ao buscar categoria:', error);
+            return null;
+        }
+    }
+
+    // ✅ CORREÇÃO: Atualizar método loadCategory no forum-category.js
+    async loadCategory() {
+        console.log('📂 Carregando categoria:', this.currentCategorySlug);
+
+        try {
+            // ✅ CORREÇÃO: Buscar categoria REAL do banco
+            this.currentCategory = await this.api.getCategoryBySlug(this.currentCategorySlug);
+
+            if (!this.currentCategory) {
+                console.error('❌ Categoria não encontrada com slug:', this.currentCategorySlug);
+
+                // Tentar fallback nas categorias já carregadas
+                this.currentCategory = this.api.categories.find(
+                    cat => cat.slug === this.currentCategorySlug
+                );
+
+                if (!this.currentCategory) {
+                    this.showError(`Categoria "${this.currentCategorySlug}" não encontrada`);
+                    return;
+                }
+            }
+
+            console.log('✅ Categoria REAL encontrada:', this.currentCategory.name);
+            await this.displayCategory();
+            await this.loadTopics();
+
+        } catch (error) {
+            console.error('❌ Erro ao carregar categoria:', error);
+            this.showError('Erro ao carregar categoria: ' + error.message);
+        }
+    }
+
     async loadCategories() {
         try {
             console.log("📂 Buscando categorias do servidor...");

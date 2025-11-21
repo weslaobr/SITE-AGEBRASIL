@@ -29,27 +29,43 @@ app.use(cors({
 app.use(express.json());
 
 // Servir arquivos estáticos do frontend
-app.use(express.static(path.join(__dirname, '/frontend')));
+app.use(express.static(path.join(__dirname, 'frontend')));
 
 // Rotas para páginas HTML
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, '/frontend/index.html'));
+    res.sendFile(path.join(__dirname, 'frontend/index.html'));
 });
 
 app.get('/leaderboard.html', (req, res) => {
-    res.sendFile(path.join(__dirname, '/frontend/leaderboard.html'));
+    res.sendFile(path.join(__dirname, 'frontend/leaderboard.html'));
 });
 
 app.get('/clan.html', (req, res) => {
-    res.sendFile(path.join(__dirname, '/frontend/clan.html'));
+    res.sendFile(path.join(__dirname, 'frontend/clan.html'));
 });
 
 app.get('/torneios.html', (req, res) => {
-    res.sendFile(path.join(__dirname, '/frontend/torneios.html'));
+    res.sendFile(path.join(__dirname, 'frontend/torneios.html'));
 });
 
 app.get('/admin.html', (req, res) => {
-    res.sendFile(path.join(__dirname, '/frontend/admin.html'));
+    res.sendFile(path.join(__dirname, 'frontend/admin.html'));
+});
+
+app.get('/forum.html', (req, res) => {
+    res.sendFile(path.join(__dirname, 'frontend/forum.html'));
+});
+
+app.get('/forum-category.html', (req, res) => {
+    res.sendFile(path.join(__dirname, 'frontend/forum-category.html'));
+});
+
+app.get('/forum-topic.html', (req, res) => {
+    res.sendFile(path.join(__dirname, 'frontend/forum-topic.html'));
+});
+
+app.get('/forum-auth.html', (req, res) => {
+    res.sendFile(path.join(__dirname, 'frontend/forum-auth.html'));
 });
 
 // CONFIGURAÇÃO DE ATUALIZAÇÃO AUTOMÁTICA

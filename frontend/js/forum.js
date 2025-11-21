@@ -1,77 +1,114 @@
-class ForumUI {
-    constructor() {
-        this.api = window.forumAPI;
-        this.init();
-    }
+// frontend/js/forum.js  ←  SUBSTITUA TUDO POR ISSO
 
-    async init() {
-        while (!window.forumAPI || window.forumAPI.categories.length === 0) {
-            await new Promise(r => setTimeout(r, 200));
+let todosTopicos = [];
+let todasCategorias = [];
+
+// Carrega categorias e tópicos do seu backend Node.js
+async function carregarDados() {
+    try {
+        const [resCat, resTop] = await Promise.all([
+            fetch('/api/categorias'),
+            fetch('/api/topicos')
+        ]);
+
+        todasCategorias = await resCat.json();
+        todosTopicos = await resTop.json();
+
+        // Agora decide o que mostrar conforme a página
+        const pagina = window.location.pathname.split('/').pop();
+
+        if (pagina === 'categoria.html') {
+            const urlParams = new URLSearchParams(window.location.search);
+            const catId = urlParams.get('categoria');
+            if (catId) mostrarCategoria(catId);
+        } else if (pagina === 'ver-topico.html') {
+            const urlParams = new URLSearchParams(window.location.search);
+            const topicoId = urlParams.get('id');
+            if (topicoId) mostrarTopico(topicoId);
+        } else {
+            // Página principal do fórum
+            listarCategorias();
+            listarTopicos(todosTopicos);
         }
-        this.renderHeader();
-        this.renderAll();
-    }
-
-    renderHeader() {
-        const user = this.api.currentUser;
-        if (user) {
-            document.getElementById('userInfo').style.display = 'flex';
-            document.getElementById('loginContainer').style.display = 'none';
-            document.getElementById('logoutBtn').style.display = 'flex';
-            document.getElementById('noAuthMessage').style.display = 'none';
-            document.getElementById('forumContent').style.display = 'block';
-
-            const avatar = user.avatar ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.webp?size=64` : 'https://cdn.discordapp.com/embed/avatars/0.png';
-            document.getElementById('userInfo').innerHTML = `
-                <div class="user-avatar"><img src="${avatar}"></div>
-                <div class="user-name">${user.global_name || user.username}</div>
-            `;
-        }
-    }
-
-    renderAll() {
-        this.api.getStats().then(s => {
-            document.getElementById('statTopics').textContent = s.totalTopics || 0;
-            document.getElementById('statReplies').textContent = s.totalReplies || 0;
-            document.getElementById('statMembers').textContent = s.totalMembers || 50;
-            document.getElementById('statOnline').textContent = s.onlineNow || 1;
-        });
-
-        document.getElementById('categoriesContainer').innerHTML = this.api.categories.map(cat => `
-            <div class="category-card" onclick="location.href='forum-category.html?category=${cat.slug}'">
-                <div class="category-icon" style="background:${cat.color || '#5865F2'}">
-                    <i class="${cat.icon || 'fas fa-comments'}"></i>
-                </div>
-                <div class="category-info">
-                    <h3>${cat.name}</h3>
-                    <p>${cat.description || ''}</p>
-                </div>
-                <div class="category-stats">
-                    <div><strong>${cat.topic_count || 0}</strong> tópicos</div>
-                    <div><strong>${cat.reply_count || 0}</strong> respostas</div>
-                </div>
-            </div>
-        `).join('');
-
-        this.api.getTopics().then(topics => {
-            document.getElementById('recentTopicsList').innerHTML = topics.length === 0 ? '<p style="text-align:center;color:#888;padding:3rem">Nenhum tópico ainda.</p>' : topics.map(t => `
-                <div class="topic-item" onclick="location.href='forum-topic.html?id=${t.id}'">
-                    <div class="topic-avatar"><img src="${t.author_avatar || 'https://cdn.discordapp.com/embed/avatars/0.png'}"></div>
-                    <div class="topic-main">
-                        <div class="topic-title">${t.title}</div>
-                        <div class="topic-meta">por ${t.author_name} • ${new Date(t.created_at).toLocaleDateString('pt-BR')} • ${t.category_name}</div>
-                    </div>
-                    <div class="topic-stats">
-                        <span><i class="fas fa-comment"></i> ${t.reply_count || 0}</span>
-                        <span><i class="fas fa-eye"></i> ${t.views || 0}</span>
-                    </div>
-                </div>
-            `).join('');
-        });
+    } catch (err) {
+        console.error("Erro ao carregar dados do servidor:", err);
     }
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-    if (window.forumAPI) window.forumAPI.loadUser();
-    new ForumUI();
-});
+function listarCategorias() {
+    const container = document.getElementById('categorias-container');
+    if (!container) return;
+
+    container.innerHTML = todasCategorias.map(cat => `
+        <div class="categoria-card">
+            <h3>${cat.nome}</h3>
+            <p>${cat.descricao}</p>
+            <a href="categoria.html?categoria=${cat.id}" class="btn">Ver tópicos</a>
+        </div>
+    `).join('');
+}
+
+function listarTopicos(lista) {
+    const container = document.getElementById('topicos-lista');
+    if (!container) return;
+
+    if (lista.length === 0) {
+        container.innerHTML = '<p class="texto-centro">Nenhum tópico nesta categoria ainda.</p>';
+        return;
+    }
+
+    container.innerHTML = lista.map(t => {
+        const cat = todasCategorias.find(c => c.id === t.categoria_id);
+        return `
+            <div class="topico-item">
+                <h3><a href="ver-topico.html?id=${t.id}">${t.titulo}</a></h3>
+                <p>Por ${t.autor} • ${cat ? cat.nome : 'Geral'} • ${t.respostas} respostas</p>
+                <small>Última atividade: ${new Date(t.ultima_resposta).toLocaleDateString('pt-BR')}</small>
+            </div>
+        `;
+    }).join('');
+}
+
+function mostrarCategoria(catId) {
+    const categoria = todasCategorias.find(c => c.id == catId);
+    if (categoria) {
+        document.title = categoria.nome + " - Fórum AGEBRASIL";
+        const titulo = document.getElementById('titulo-categoria');
+        if (titulo) titulo.textContent = categoria.nome;
+    }
+
+    const topicosFiltrados = todosTopicos.filter(t => t.categoria_id == catId);
+    listarTopicos(topicosFiltrados);
+}
+
+async function mostrarTopico(id) {
+    try {
+        const res = await fetch(`/api/topicos/${id}`);
+        const topico = await res.json();
+
+        const cat = todasCategorias.find(c => c.id === topico.categoria_id);
+
+        document.title = topico.titulo + " - Fórum";
+        document.getElementById('topico-titulo').textContent = topico.titulo;
+        document.getElementById('topico-autor').innerHTML = `Por <strong>${topico.autor}</strong> em ${cat ? cat.nome : 'Geral'}`;
+        document.getElementById('topico-data').textContent = new Date(topico.data_criacao).toLocaleDateString('pt-BR');
+        document.getElementById('topico-conteudo').innerHTML = topico.conteudo.replace(/\n/g, '<br>');
+
+        const respostasDiv = document.getElementById('respostas');
+        if (topico.respostas && topico.respostas.length > 0) {
+            respostasDiv.innerHTML = topico.respostas.map(r => `
+                <div class="resposta">
+                    <strong>${r.autor}</strong> <small>${new Date(r.data).toLocaleDateString('pt-BR')}</small>
+                    <p>${r.texto.replace(/\n/g, '<br>')}</p>
+                </div>
+            `).join('');
+        } else {
+            respostasDiv.innerHTML = '<p>Seja o primeiro a responder!</p>';
+        }
+    } catch (err) {
+        document.body.innerHTML = '<h2>Tópico não encontrado</h2>';
+    }
+}
+
+// Inicia tudo quando a página carregar
+document.addEventListener('DOMContentLoaded', carregarDados);

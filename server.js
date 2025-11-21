@@ -290,8 +290,8 @@ const corsOptions = {
     origin: [
         'https://aoe4.com.br',
         'https://www.aoe4.com.br',
-        'http://localhost:3000', // desenvolvimento
-        'http://127.0.0.1:3000'
+        'http://localhost:3001', // desenvolvimento
+        'http://127.0.0.1:3001'
     ],
     credentials: true,
     optionsSuccessStatus: 200

@@ -781,41 +781,61 @@
         </div>
     </footer>
 
+    <!-- SUBSTITUIR o script do modal no forum-category.html -->
     <script>
-        // Funções auxiliares
+        // ✅ CORREÇÃO: Funções globais simplificadas e funcionais
         function openNewTopicModal() {
+            console.log('📝 Abrindo modal de novo tópico...');
             const modal = document.getElementById('newTopicModal');
             if (modal) {
                 modal.style.display = 'block';
+                // Focar no título
+                setTimeout(() => {
+                    const titleInput = document.getElementById('topicTitle');
+                    if (titleInput) titleInput.focus();
+                }, 100);
             }
         }
 
         function closeNewTopicModal() {
+            console.log('❌ Fechando modal...');
             const modal = document.getElementById('newTopicModal');
             const form = document.getElementById('newTopicForm');
+            if (modal) modal.style.display = 'none';
+            if (form) form.reset();
+        }
 
-            if (modal) {
-                modal.style.display = 'none';
-            }
-
+        // ✅ CORREÇÃO: Handler do formulário
+        document.addEventListener('DOMContentLoaded', function () {
+            const form = document.getElementById('newTopicForm');
             if (form) {
-                form.reset();
-            }
-        }
+                form.addEventListener('submit', function (e) {
+                    e.preventDefault();
+                    console.log('📤 Formulário submetido...');
 
-        // Fechar modal ao clicar fora
-        window.onclick = function (event) {
-            const modal = document.getElementById('newTopicModal');
-            if (event.target === modal) {
-                closeNewTopicModal();
+                    if (window.forumCategoryUI && window.forumCategoryUI.createNewTopic) {
+                        window.forumCategoryUI.createNewTopic();
+                    } else {
+                        console.error('❌ forumCategoryUI não disponível');
+                        alert('Sistema não carregado. Recarregue a página.');
+                    }
+                });
             }
-        }
 
-        // Fechar modal com ESC
-        document.addEventListener('keydown', function (event) {
-            if (event.key === 'Escape') {
-                closeNewTopicModal();
-            }
+            // Fechar modal com ESC
+            document.addEventListener('keydown', function (event) {
+                if (event.key === 'Escape') {
+                    closeNewTopicModal();
+                }
+            });
+
+            // Fechar modal ao clicar fora
+            window.addEventListener('click', function (event) {
+                const modal = document.getElementById('newTopicModal');
+                if (event.target === modal) {
+                    closeNewTopicModal();
+                }
+            });
         });
     </script>
 

@@ -303,6 +303,7 @@ class ForumAPI {
 
     /* ====================== TOPICS ====================== */
 
+    // NO forum-api.js - CORRIGIR getTopics
     async getTopics(categorySlug = null, limit = null) {
         try {
             console.log(`📝 Buscando tópicos para categoria: ${categorySlug || 'todas'}`);
@@ -312,9 +313,7 @@ class ForumAPI {
                 url = `${this.baseURL}/api/forum/categories/${categorySlug}/topics`;
             }
 
-            if (limit) {
-                url += `?limit=${limit}`;
-            }
+            console.log('🔗 URL:', url);
 
             const response = await fetch(url);
 
@@ -328,6 +327,17 @@ class ForumAPI {
 
             const topics = await response.json();
             console.log(`📦 Tópicos recebidos: ${topics.length}`);
+
+            // ✅ CORREÇÃO: Log detalhado para debug
+            if (topics.length > 0) {
+                console.log('📋 Primeiro tópico:', {
+                    id: topics[0].id,
+                    title: topics[0].title,
+                    author: topics[0].author_name || topics[0].author,
+                    authorId: topics[0].author_discord_id,
+                    replyCount: topics[0].reply_count
+                });
+            }
 
             return topics.map(topic => this.formatTopic(topic));
 

@@ -29,10 +29,9 @@ app.use(cors({
 app.use(express.json());
 
 // Servir arquivos estáticos do frontend (corrigido para Railway)
-app.use(express.static(path.join(__dirname, 'frontend'), {
-    index: false,
-    extensions: ['html', 'js', 'css']
-}));
+app.use(express.static(path.join(__dirname, 'frontend')));
+app.use('/js', express.static(path.join(__dirname, 'frontend/js')));
+app.use('/css', express.static(path.join(__dirname, 'frontend/css')));
 
 // Corrige o bug do Railway que não serve subpastas js/css
 app.get('/js/*', (req, res) => {

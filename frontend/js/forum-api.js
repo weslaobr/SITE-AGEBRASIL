@@ -1,7 +1,7 @@
 // forum-api.js - VERSÃO 100% COMPATÍVEL COM SEU BANCO REAL (2025)
 class ForumAPI {
     constructor() {
-        this.baseURL = "https://ageivbrasil.up.railway.app"
+        this.baseURL = window.location.origin;
         this.currentUser = null;
         this.isAdmin = false;
         this.categories = [];

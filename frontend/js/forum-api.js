@@ -356,6 +356,7 @@ class ForumAPI {
 
     /* ====================== FORMAT TOPIC ====================== */
 
+    // NO forum-api.js - CORRIGIR O MÉTODO formatTopic()
     formatTopic(t) {
         return {
             id: t.id,
@@ -366,18 +367,129 @@ class ForumAPI {
             title: t.title,
             content: t.content,
 
-            author: t.author_name,
-            authorId: t.author_discord_id,
+            // ✅ CORREÇÃO: Mapear corretamente os campos do backend
+            author: t.author_name || t.author, // Usar author_name do backend
+            authorId: t.author_discord_id || t.authorId,
             authorAvatar: t.author_avatar,
 
             views: t.views || 0,
-            isPinned: t.is_pinned || false,
-            isLocked: t.is_locked || false,
+            isPinned: t.is_pinned || t.isPinned || false,
+            isLocked: t.is_locked || t.isLocked || false,
 
-            createdAt: t.created_at,
-            updatedAt: t.updated_at,
-            lastReplyAt: t.last_reply_at
+            createdAt: t.created_at || t.createdAt,
+            updatedAt: t.updated_at || t.updatedAt,
+            lastReplyAt: t.last_reply_at || t.lastReplyAt,
+
+            // ✅ CORREÇÃO: Incluir replyCount se disponível
+            replyCount: t.reply_count || 0
         };
+    }
+
+    // ✅ CORREÇÃO: Adicionar métodos de moderação que faltavam
+    async togglePinTopic(topicId) {
+        try {
+            const currentTopic = await this.getTopic(topicId);
+            const newPinnedState = !currentTopic.isPinned;
+
+            console.log(`📌 ${newPinnedState ? 'Fixando' : 'Desfixando'} tópico ${topicId}`);
+
+            const response = await fetch(`${this.baseURL}/api/forum/topics/${topicId}`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    is_pinned: newPinnedState
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error(`Erro HTTP: ${response.status}`);
+            }
+
+            const updatedTopic = await response.json();
+            console.log('✅ Tópico atualizado:', updatedTopic);
+            return this.formatTopic(updatedTopic);
+
+        } catch (error) {
+            console.error('❌ Erro ao fixar/desfixar tópico:', error);
+            throw error;
+        }
+    }
+
+    async toggleLockTopic(topicId) {
+        try {
+            const currentTopic = await this.getTopic(topicId);
+            const newLockedState = !currentTopic.isLocked;
+
+            console.log(`🔒 ${newLockedState ? 'Bloqueando' : 'Desbloqueando'} tópico ${topicId}`);
+
+            const response = await fetch(`${this.baseURL}/api/forum/topics/${topicId}`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    is_locked: newLockedState
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error(`Erro HTTP: ${response.status}`);
+            }
+
+            const updatedTopic = await response.json();
+            console.log('✅ Tópico atualizado:', updatedTopic);
+            return this.formatTopic(updatedTopic);
+
+        } catch (error) {
+            console.error('❌ Erro ao bloquear/desbloquear tópico:', error);
+            throw error;
+        }
+    }
+
+    async deleteTopic(topicId) {
+        try {
+            console.log(`🗑️ Deletando tópico ${topicId}`);
+
+            const response = await fetch(`${this.baseURL}/api/forum/topics/${topicId}`, {
+                method: 'DELETE'
+            });
+
+            if (!response.ok) {
+                throw new Error(`Erro HTTP: ${response.status}`);
+            }
+
+            const result = await response.json();
+            console.log('✅ Tópico deletado:', result);
+            return result;
+
+        } catch (error) {
+            console.error('❌ Erro ao deletar tópico:', error);
+            throw error;
+        }
+    }
+
+    async deleteReply(replyId) {
+        try {
+            console.log(`🗑️ Deletando resposta ${replyId}`);
+
+            const response = await fetch(`${this.baseURL}/api/forum/replies/${replyId}`, {
+                method: 'DELETE'
+            });
+
+            if (!response.ok) {
+                throw new Error(`Erro HTTP: ${response.status}`);
+            }
+
+            const result = await response.json();
+            console.log('✅ Resposta deletada:', result);
+            return result;
+
+        } catch (error) {
+            console.error('❌ Erro ao deletar resposta:', error);
+            throw error;
+        }
     }
 
     /* ====================== DEBUG ====================== */

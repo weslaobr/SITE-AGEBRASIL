@@ -1050,6 +1050,51 @@
         console.log('=== 🎯 DEBUG CONFIGURADO - Aguardando execução... ===');
     </script>
 
+    <!-- NO forum-category.html - ATUALIZAR O SCRIPT DO MODAL -->
+    <script>
+        // ✅ CORREÇÃO: Funções globais corrigidas
+        function openNewTopicModal() {
+            const modal = document.getElementById('newTopicModal');
+            if (modal) {
+                modal.style.display = 'block';
+            }
+        }
+
+        function closeNewTopicModal() {
+            if (window.forumCategoryUI) {
+                window.forumCategoryUI.closeNewTopicModal();
+            }
+        }
+
+        // ✅ CORREÇÃO: Form handler global
+        document.addEventListener('DOMContentLoaded', function () {
+            const form = document.getElementById('newTopicForm');
+            if (form) {
+                form.addEventListener('submit', function (e) {
+                    e.preventDefault();
+                    if (window.forumCategoryUI) {
+                        window.forumCategoryUI.createNewTopic();
+                    }
+                });
+            }
+
+            // Fechar modal com ESC
+            document.addEventListener('keydown', function (event) {
+                if (event.key === 'Escape') {
+                    closeNewTopicModal();
+                }
+            });
+
+            // Fechar modal ao clicar fora
+            window.addEventListener('click', function (event) {
+                const modal = document.getElementById('newTopicModal');
+                if (event.target === modal) {
+                    closeNewTopicModal();
+                }
+            });
+        });
+    </script>
+
 </body>
 
 

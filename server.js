@@ -1,8 +1,16 @@
 const express = require('express');
 const cors = require('cors');
 const pkg = require('pg');
-const path = require('path');
 const dotenv = require('dotenv');
+const app = express();
+const path = require('path');
+
+// ============ ADICIONE ESTAS DUAS LINHAS AQUI ============
+app.use(express.json());                    // <-- permite ler JSON no body
+app.use(express.static(path.join(__dirname, 'frontend'))); // já deve ter isso
+// =========================================================
+
+const PORT = process.env.PORT || 3001;
 
 // 🔥 CARREGAR VARIÁVEIS DE AMBIENTE
 dotenv.config();
@@ -17,8 +25,6 @@ console.log('==============================');
 
 const { Pool } = pkg;
 
-const app = express();
-const PORT = process.env.PORT || 3001;
 
 // Middleware
 app.use(cors({
@@ -26,7 +32,6 @@ app.use(cors({
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
     credentials: true
 }));
-app.use(express.json());
 
 // Servir arquivos estáticos do frontend (corrigido para Railway)
 app.use(express.static(path.join(__dirname, 'frontend')));
@@ -262,6 +267,31 @@ app.post('/api/forum/topics', async (req, res) => {
     } finally {
         client.release();
     }
+});
+
+app.post('/api/topicos/:id/responder', (req, res) => {
+    const id = parseInt(req.params.id);
+    const { autor, texto } = req.body;
+
+    if (!autor || !texto || !texto.trim()) {
+        return res.status(400).json({ erro: "Autor e texto são obrigatórios" });
+    }
+
+    const topico = topicos.find(t => t.id === id);
+    if (!topico) {
+        return res.status(404).json({ erro: "Tópico não encontrado" });
+    }
+
+    const novaResposta = {
+        autor: autor.trim(),
+        texto: texto.trim(),
+        data: new Date().toISOString()
+    };
+
+    topico.respostas.push(novaResposta);
+    topico.ultima_resposta = new Date().toISOString();
+
+    res.json({ sucesso: true, resposta: novaResposta });
 });
 
 // GET stats (opcional, mas deixa bonito)

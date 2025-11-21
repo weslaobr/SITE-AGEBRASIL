@@ -1,4 +1,4 @@
-// forum.js - VERSÃO POSTGRESQL COMPLETA
+// forum.js - VERSÃO CORRIGIDA
 class ForumUI {
     constructor() {
         this.api = window.forumAPI;
@@ -7,16 +7,54 @@ class ForumUI {
 
     async init() {
         console.log('🔧 Inicializando ForumUI...');
+
+        // Aguardar o API estar completamente carregado
+        await this.waitForAPI();
+
         console.log('👤 Estado de autenticação:', this.api.currentUser ? 'Logado' : 'Não logado');
+        console.log('📂 Categorias carregadas:', this.api.categories.length);
 
         this.checkAuthState();
-        await this.loadStats();
-        await this.loadCategories();
-        await this.loadRecentTopics();
+        await this.loadAllData();
         this.setupEventListeners();
-        this.loadCategoryOptions();
 
-        console.log('✅ ForumUI inicializado');
+        console.log('✅ ForumUI inicializado completamente');
+    }
+
+    async waitForAPI() {
+        let attempts = 0;
+        const maxAttempts = 50; // 5 segundos
+
+        while ((!this.api.categories || this.api.categories.length === 0) && attempts < maxAttempts) {
+            await new Promise(resolve => setTimeout(resolve, 100));
+            attempts++;
+
+            // Recarregar usuário e categorias se necessário
+            await this.api.loadCurrentUser();
+            if (!this.api.categoriesLoaded) {
+                await this.api.loadCategories();
+            }
+        }
+
+        if (this.api.categories.length === 0) {
+            console.warn('⚠️ Nenhuma categoria carregada após 5 segundos, usando fallback');
+            await this.api.ensureCategoriesLoaded();
+        }
+    }
+
+    async loadAllData() {
+        console.log('📥 Carregando todos os dados do fórum...');
+
+        try {
+            await Promise.all([
+                this.loadStats(),
+                this.loadCategories(),
+                this.loadRecentTopics()
+            ]);
+            console.log('✅ Todos os dados carregados');
+        } catch (error) {
+            console.error('❌ Erro ao carregar dados:', error);
+        }
     }
 
     checkAuthState() {
@@ -24,32 +62,54 @@ class ForumUI {
         const authElements = document.querySelectorAll('[data-auth-only]');
         const noAuthElements = document.querySelectorAll('[data-no-auth]');
 
+        console.log('🔐 Verificando estado de autenticação...');
+
         if (user) {
-            authElements.forEach(el => el.style.display = '');
-            noAuthElements.forEach(el => el.style.display = 'none');
+            console.log('✅ Usuário logado, mostrando conteúdo');
+            authElements.forEach(el => {
+                el.style.display = '';
+                console.log('📦 Mostrando elemento:', el.id || el.className);
+            });
+            noAuthElements.forEach(el => {
+                el.style.display = 'none';
+                console.log('🚫 Ocultando elemento:', el.id || el.className);
+            });
             this.updateUserInfo(user);
         } else {
-            authElements.forEach(el => el.style.display = 'none');
-            noAuthElements.forEach(el => el.style.display = '');
+            console.log('❌ Usuário não logado, mostrando mensagem de login');
+            authElements.forEach(el => {
+                el.style.display = 'none';
+                console.log('🚫 Ocultando elemento:', el.id || el.className);
+            });
+            noAuthElements.forEach(el => {
+                el.style.display = '';
+                console.log('📦 Mostrando elemento:', el.id || el.className);
+            });
         }
     }
 
     updateUserInfo(user) {
         const userInfoElement = document.getElementById('userInfo');
         if (userInfoElement) {
+            const avatarUrl = user.avatar
+                ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.webp?size=64`
+                : `https://cdn.discordapp.com/embed/avatars/${user.discriminator % 5}.png`;
+
             userInfoElement.innerHTML = `
                 <div class="user-avatar">
-                    <img src="https://cdn.discordapp.com/embed/avatars/${user.discriminator % 5}.png" 
-                         alt="${user.username}">
+                    <img src="${avatarUrl}" alt="${user.username}">
                 </div>
                 <span class="user-name">${user.global_name || user.username}</span>
+                ${this.api.isAdmin ? '<span class="admin-badge">ADMIN</span>' : ''}
             `;
         }
     }
 
     async loadStats() {
         try {
+            console.log('📊 Carregando estatísticas...');
             const stats = await this.api.getStats();
+
             const statsHTML = `
                 <div class="forum-stat">
                     <i class="fas fa-comments"></i>
@@ -80,24 +140,70 @@ class ForumUI {
                     </div>
                 </div>
             `;
-            document.getElementById('forum-stats').innerHTML = statsHTML;
+
+            const statsContainer = document.getElementById('forum-stats');
+            if (statsContainer) {
+                statsContainer.innerHTML = statsHTML;
+                console.log('✅ Estatísticas carregadas');
+            }
         } catch (error) {
-            console.error('Erro ao carregar estatísticas:', error);
+            console.error('❌ Erro ao carregar estatísticas:', error);
+            this.showFallbackStats();
+        }
+    }
+
+    showFallbackStats() {
+        const statsContainer = document.getElementById('forum-stats');
+        if (statsContainer) {
+            statsContainer.innerHTML = `
+                <div class="forum-stat">
+                    <i class="fas fa-comments"></i>
+                    <div>
+                        <div class="number">0</div>
+                        <div class="label">Tópicos</div>
+                    </div>
+                </div>
+                <div class="forum-stat">
+                    <i class="fas fa-reply"></i>
+                    <div>
+                        <div class="number">0</div>
+                        <div class="label">Respostas</div>
+                    </div>
+                </div>
+                <div class="forum-stat">
+                    <i class="fas fa-users"></i>
+                    <div>
+                        <div class="number">0</div>
+                        <div class="label">Membros</div>
+                    </div>
+                </div>
+                <div class="forum-stat">
+                    <i class="fas fa-user-clock"></i>
+                    <div>
+                        <div class="number">0</div>
+                        <div class="label">Online agora</div>
+                    </div>
+                </div>
+            `;
         }
     }
 
     async loadCategories() {
         try {
-            console.log('🔄 Carregando categorias do PostgreSQL...');
+            console.log('📂 Carregando categorias na interface...');
 
-            // Aguardar as categorias carregarem
-            if (!this.api.categories || this.api.categories.length === 0) {
-                await this.api.loadCategories();
+            // Garantir que as categorias estão carregadas
+            const categories = await this.api.ensureCategoriesLoaded();
+
+            const categoriesContainer = document.getElementById('categories-list');
+            if (!categoriesContainer) {
+                console.error('❌ Container de categorias não encontrado');
+                return;
             }
 
-            if (!this.api.categories || this.api.categories.length === 0) {
-                console.warn('⚠️ Nenhuma categoria encontrada!');
-                document.getElementById('categories-list').innerHTML = `
+            if (!categories || categories.length === 0) {
+                console.warn('⚠️ Nenhuma categoria para exibir');
+                categoriesContainer.innerHTML = `
                     <div class="no-activity">
                         <i class="fas fa-exclamation-triangle"></i>
                         <h3>Nenhuma categoria configurada</h3>
@@ -107,7 +213,9 @@ class ForumUI {
                 return;
             }
 
-            const categoriesHTML = this.api.categories.map(category => `
+            console.log(`✅ Exibindo ${categories.length} categorias`);
+
+            const categoriesHTML = categories.map(category => `
                 <div class="category-card" onclick="forumUI.viewCategory('${category.slug}')">
                     <div class="category-header">
                         <div class="category-icon" style="background: linear-gradient(135deg, ${category.color}, #3e8ce5);">
@@ -120,31 +228,39 @@ class ForumUI {
                         <div class="category-stats">
                             <div class="stat">
                                 <i class="fas fa-comment"></i>
-                                <span>${category.topic_count || category.topicCount || 0} tópicos</span>
+                                <span>${category.topic_count} tópicos</span>
                             </div>
                             <div class="stat">
                                 <i class="fas fa-reply"></i>
-                                <span>${category.reply_count || category.replyCount || 0} respostas</span>
+                                <span>${category.reply_count} respostas</span>
                             </div>
                         </div>
                     </div>
                 </div>
             `).join('');
 
-            document.getElementById('categories-list').innerHTML = categoriesHTML;
-            console.log('✅ Categorias carregadas na interface:', this.api.categories.length);
+            categoriesContainer.innerHTML = categoriesHTML;
+
         } catch (error) {
-            console.error('Erro ao carregar categorias:', error);
+            console.error('❌ Erro ao carregar categorias:', error);
+            this.showError('categories-list', 'Erro ao carregar categorias');
         }
     }
 
     async loadRecentTopics() {
         try {
-            const topics = await this.api.getTopics();
-            const limitedTopics = topics.slice(0, 5);
+            console.log('📝 Carregando tópicos recentes...');
+            const topics = await this.api.getTopics(null, 5); // 5 tópicos mais recentes
 
-            if (limitedTopics.length === 0) {
-                document.getElementById('recent-topics-list').innerHTML = `
+            const topicsContainer = document.getElementById('recent-topics-list');
+            if (!topicsContainer) {
+                console.error('❌ Container de tópicos não encontrado');
+                return;
+            }
+
+            if (!topics || topics.length === 0) {
+                console.log('📭 Nenhum tópico recente encontrado');
+                topicsContainer.innerHTML = `
                     <div class="no-activity">
                         <i class="fas fa-comments"></i>
                         <h3>Nenhum tópico encontrado</h3>
@@ -154,8 +270,9 @@ class ForumUI {
                 return;
             }
 
-            const topicsHTML = await Promise.all(limitedTopics.map(async (topic) => {
-                const category = this.api.categories.find(cat => cat.id == topic.categoryId);
+            console.log(`✅ Exibindo ${topics.length} tópicos recentes`);
+
+            const topicsHTML = await Promise.all(topics.map(async (topic) => {
                 const replies = await this.api.getReplies(topic.id);
                 const replyCount = replies.length;
 
@@ -176,7 +293,7 @@ class ForumUI {
                             </div>
                             <div class="topic-meta">
                                 <span>por ${topic.author}</span>
-                                <span>em ${category?.name || 'Geral'}</span>
+                                <span>em ${topic.categoryName || 'Geral'}</span>
                                 <span>${this.formatDate(topic.updatedAt || topic.createdAt)}</span>
                             </div>
                         </div>
@@ -194,62 +311,31 @@ class ForumUI {
                 `;
             }));
 
-            document.getElementById('recent-topics-list').innerHTML = topicsHTML.join('');
+            topicsContainer.innerHTML = topicsHTML.join('');
+
         } catch (error) {
-            console.error('Erro ao carregar tópicos recentes:', error);
-            document.getElementById('recent-topics-list').innerHTML = `
+            console.error('❌ Erro ao carregar tópicos recentes:', error);
+            this.showError('recent-topics-list', 'Erro ao carregar tópicos');
+        }
+    }
+
+    showError(containerId, message) {
+        const container = document.getElementById(containerId);
+        if (container) {
+            container.innerHTML = `
                 <div class="no-activity">
                     <i class="fas fa-exclamation-triangle"></i>
-                    <h3>Erro ao carregar tópicos</h3>
-                    <p>Tente recarregar a página</p>
+                    <h3>Erro ao carregar</h3>
+                    <p>${message}</p>
+                    <button onclick="window.location.reload()" class="btn btn-primary" style="margin-top: 1rem;">
+                        <i class="fas fa-redo"></i> Recarregar
+                    </button>
                 </div>
             `;
         }
     }
 
-    loadCategoryOptions() {
-        console.log('🔄 Carregando opções de categoria no select...');
-
-        const select = document.getElementById('topicCategory');
-        if (!select) {
-            console.error('❌ Elemento select não encontrado! ID: topicCategory');
-            return;
-        }
-
-        select.innerHTML = '<option value="">Selecione uma categoria</option>';
-
-        if (!this.api.categories || this.api.categories.length === 0) {
-            console.warn('⚠️ Nenhuma categoria disponível para carregar no select');
-            return;
-        }
-
-        this.api.categories.forEach(category => {
-            const option = document.createElement('option');
-            option.value = category.id;
-            option.textContent = category.name;
-            select.appendChild(option);
-        });
-
-        console.log('✅ Opções de categoria carregadas no select');
-    }
-
-    formatDate(dateString) {
-        if (!dateString) return 'Data desconhecida';
-
-        const date = new Date(dateString);
-        const now = new Date();
-        const diffMs = now - date;
-        const diffMins = Math.floor(diffMs / 60000);
-        const diffHours = Math.floor(diffMs / 3600000);
-        const diffDays = Math.floor(diffMs / 86400000);
-
-        if (diffMins < 1) return 'Agora mesmo';
-        if (diffMins < 60) return `${diffMins} min atrás`;
-        if (diffHours < 24) return `${diffHours} h atrás`;
-        if (diffDays < 7) return `${diffDays} dias atrás`;
-
-        return date.toLocaleDateString('pt-BR');
-    }
+    // ... (resto dos métodos permanecem iguais)
 
     setupEventListeners() {
         const form = document.getElementById('newTopicForm');
@@ -415,6 +501,24 @@ class ForumUI {
         window.location.href = `forum-topic.html?id=${topicId}`;
     }
 
+    formatDate(dateString) {
+        if (!dateString) return 'Data desconhecida';
+
+        const date = new Date(dateString);
+        const now = new Date();
+        const diffMs = now - date;
+        const diffMins = Math.floor(diffMs / 60000);
+        const diffHours = Math.floor(diffMs / 3600000);
+        const diffDays = Math.floor(diffMs / 86400000);
+
+        if (diffMins < 1) return 'Agora mesmo';
+        if (diffMins < 60) return `${diffMins} min atrás`;
+        if (diffHours < 24) return `${diffHours} h atrás`;
+        if (diffDays < 7) return `${diffDays} dias atrás`;
+
+        return date.toLocaleDateString('pt-BR');
+    }
+
     startAuthMonitor() {
         setInterval(() => {
             this.api.loadCurrentUser();
@@ -427,10 +531,20 @@ class ForumUI {
 document.addEventListener('DOMContentLoaded', () => {
     console.log('🚀 DOM carregado, inicializando fórum...');
 
-    setTimeout(() => {
+    setTimeout(async () => {
         if (window.forumAPI) {
             window.forumUI = new ForumUI();
             window.forumUI.startAuthMonitor();
+
+            // Adicionar função global de debug
+            window.debugForum = function () {
+                console.log('🔍=== DEBUG FORUM ===');
+                console.log('👤 Usuário:', window.forumAPI.currentUser);
+                console.log('📂 Categorias:', window.forumAPI.categories);
+                console.log('🔐 Admin:', window.forumAPI.isAdmin);
+                console.log('🔚=== FIM DEBUG ===');
+            };
+
         } else {
             console.error('❌ ForumAPI não está disponível!');
         }

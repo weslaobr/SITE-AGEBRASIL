@@ -29,13 +29,12 @@ app.use(cors({
 app.use(express.json());
 
 // Servir arquivos estáticos do frontend
-app.use('/js', express.static(path.join(__dirname, 'frontend/js'), {
-    setHeaders: (res, path) => {
-        if (path.endsWith('.js')) {
-            res.setHeader('Content-Type', 'application/javascript');
-        }
-    }
-}));
+// Servir arquivos estáticos do frontend
+app.use(express.static(path.join(__dirname, 'frontend')));
+
+// Força servir a pasta js (corrige o bug do Railway)
+app.use('/js', express.static(path.join(__dirname, 'frontend/js')));
+app.use('/css', express.static(path.join(__dirname, 'frontend/css')));
 
 // Rotas para páginas HTML
 app.get('/', (req, res) => {

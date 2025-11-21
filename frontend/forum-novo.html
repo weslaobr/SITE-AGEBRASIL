@@ -21,21 +21,21 @@
 
                 <nav>
                     <ul>
-                        <li><a href="index.html">Início</a></li>
-                        <li><a href="forum.html" class="active">Fórum</a></li>
-                        <li><a href="leaderboard.html">Tabela de classificação</a></li>
-                        <li><a href="torneios.html">Torneios</a></li>
-                        <li><a href="sobre.html">Sobre</a></li>
+                        <li><a href="/">Início</a></li>
+                        <li><a href="/forum.html" class="active">Fórum</a></li>
+                        <li><a href="/leaderboard.html">Tabela de classificação</a></li>
+                        <li><a href="/torneios.html">Torneios</a></li>
+                        <li><a href="/sobre.html">Sobre</a></li>
                     </ul>
                 </nav>
 
                 <div class="user-actions">
-                    <div id="loginContainer" style="display:flex">
+                    <div id="loginContainer">
                         <button id="loginBtn" class="login-btn-header">
                             <i class="fab fa-discord"></i> Login com Discord
                         </button>
                     </div>
-                    <div id="userInfo" style="display:none"></div>
+                    <div id="userInfo" class="user-info-container" style="display:none"></div>
                     <button id="logoutBtn" style="display:none">Sair</button>
                 </div>
             </div>
@@ -43,16 +43,16 @@
     </header>
 
     <main class="container">
-        <div id="noAuthMessage" style="text-align:center; padding:4rem; display:none">
-            <i class="fas fa-lock fa-4x" style="color:#5865F2; margin-bottom:1rem"></i>
+        <div id="noAuthMessage" style="text-align:center; padding:5rem; display:none">
+            <i class="fas fa-lock fa-5x" style="color:#5865F2"></i>
             <h2>Faça login para acessar o fórum</h2>
-            <button id="loginBtnBottom" class="login-btn">
+            <button class="login-btn" id="loginBtnBottom">
                 <i class="fab fa-discord"></i> Login com Discord
             </button>
         </div>
 
         <div id="forumContent" style="display:none">
-            <div class="hero-section" style="background-image: url('https://i.imgur.com/9rX5o3j.jpg');">
+            <div class="hero-section" style="background: url('https://i.imgur.com/9rX5o3j.jpg') center/cover">
                 <h1>Fórum da Comunidade</h1>
                 <p>Converse, compartilhe estratégias e faça parte da comunidade Age of Empires IV Brasil</p>
             </div>
@@ -79,15 +79,13 @@
             <section class="forum-section">
                 <h2>Categorias</h2>
                 <div id="categoriesContainer" class="categories-grid">
-                    Carregando categorias...
+                    Carregando...
                 </div>
             </section>
 
             <section class="forum-section">
                 <h2>Tópicos Recentes</h2>
-                <div id="recentTopicsList">
-                    Carregando tópicos...
-                </div>
+                <div id="recentTopicsList"></div>
             </section>
         </div>
     </main>
@@ -102,14 +100,14 @@
         </div>
     </footer>
 
+    <!-- JS LIMPO E FUNCIONAL — É SÓ ISSO QUE PRECISA -->
     <script>
-        // JS limpo e funcional - funciona 100% com seu backend
         const base = window.location.origin;
 
-        async function initForum() {
-            // Carrega usuário do localStorage
+        async function start() {
             const user = JSON.parse(localStorage.getItem('discord_user') || 'null');
 
+            // Header e auth
             if (user) {
                 document.getElementById('userInfo').style.display = 'flex';
                 document.getElementById('loginContainer').style.display = 'none';
@@ -122,48 +120,40 @@
                     : 'https://cdn.discordapp.com/embed/avatars/0.png';
 
                 document.getElementById('userInfo').innerHTML = `
-                    <div class="user-avatar"><img src="${avatar}" alt="Avatar"></div>
+                    <div class="user-avatar"><img src="${avatar}"></div>
                     <div class="user-name">${user.global_name || user.username}</div>
                 `;
-            } else {
-                document.getElementById('forumContent').style.display = 'none';
-                document.getElementById('noAuthMessage').style.display = 'block';
             }
 
-            // Botões de login
-            document.querySelectorAll('#loginBtn, #loginBtnBottom').forEach(btn => {
-                btn.onclick = () => location.href = 'forum-auth.html';
-            });
-
-            // Logout
+            // Botões
+            document.querySelectorAll('#loginBtn, #loginBtnBottom').forEach(b => b.onclick = () => location.href = 'forum-auth.html');
             document.getElementById('logoutBtn').onclick = () => {
                 localStorage.clear();
                 location.reload();
             };
 
-            // Só carrega o resto se estiver logado
             if (!user) return;
 
-            // Carrega categorias
-            const categories = await fetch(`${base}/api/forum/categories`).then(r => r.json());
-            document.getElementById('categoriesContainer').innerHTML = categories.map(cat => `
-                <div class="category-card" onclick="location.href='forum-category.html?category=${cat.slug}'">
-                    <div class="category-icon" style="background:${cat.color || '#5865F2'}">
-                        <i class="${cat.icon || 'fas fa-comments'}"></i>
+            // Categorias
+            const cats = await (await fetch(`${base}/api/forum/categories`)).json();
+            document.getElementById('categoriesContainer').innerHTML = cats.map(c => `
+                <div class="category-card" onclick="location.href='forum-category.html?category=${c.slug}'">
+                    <div class="category-icon" style="background:${c.color || '#5865F2'}">
+                        <i class="${c.icon || 'fas fa-comments'}"></i>
                     </div>
                     <div class="category-info">
-                        <h3>${cat.name}</h3>
-                        <p>${cat.description || 'Sem descrição'}</p>
+                        <h3>${c.name}</h3>
+                        <p>${c.description || 'Sem descrição'}</p>
                     </div>
                     <div class="category-stats">
-                        <div><strong>${cat.topic_count || 0}</strong> tópicos</div>
-                        <div><strong>${cat.reply_count || 0}</strong> respostas</div>
+                        <div><strong>${c.topic_count || 0}</strong> tópicos</div>
+                        <div><strong>${c.reply_count || 0}</strong> respostas</div>
                     </div>
                 </div>
             `).join('');
 
-            // Carrega tópicos recentes
-            const topics = await fetch(`${base}/api/forum/topics`).then(r => r.json());
+            // Tópicos recentes
+            const topics = await (await fetch(`${base}/api/forum/topics`)).json();
             document.getElementById('recentTopicsList').innerHTML = topics.length === 0
                 ? '<p style="text-align:center;color:#888;padding:3rem">Nenhum tópico recente.</p>'
                 : topics.map(t => `
@@ -185,15 +175,16 @@
                     </div>
                 `).join('');
 
-            // Atualiza estatísticas
-            document.getElementById('statTopics').textContent = categories.reduce((a, c) => a + (c.topic_count || 0), 0);
-            document.getElementById('statReplies').textContent = categories.reduce((a, c) => a + (c.reply_count || 0), 0);
-            document.getElementById('statMembers').textContent = '50+'; // ou pega de outro endpoint depois
-            document.getElementById('statOnline').textContent = '5+';
+            // Estatísticas
+            const totalTopics = cats.reduce((a, c) => a + (c.topic_count || 0), 0);
+            const totalReplies = cats.reduce((a, c) => a + (c.reply_count || 0), 0);
+            document.getElementById('statTopics').textContent = totalTopics;
+            document.getElementById('statReplies').textContent = totalReplies;
+            document.getElementById('statMembers').textContent = '50+';
+            document.getElementById('statOnline').textContent = '8+';
         }
 
-        // Inicia quando a página carrega
-        document.addEventListener('DOMContentLoaded', initForum);
+        document.addEventListener('DOMContentLoaded', start);
     </script>
 </body>
 

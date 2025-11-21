@@ -31,6 +31,33 @@ class ForumCategoryUI {
         }
     }
 
+
+    getCategorySlugFromURL() {
+        const urlParams = new URLSearchParams(window.location.search);
+        let categorySlug = urlParams.get('category');
+
+        console.log('🔗 URL Params:', { category: categorySlug });
+
+        // ✅ CORREÇÃO: Mapear slugs para os nomes corretos
+        const slugMapping = {
+            'estrategias-dicas': 'estrategias-dicas',
+            'discussoes-gerais': 'discussoes-gerais',
+            'multiplayer': 'multiplayer',
+            'civilizacoes': 'civilizacoes'
+        };
+
+        // Se não encontrou, tentar extrair da URL completa
+        if (!categorySlug) {
+            const path = window.location.pathname;
+            const match = path.match(/forum-category\.html\?category=([^&]+)/);
+            if (match) {
+                categorySlug = match[1];
+            }
+        }
+
+        console.log('🎯 Slug final:', categorySlug);
+        return categorySlug;
+    }
     // ✅ NOVO MÉTODO: Aguardar autenticação e categorias
     async waitForAuthAndCategories() {
         console.log('⏳ Aguardando carregamento...');
@@ -68,21 +95,39 @@ class ForumCategoryUI {
             if (!this.api.categories || this.api.categories.length === 0) {
                 console.log('🔄 Carregando categorias...');
                 await this.api.loadCategories();
+
+                // Aguardar um pouco mais se necessário
+                await new Promise(resolve => setTimeout(resolve, 500));
             }
 
-            console.log('📋 Todas as categorias:', this.api.categories);
+            console.log('📋 Todas as categorias disponíveis:', this.api.categories);
 
-            // ✅ CORREÇÃO: Buscar categoria corretamente
+            // ✅ CORREÇÃO: Buscar categoria por slug (não por nome)
             this.currentCategory = this.api.categories.find(
                 cat => cat.slug === this.currentCategorySlug
             );
 
-            console.log('🔍 Categoria encontrada:', this.currentCategory);
+            console.log('🔍 Resultado da busca:', {
+                slugProcurado: this.currentCategorySlug,
+                categoriaEncontrada: this.currentCategory
+            });
 
             if (!this.currentCategory) {
                 console.error('❌ Categoria não encontrada com slug:', this.currentCategorySlug);
-                this.showError(`Categoria "${this.currentCategorySlug}" não encontrada`);
-                return;
+
+                // ✅ TENTAR FALLBACK: buscar por nome similar
+                const fallbackCategory = this.api.categories.find(cat =>
+                    cat.slug && cat.slug.includes(this.currentCategorySlug) ||
+                    cat.name && cat.name.toLowerCase().includes(this.currentCategorySlug.toLowerCase())
+                );
+
+                if (fallbackCategory) {
+                    console.log('🔄 Usando fallback category:', fallbackCategory);
+                    this.currentCategory = fallbackCategory;
+                } else {
+                    this.showError(`Categoria "${this.currentCategorySlug}" não encontrada`);
+                    return;
+                }
             }
 
             console.log('✅ Categoria encontrada:', this.currentCategory.name);
@@ -93,6 +138,44 @@ class ForumCategoryUI {
             console.error('❌ Erro ao carregar categoria:', error);
             this.showError('Erro ao carregar categoria: ' + error.message);
         }
+    }
+
+    async displayCategory() {
+        if (!this.currentCategory) return;
+
+        console.log('🎨 Exibindo categoria:', this.currentCategory);
+
+        // Atualizar breadcrumb
+        const breadcrumbElement = document.getElementById('categoryNameBreadcrumb');
+        if (breadcrumbElement) {
+            breadcrumbElement.textContent = this.currentCategory.name;
+        }
+
+        // Atualizar título da categoria
+        const titleElement = document.getElementById('categoryTitle');
+        const descriptionElement = document.getElementById('categoryDescription');
+        const iconElement = document.getElementById('categoryIconLarge');
+
+        if (titleElement) titleElement.textContent = this.currentCategory.name;
+        if (descriptionElement) descriptionElement.textContent = this.currentCategory.description;
+
+        if (iconElement) {
+            iconElement.innerHTML = `<i class="${this.currentCategory.icon || 'fas fa-folder'}"></i>`;
+            if (this.currentCategory.color) {
+                iconElement.style.background = `linear-gradient(135deg, ${this.currentCategory.color}, #3e8ce5)`;
+            }
+        }
+
+        // Atualizar estatísticas
+        const topicCountElement = document.getElementById('topicCount');
+        const replyCountElement = document.getElementById('replyCount');
+        const membersElement = document.getElementById('categoryMembers');
+
+        if (topicCountElement) topicCountElement.textContent = this.currentCategory.topic_count || 0;
+        if (replyCountElement) replyCountElement.textContent = this.currentCategory.reply_count || 0;
+        if (membersElement) membersElement.textContent = this.currentCategory.member_count || 0;
+
+        console.log('✅ Categoria exibida na interface');
     }
 
     async async loadTopics() {

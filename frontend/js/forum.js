@@ -5,7 +5,7 @@ class ForumUI {
     }
 
     async init() {
-        // Espera a API carregar
+        // Espera as categorias carregarem
         while (!window.forumAPI || window.forumAPI.categories.length === 0) {
             await new Promise(r => setTimeout(r, 200));
         }
@@ -13,34 +13,28 @@ class ForumUI {
         this.renderAll();
     }
 
-    renderHeader() {
-        const user = this.api.currentUser;
-        if (user) {
-            document.getElementById('userInfo').style.display = 'flex';
-            document.getElementById('loginContainer').style.display = 'none';
-            document.getElementById('logoutBtn').style.display = 'flex';
-            document.getElementById('noAuthMessage').style.display = 'none';
-            document.getElementById('forumContent').style.display = 'block';
+}
 
-            const avatar = user.avatar ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.webp?size=64` : 'https://cdn.discordapp.com/embed/avatars/0.png';
-            document.getElementById('userInfo').innerHTML = `
+renderHeader() {
+    const user = this.api.currentUser;
+    if (user) {
+        document.getElementById('userInfo').style.display = 'flex';
+        document.getElementById('loginContainer').style.display = 'none';
+        document.getElementById('logoutBtn').style.display = 'flex';
+        document.getElementById('noAuthMessage').style.display = 'none';
+        document.getElementById('forumContent').style.display = 'block';
+
+        const avatar = user.avatar ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.webp?size=64` : 'https://cdn.discordapp.com/embed/avatars/0.png';
+        document.getElementById('userInfo').innerHTML = `
                 <div class="user-avatar"><img src="${avatar}"></div>
                 <div class="user-name">${user.global_name || user.username}</div>
             `;
-        }
     }
+}
 
-    renderAll() {
-        // Estatísticas
-        this.api.getStats().then(s => {
-            document.getElementById('statTopics').textContent = s.totalTopics || 0;
-            document.getElementById('statReplies').textContent = s.totalReplies || 0;
-            document.getElementById('statMembers').textContent = s.totalMembers || 50;
-            document.getElementById('statOnline').textContent = s.onlineNow || 1;
-        });
-
-        // Categorias
-        document.getElementById('categoriesContainer').innerHTML = this.api.categories.map(cat => `
+renderAll() {
+    // Categorias
+    document.getElementById('categoriesContainer').innerHTML = this.api.categories.map(cat => `
             <div class="category-card" onclick="location.href='forum-category.html?category=${cat.slug}'">
                 <div class="category-icon" style="background:${cat.color || '#5865F2'}">
                     <i class="${cat.icon || 'fas fa-comments'}"></i>
@@ -56,9 +50,9 @@ class ForumUI {
             </div>
         `).join('');
 
-        // Tópicos recentes
-        this.api.getTopics().then(topics => {
-            document.getElementById('recentTopicsList').innerHTML = topics.length === 0 ? '<p style="text-align:center;color:#888;padding:3rem">Nenhum tópico ainda.</p>' : topics.map(t => `
+    // Tópicos recentes
+    this.api.getTopics().then(topics => {
+        document.getElementById('recentTopicsList').innerHTML = topics.map(t => `
                 <div class="topic-item" onclick="location.href='forum-topic.html?id=${t.id}'">
                     <div class="topic-avatar"><img src="${t.author_avatar || 'https://cdn.discordapp.com/embed/avatars/0.png'}"></div>
                     <div class="topic-main">
@@ -71,8 +65,8 @@ class ForumUI {
                     </div>
                 </div>
             `).join('');
-        });
-    }
+    });
+}
 }
 
 document.addEventListener('DOMContentLoaded', () => {

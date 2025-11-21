@@ -154,7 +154,7 @@ app.get('/api/forum/topics', async (req, res) => {
     }
 });
 
-// 📝 GET TÓPICOS POR CATEGORIA
+// 📝 GET TÓPICOS POR CATEGORIA - VERSÃO CORRIGIDA
 app.get('/api/forum/categories/:slug/topics', async (req, res) => {
     const { slug } = req.params;
     console.log(`📥 Buscando tópicos da categoria: ${slug}`);
@@ -162,35 +162,78 @@ app.get('/api/forum/categories/:slug/topics', async (req, res) => {
     const client = await pool.connect();
 
     try {
-        // Primeiro encontrar o ID da categoria pelo slug
+        // Buscar categoria
         const categoryResult = await client.query(
-            'SELECT id FROM forum_categories WHERE slug = $1 AND is_active = true',
+            'SELECT id, name, slug FROM forum_categories WHERE slug = $1 AND is_active = true',
             [slug]
         );
 
         if (categoryResult.rows.length === 0) {
+            console.log(`❌ Categoria não encontrada: ${slug}`);
             return res.status(404).json({ error: 'Categoria não encontrada' });
         }
 
         const categoryId = categoryResult.rows[0].id;
+        console.log(`✅ Categoria encontrada - ID: ${categoryId}`);
 
-        // Buscar tópicos da categoria
+        // Buscar tópicos com estrutura COMPLETA que o frontend espera
         const topicsResult = await client.query(
-            `SELECT t.*, c.name as category_name, c.slug as category_slug
+            `SELECT 
+                t.id,
+                t.category_id,
+                t.title,
+                t.content,
+                t.author_discord_id as "authorId",
+                t.author_name as "author",
+                t.author_avatar as "authorAvatar",
+                t.views,
+                t.is_pinned as "isPinned",
+                t.is_locked as "isLocked",
+                t.created_at as "createdAt",
+                t.updated_at as "updatedAt",
+                t.last_reply_at as "lastReplyAt",
+                c.name as category_name,
+                c.slug as category_slug,
+                (SELECT COUNT(*) FROM forum_replies r WHERE r.topic_id = t.id) as reply_count
              FROM forum_topics t
              LEFT JOIN forum_categories c ON t.category_id = c.id
-             WHERE t.category_id = $1
+             WHERE t.category_id = $1 AND c.is_active = true
              ORDER BY t.is_pinned DESC, t.updated_at DESC
              LIMIT 50`,
             [categoryId]
         );
 
-        console.log(`✅ ${topicsResult.rows.length} tópicos encontrados`);
-        res.json(topicsResult.rows);
+        console.log(`✅ ${topicsResult.rows.length} tópicos encontrados para categoria ${slug}`);
+
+        // Formatar os dados para o frontend
+        const formattedTopics = topicsResult.rows.map(topic => ({
+            id: topic.id,
+            categoryId: topic.category_id,
+            categorySlug: topic.category_slug,
+            categoryName: topic.category_name,
+            title: topic.title,
+            content: topic.content,
+            author: topic.author,
+            authorId: topic.authorId,
+            authorAvatar: topic.authorAvatar,
+            views: topic.views,
+            isPinned: topic.isPinned,
+            isLocked: topic.isLocked,
+            createdAt: topic.createdAt,
+            updatedAt: topic.updatedAt,
+            lastReplyAt: topic.lastReplyAt,
+            replyCount: parseInt(topic.reply_count) || 0
+        }));
+
+        console.log('📋 Tópico formatado (primeiro):', formattedTopics[0]);
+        res.json(formattedTopics);
 
     } catch (error) {
         console.error('❌ Erro ao buscar tópicos:', error);
-        res.status(500).json({ error: 'Erro interno do servidor' });
+        res.status(500).json({
+            error: 'Erro interno do servidor',
+            details: error.message
+        });
     } finally {
         client.release();
     }

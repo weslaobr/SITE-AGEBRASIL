@@ -1,4 +1,4 @@
-// forum.js - VERSÃO FINAL 100% FUNCIONAL - 21/11/2025
+// forum.js - VERSÃO QUE VAI FAZER TUDO APARECER AGORA
 class ForumUI {
     constructor() {
         this.api = window.forumAPI;
@@ -19,44 +19,18 @@ class ForumUI {
 
     renderHeader() {
         const user = this.api.currentUser;
-        const userInfo = document.getElementById('userInfo');
-        const loginContainer = document.getElementById('loginContainer');
-        const logoutBtn = document.getElementById('logoutBtn');
-        const noAuth = document.getElementById('noAuthMessage');
-        const content = document.getElementById('forumContent');
-
         if (user) {
-            userInfo.style.display = 'flex';
-            loginContainer.style.display = 'none';
-            logoutBtn.style.display = 'flex';
-            noAuth.style.display = 'none';
-            content.style.display = 'block';
+            document.getElementById('userInfo').style.display = 'flex';
+            document.getElementById('loginContainer').style.display = 'none';
+            document.getElementById('logoutBtn').style.display = 'flex';
+            document.getElementById('noAuthMessage').style.display = 'none';
+            document.getElementById('forumContent').style.display = 'block';
 
-            const avatar = user.avatar
-                ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.webp?size=64`
-                : `https://cdn.discordapp.com/embed/avatars/0.png`;
-
-            userInfo.innerHTML = `
-                <div class="user-avatar"><img src="${avatar}" alt="Avatar"></div>
+            const avatar = user.avatar ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.webp?size=64` : 'https://cdn.discordapp.com/embed/avatars/0.png';
+            document.getElementById('userInfo').innerHTML = `
+                <div class="user-avatar"><img src="${avatar}"></div>
                 <div class="user-name">${user.global_name || user.username}</div>
             `;
-        } else {
-            userInfo.style.display = 'none';
-            loginContainer.style.display = 'flex';
-            logoutBtn.style.display = 'none';
-            noAuth.style.display = 'block';
-            content.style.display = 'none';
-        }
-
-        // Botões de login/logout
-        document.querySelectorAll('#loginBtn').forEach(btn => {
-            btn.onclick = () => location.href = 'forum-auth.html';
-        });
-        if (logoutBtn) {
-            logoutBtn.onclick = () => {
-                localStorage.clear();
-                location.reload();
-            };
         }
     }
 
@@ -66,33 +40,21 @@ class ForumUI {
             this.api.getTopics()
         ]);
 
-        this.renderStats(stats);
-        this.renderCategories();
-        this.renderRecentTopics(topics);
-    }
-
-    renderStats(stats) {
         document.getElementById('statTopics').textContent = stats.totalTopics || 0;
         document.getElementById('statReplies').textContent = stats.totalReplies || 0;
-        document.getElementById('statMembers').textContent = stats.totalMembers || 50;
+        document.getElementById('statMembers').textContent = stats.totalMembers || 0;
         document.getElementById('statOnline').textContent = stats.onlineNow || 1;
-    }
 
-    renderCategories() {
-        const container = document.getElementById('categoriesContainer');
-        if (!this.api.categories || this.api.categories.length === 0) {
-            container.innerHTML = '<p style="text-align:center;color:#aaa">Nenhuma categoria encontrada.</p>';
-            return;
-        }
-
-        const html = this.api.categories.map(cat => `
+        // Categorias
+        const catContainer = document.getElementById('categoriesContainer');
+        catContainer.innerHTML = this.api.categories.map(cat => `
             <div class="category-card" onclick="location.href='forum-category.html?category=${cat.slug}'">
                 <div class="category-icon" style="background:${cat.color || '#5865F2'}">
                     <i class="${cat.icon || 'fas fa-comments'}"></i>
                 </div>
                 <div class="category-info">
                     <h3>${cat.name}</h3>
-                    <p>${cat.description || 'Sem descrição'}</p>
+                    <p>${cat.description || ''}</p>
                 </div>
                 <div class="category-stats">
                     <div><strong>${cat.topic_count || 0}</strong> tópicos</div>
@@ -101,37 +63,21 @@ class ForumUI {
             </div>
         `).join('');
 
-        container.innerHTML = html;
-    }
-
-    renderRecentTopics(topics) {
-        const container = document.getElementById('recentTopicsList');
-        if (!topics || topics.length === 0) {
-            container.innerHTML = '<p style="text-align:center;color:#aaa;padding:2rem">Nenhum tópico recente.</p>';
-            return;
-            return;
-        }
-
-        const html = topics.map(t => `
+        // Tópicos recentes
+        const topicContainer = document.getElementById('recentTopicsList');
+        topicContainer.innerHTML = topics.length > 0 ? topics.map(t => `
             <div class="topic-item" onclick="location.href='forum-topic.html?id=${t.id}'">
-                <div class="topic-avatar">
-                    <img src="${t.author_avatar || 'https://cdn.discordapp.com/embed/avatars/0.png'}" alt="avatar">
-                </div>
+                <div class="topic-avatar"><img src="${t.author_avatar || 'https://cdn.discordapp.com/embed/avatars/0.png'}"></div>
                 <div class="topic-main">
                     <div class="topic-title">${t.title}</div>
-                    <div class="topic-meta">
-                        por <strong>${t.author_name || 'Anônimo'}</strong> • ${new Date(t.created_at).toLocaleDateString('pt-BR')}
-                        • ${t.category_name || 'Geral'}
-                    </div>
+                    <div class="topic-meta">por ${t.author_name} • ${new Date(t.created_at).toLocaleDateString('pt-BR')} • ${t.category_name}</div>
                 </div>
                 <div class="topic-stats">
                     <span><i class="fas fa-comment"></i> ${t.reply_count || 0}</span>
                     <span><i class="fas fa-eye"></i> ${t.views || 0}</span>
                 </div>
             </div>
-        `).join('');
-
-        container.innerHTML = html;
+        `).join('') : '<p style="text-align:center;color:#888;padding:2rem">Nenhum tópico ainda.</p>';
     }
 }
 

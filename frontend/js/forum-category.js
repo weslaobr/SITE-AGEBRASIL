@@ -11,6 +11,7 @@ class ForumCategoryUI {
         console.log('🔧 Inicializando ForumCategoryUI...');
 
         this.currentCategorySlug = this.getCategorySlugFromURL();
+
         console.log('📌 Categoria Slug da URL:', this.currentCategorySlug);
 
         if (!this.currentCategorySlug) {
@@ -34,6 +35,7 @@ class ForumCategoryUI {
 
     getCategorySlugFromURL() {
         const urlParams = new URLSearchParams(window.location.search);
+
         let categorySlug = urlParams.get('category');
 
         console.log('🔗 URL Params:', { category: categorySlug });
@@ -178,7 +180,7 @@ class ForumCategoryUI {
         console.log('✅ Categoria exibida na interface');
     }
 
-    async async loadTopics() {
+    async loadTopics() {
         console.log('📝 Carregando tópicos para:', this.currentCategorySlug);
 
         try {

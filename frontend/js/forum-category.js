@@ -230,7 +230,8 @@ class ForumCategoryUI {
 
                         <div class="topic-meta">
                             <span>por ${topic.author}</span>
-                            <span>${this.formatDate(topic.updatedAt || topic.createdAt)}</span>
+                            <span>${new Date(topic.updatedAt || topic.createdAt).toLocaleDateString('pt-BR')}</span>
+
                         </div>
                     </div>
 
@@ -264,6 +265,35 @@ class ForumCategoryUI {
                 </button>
             </div>
         `;
+        }
+    }
+
+
+
+    formatDate(dateString) {
+        if (!dateString) return 'Data desconhecida';
+
+        try {
+            const date = new Date(dateString);
+            const now = new Date();
+            const diffMs = now - date;
+            const diffMins = Math.floor(diffMs / 60000);
+            const diffHours = Math.floor(diffMs / 3600000);
+            const diffDays = Math.floor(diffMs / 86400000);
+
+            if (diffMins < 1) return 'Agora mesmo';
+            if (diffMins < 60) return `${diffMins} min atrás`;
+            if (diffHours < 24) return `${diffHours} h atrás`;
+            if (diffDays < 7) return `${diffDays} dias atrás`;
+
+            return date.toLocaleDateString('pt-BR', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric'
+            });
+        } catch (error) {
+            console.error('Erro ao formatar data:', error);
+            return 'Data inválida';
         }
     }
 

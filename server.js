@@ -29,7 +29,13 @@ app.use(cors({
 app.use(express.json());
 
 // Servir arquivos estáticos do frontend
-app.use(express.static(path.join(__dirname, 'frontend')));
+app.use('/js', express.static(path.join(__dirname, 'frontend/js'), {
+    setHeaders: (res, path) => {
+        if (path.endsWith('.js')) {
+            res.setHeader('Content-Type', 'application/javascript');
+        }
+    }
+}));
 
 // Rotas para páginas HTML
 app.get('/', (req, res) => {

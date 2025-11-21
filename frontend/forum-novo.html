@@ -8,183 +8,169 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="css/style.css">
     <link rel="icon" type="image/png" href="https://i.postimg.cc/3JT4W3hz/favicon.png">
+    <style>
+        .category-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin: 1rem 0;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .category-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .category-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            color: white;
+        }
+
+        .topic-item {
+            background: var(--card-bg);
+            padding: 1rem;
+            margin: 0.5rem 0;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .topic-avatar img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+        }
+
+        .stats {
+            display: flex;
+            gap: 2rem;
+            margin: 2rem 0;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat strong {
+            font-size: 2rem;
+            display: block;
+        }
+    </style>
 </head>
 
 <body>
+
     <header>
         <div class="container">
-            <div class="header-content">
-                <div class="logo">
-                    <img src="https://i.postimg.cc/rFNdr7FV/logo.png" alt="Age of Empires IV Brasil" class="logo-img">
-                    <h1>Age of Empires IV Brasil</h1>
-                </div>
-
-                <nav>
-                    <ul>
-                        <li><a href="/">Início</a></li>
-                        <li><a href="/forum.html" class="active">Fórum</a></li>
-                        <li><a href="/leaderboard.html">Tabela de classificação</a></li>
-                        <li><a href="/torneios.html">Torneios</a></li>
-                        <li><a href="/sobre.html">Sobre</a></li>
-                    </ul>
-                </nav>
-
-                <div class="user-actions">
-                    <div id="loginContainer">
-                        <button id="loginBtn" class="login-btn-header">
-                            <i class="fab fa-discord"></i> Login com Discord
-                        </button>
-                    </div>
-                    <div id="userInfo" class="user-info-container" style="display:none"></div>
-                    <button id="logoutBtn" style="display:none">Sair</button>
-                </div>
+            <div class="logo">
+                <img src="https://i.postimg.cc/rFNdr7FV/logo.png" class="logo-img">
+                <h1>Age of Empires IV Brasil</h1>
             </div>
+            <div id="userInfo" style="display:none"></div>
+            <button id="logoutBtn" style="display:none">Sair</button>
+            <button id="loginBtn" style="display:none">Login Discord</button>
         </div>
     </header>
 
     <main class="container">
-        <div id="noAuthMessage" style="text-align:center; padding:5rem; display:none">
-            <i class="fas fa-lock fa-5x" style="color:#5865F2"></i>
-            <h2>Faça login para acessar o fórum</h2>
-            <button class="login-btn" id="loginBtnBottom">
-                <i class="fab fa-discord"></i> Login com Discord
-            </button>
+        <h2 style="text-center">Fórum da Comunidade</h2>
+
+        <div class="stats">
+            <div class="stat">
+                <strong id="statTopics">0</strong>
+                Tópicos
+            </div>
+            <div class="stat">
+                <strong id="statReplies">0</strong>
+                Respostas
+            </div>
+            <div class="stat">
+                <strong id="statMembers">0</strong>
+                Membros
+            </div>
+            <div class="stat">
+                <strong id="statOnline">0</strong>
+                Online
+            </div>
         </div>
 
-        <div id="forumContent" style="display:none">
-            <div class="hero-section" style="background: url('https://i.imgur.com/9rX5o3j.jpg') center/cover">
-                <h1>Fórum da Comunidade</h1>
-                <p>Converse, compartilhe estratégias e faça parte da comunidade Age of Empires IV Brasil</p>
-            </div>
+        <h3>Categorias</h3>
+        <div id="categoriesContainer">Carregando...</div>
 
-            <div class="forum-stats">
-                <div class="stat">
-                    <strong id="statTopics">0</strong>
-                    <span>Tópicos</span>
-                </div>
-                <div class="stat">
-                    <strong id="statReplies">0</strong>
-                    <span>Respostas</span>
-                </div>
-                <div class="stat">
-                    <strong id="statMembers">0</strong>
-                    <span>Membros</span>
-                </div>
-                <div class="stat">
-                    <strong id="statOnline">0</strong>
-                    <span>Online</span>
-                </div>
-            </div>
-
-            <section class="forum-section">
-                <h2>Categorias</h2>
-                <div id="categoriesContainer" class="categories-grid">
-                    Carregando...
-                </div>
-            </section>
-
-            <section class="forum-section">
-                <h2>Tópicos Recentes</h2>
-                <div id="recentTopicsList"></div>
-            </section>
-        </div>
+        <h3>Tópicos Recentes</h3>
+        <div id="recentTopicsList">Carregando...</div>
     </main>
 
-    <footer>
-        <div class="container">
-            <div class="footer-content">
-                <div class="copyright">
-                    &copy; 2025 - Age of Empires IV Brasil.
-                </div>
-            </div>
-        </div>
-    </footer>
-
-    <!-- JS LIMPO E FUNCIONAL — É SÓ ISSO QUE PRECISA -->
     <script>
+        // Simples e funciona 100%
         const base = window.location.origin;
 
-        async function start() {
+        async function load() {
+            // Carrega usuário
             const user = JSON.parse(localStorage.getItem('discord_user') || 'null');
-
-            // Header e auth
             if (user) {
-                document.getElementById('userInfo').style.display = 'flex';
-                document.getElementById('loginContainer').style.display = 'none';
+                document.getElementById('userInfo').innerHTML = `<img src="https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.webp?size=64" width="40" style="border-radius:50%"> ${user.global_name || user.username}`;
+                document.getElementById('userInfo').style.display = 'block';
                 document.getElementById('logoutBtn').style.display = 'block';
-                document.getElementById('noAuthMessage').style.display = 'none';
-                document.getElementById('forumContent').style.display = 'block';
-
-                const avatar = user.avatar
-                    ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.webp?size=64`
-                    : 'https://cdn.discordapp.com/embed/avatars/0.png';
-
-                document.getElementById('userInfo').innerHTML = `
-                    <div class="user-avatar"><img src="${avatar}"></div>
-                    <div class="user-name">${user.global_name || user.username}</div>
-                `;
+                document.getElementById('loginBtn').style.display = 'none';
+            } else {
+                document.getElementById('loginBtn').style.display = 'block';
+                document.getElementById('loginBtn').onclick = () => location.href = 'forum-auth.html';
             }
 
-            // Botões
-            document.querySelectorAll('#loginBtn, #loginBtnBottom').forEach(b => b.onclick = () => location.href = 'forum-auth.html');
             document.getElementById('logoutBtn').onclick = () => {
                 localStorage.clear();
                 location.reload();
             };
 
-            if (!user) return;
-
-            // Categorias
-            const cats = await (await fetch(`${base}/api/forum/categories`)).json();
+            // Carrega categorias
+            const cats = await fetch(`${base}/api/forum/categories`).then(r => r.json());
             document.getElementById('categoriesContainer').innerHTML = cats.map(c => `
-                <div class="category-card" onclick="location.href='forum-category.html?category=${c.slug}'">
-                    <div class="category-icon" style="background:${c.color || '#5865F2'}">
-                        <i class="${c.icon || 'fas fa-comments'}"></i>
-                    </div>
-                    <div class="category-info">
-                        <h3>${c.name}</h3>
-                        <p>${c.description || 'Sem descrição'}</p>
-                    </div>
-                    <div class="category-stats">
-                        <div><strong>${c.topic_count || 0}</strong> tópicos</div>
-                        <div><strong>${c.reply_count || 0}</strong> respostas</div>
-                    </div>
-                </div>
-            `).join('');
+        <div class="category-card" onclick="location.href='forum-category.html?category=${c.slug}'">
+            <div class="category-icon" style="background:${c.color || '#5865F2'}">
+                <i class="${c.icon || 'fas fa-comments'}"></i>
+            </div>
+            <div style="flex:1">
+                <h3>${c.name}</h3>
+                <p>${c.description || ''}</p>
+            </div>
+            <div>
+                <div><strong>${c.topic_count || 0}</strong> tópicos</div>
+                <div><strong>${c.reply_count || 0}</strong> respostas</div>
+            </div>
+        </div>
+    `).join('');
 
-            // Tópicos recentes
-            const topics = await (await fetch(`${base}/api/forum/topics`)).json();
-            document.getElementById('recentTopicsList').innerHTML = topics.length === 0
-                ? '<p style="text-align:center;color:#888;padding:3rem">Nenhum tópico recente.</p>'
-                : topics.map(t => `
-                    <div class="topic-item" onclick="location.href='forum-topic.html?id=${t.id}'">
-                        <div class="topic-avatar">
-                            <img src="${t.author_avatar || 'https://cdn.discordapp.com/embed/avatars/0.png'}">
-                        </div>
-                        <div class="topic-main">
-                            <div class="topic-title">${t.title}</div>
-                            <div class="topic-meta">
-                                por ${t.author_name || 'Anônimo'} • ${new Date(t.created_at).toLocaleDateString('pt-BR')}
-                                • ${t.category_name || 'Geral'}
-                            </div>
-                        </div>
-                        <div class="topic-stats">
-                            <span><i class="fas fa-comment"></i> ${t.reply_count || 0}</span>
-                            <span><i class="fas fa-eye"></i> ${t.views || 0}</span>
-                        </div>
-                    </div>
-                `).join('');
+            // Carrega tópicos recentes
+            const topics = await fetch(`${base}/api/forum/topics`).then(r => r.json());
+            document.getElementById('recentTopicsList').innerHTML = topics.length === 0 ? '<p>Nenhum tópico ainda.</p>' : topics.map(t => `
+        <div class="topic-item" onclick="location.href='forum-topic.html?id=${t.id}'">
+            <img src="${t.author_avatar || 'https://cdn.discordapp.com/embed/avatars/0.png'}" width="40" style="border-radius:50%">
+            <div style="flex:1">
+                <strong>${t.title}</strong><br>
+                <small>por ${t.author_name} • ${new Date(t.created_at).toLocaleDateString('pt-BR')} • ${t.category_name}</small>
+            </div>
+            <small>${t.reply_count || 0} respostas • ${t.views || 0} views</small>
+        </div>
+    `).join('');
 
-            // Estatísticas
-            const totalTopics = cats.reduce((a, c) => a + (c.topic_count || 0), 0);
-            const totalReplies = cats.reduce((a, c) => a + (c.reply_count || 0), 0);
-            document.getElementById('statTopics').textContent = totalTopics;
-            document.getElementById('statReplies').textContent = totalReplies;
-            document.getElementById('statMembers').textContent = '50+';
-            document.getElementById('statOnline').textContent = '8+';
+            // Estatísticas rápidas
+            document.getElementById('statTopics').textContent = topics.length;
         }
 
-        document.addEventListener('DOMContentLoaded', start);
+        load();
     </script>
 </body>
 

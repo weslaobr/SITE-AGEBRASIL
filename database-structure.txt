@@ -1,0 +1,229 @@
+=== ESTRUTURA DO BANCO DE DADOS ===
+Data/Hora: 21/11/2025, 01:08:37
+
+Total de tabelas encontradas: 17
+
+TABELA: challenges
+==================
+   • id                        character varying   (20) NOT NULL
+   • guild_id                  character varying   (20) NOT NULL
+   • challenger_id             character varying   (20)
+   • opponent_id               character varying   (20)
+   • challenge_type            character varying   (10) NOT NULL
+   • status                    character varying   (10) NOT NULL DEFAULT 'pending'::character varying
+   • map                       character varying   (50)
+   • team_size                 integer             
+   • challenger_clan_tag       character varying   (6)
+   • opponent_clan_tag         character varying   (6)
+   • created_at                timestamp with time zone DEFAULT now()
+   • accepted_at               timestamp with time zone
+   • declined_at               timestamp with time zone
+   • completed_at              timestamp with time zone
+   • winner_id                 character varying   (20)
+   • cancelled_at              timestamp with time zone
+   • winner_clan_tag           character varying   (6)
+
+TABELA: clan_members
+====================
+   • clan_id                   integer              NOT NULL
+   • discord_user_id           text                 NOT NULL
+   • discord_guild_id          text                 NOT NULL
+   • joined_at                 timestamp without time zone DEFAULT now()
+   • is_owner                  boolean              DEFAULT false
+
+TABELA: clans
+=============
+   • id                        integer              NOT NULL DEFAULT nextval('clans_id_seq'::regclass)
+   • name                      character varying   (50) NOT NULL
+   • tag                       character varying   (6) NOT NULL
+   • discord_guild_id          text                 NOT NULL
+   • owner_id                  text                 NOT NULL
+   • description               text                 DEFAULT 'Sem descrição'::text
+   • color                     character varying   (7) DEFAULT '#0099ff'::character varying
+   • created_at                timestamp without time zone DEFAULT now()
+   • member_count              integer              DEFAULT 1
+   • average_elo               integer              DEFAULT 0
+   • total_wins                integer              DEFAULT 0
+   • total_losses              integer              DEFAULT 0
+
+TABELA: forum_admins
+====================
+   • id                        integer              NOT NULL DEFAULT nextval('forum_admins_id_seq'::regclass)
+   • discord_user_id           character varying   (50) NOT NULL
+   • discord_username          character varying   (100) NOT NULL
+   • permissions               jsonb                DEFAULT '{"manage_topics": true, "manage_replies": true, "manage_categories": true}'::jsonb
+   • added_by                  character varying   (50)
+   • added_at                  timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+   • is_active                 boolean              DEFAULT true
+
+TABELA: forum_categories
+========================
+   • id                        integer              NOT NULL DEFAULT nextval('forum_categories_id_seq'::regclass)
+   • name                      character varying   (100) NOT NULL
+   • slug                      character varying   (100) NOT NULL
+   • description               text                
+   • icon                      character varying   (50)
+   • color                     character varying   (7)
+   • topic_count               integer              DEFAULT 0
+   • reply_count               integer              DEFAULT 0
+   • display_order             integer              DEFAULT 0
+   • is_active                 boolean              DEFAULT true
+   • created_at                timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+   • updated_at                timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+
+TABELA: forum_mod_logs
+======================
+   • id                        integer              NOT NULL DEFAULT nextval('forum_mod_logs_id_seq'::regclass)
+   • action                    character varying   (50) NOT NULL
+   • target_type               character varying   (20) NOT NULL
+   • target_id                 integer             
+   • target_info               jsonb               
+   • moderator_discord_id      character varying   (50) NOT NULL
+   • moderator_name            character varying   (100) NOT NULL
+   • reason                    text                
+   • created_at                timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+
+TABELA: forum_replies
+=====================
+   • id                        integer              NOT NULL DEFAULT nextval('forum_replies_id_seq'::regclass)
+   • topic_id                  integer             
+   • content                   text                 NOT NULL
+   • author_discord_id         character varying   (50) NOT NULL
+   • author_name               character varying   (100) NOT NULL
+   • author_avatar             character varying   (100)
+   • reply_to                  integer             
+   • likes                     integer              DEFAULT 0
+   • is_edited                 boolean              DEFAULT false
+   • last_edited_by            character varying   (100)
+   • last_edited_at            timestamp without time zone
+   • created_at                timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+   • updated_at                timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+
+TABELA: forum_settings
+======================
+   • id                        integer              NOT NULL DEFAULT nextval('forum_settings_id_seq'::regclass)
+   • setting_key               character varying   (50) NOT NULL
+   • setting_value             jsonb                NOT NULL
+   • description               text                
+   • updated_at                timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+   • updated_by                character varying   (50)
+
+TABELA: forum_topics
+====================
+   • id                        integer              NOT NULL DEFAULT nextval('forum_topics_id_seq'::regclass)
+   • category_id               integer             
+   • title                     character varying   (200) NOT NULL
+   • content                   text                 NOT NULL
+   • author_discord_id         character varying   (50) NOT NULL
+   • author_name               character varying   (100) NOT NULL
+   • author_avatar             character varying   (100)
+   • views                     integer              DEFAULT 0
+   • is_pinned                 boolean              DEFAULT false
+   • is_locked                 boolean              DEFAULT false
+   • last_reply_at             timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+   • created_at                timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+   • updated_at                timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+
+TABELA: forum_user_stats
+========================
+   • id                        integer              NOT NULL DEFAULT nextval('forum_user_stats_id_seq'::regclass)
+   • discord_user_id           character varying   (50) NOT NULL
+   • discord_username          character varying   (100) NOT NULL
+   • topics_created            integer              DEFAULT 0
+   • replies_created           integer              DEFAULT 0
+   • likes_received            integer              DEFAULT 0
+   • last_activity             timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+   • joined_at                 timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+   • updated_at                timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+
+TABELA: guild_settings
+======================
+   • discord_guild_id          text                 NOT NULL
+   • games_channel_id          text                
+   • pro_channel_id            text                
+   • report_channel_id         text                
+   • created_at                timestamp without time zone DEFAULT now()
+
+TABELA: guilds
+==============
+   • id                        integer              NOT NULL DEFAULT nextval('guilds_id_seq'::regclass)
+   • discord_guild_id          text                 NOT NULL
+   • created_at                timestamp without time zone DEFAULT now()
+
+TABELA: leaderboard_cache
+=========================
+   • user_id                   integer             
+   • aoe4_world_id             text                 NOT NULL
+   • name                      text                
+   • profile_url               text                
+   • points                    integer              DEFAULT 0
+   • elo                       integer              DEFAULT 0
+   • wins                      integer              DEFAULT 0
+   • losses                    integer              DEFAULT 0
+   • total_matches             integer              DEFAULT 0
+   • rank                      integer              DEFAULT 0
+   • last_game                 text                
+   • updated_at                timestamp with time zone DEFAULT now()
+   • civilization              text                
+   • region                    text                
+   • clan_tag                  text                
+   • avatar_url                text                
+   • discord_user_id           text                
+   • last_game_timestamp       bigint              
+   • cached_at                 timestamp without time zone DEFAULT now()
+   • needs_refresh             boolean              DEFAULT true
+   • refresh_attempts          integer              DEFAULT 0
+   • game_mode                 character varying   (20) DEFAULT 'rm_solo'::character varying
+   • rm_solo_points            integer              DEFAULT 0
+   • rm_solo_elo               integer              DEFAULT 0
+   • rm_solo_wins              integer              DEFAULT 0
+   • rm_solo_total_matches     integer              DEFAULT 0
+   • rm_team_points            integer              DEFAULT 0
+   • rm_team_elo               integer              DEFAULT 0
+   • rm_team_wins              integer              DEFAULT 0
+   • rm_team_total_matches     integer              DEFAULT 0
+   • level                     text                
+   • season_id                 integer              NOT NULL DEFAULT 12
+   • last_solo_game            timestamp without time zone
+   • last_team_game            timestamp without time zone
+
+TABELA: player_seasons_data
+===========================
+   • id                        integer              NOT NULL DEFAULT nextval('player_seasons_data_id_seq'::regclass)
+   • player_id                 integer             
+   • aoe4_world_id             text                
+   • season_id                 integer             
+   • game_mode                 text                
+   • rating                    integer              DEFAULT 0
+   • max_rating                integer              DEFAULT 0
+   • rank                      integer              DEFAULT 0
+   • wins_count                integer              DEFAULT 0
+   • games_count               integer              DEFAULT 0
+   • winrate                   numeric              DEFAULT 0
+   • cached_at                 timestamp without time zone DEFAULT now()
+
+TABELA: proplayers
+==================
+   • id                        integer              NOT NULL DEFAULT nextval('proplayers_id_seq'::regclass)
+   • discord_user_id           text                
+   • aoe4_world_id             text                 NOT NULL
+   • last_game_checkup_at      bigint              
+   • created_at                timestamp without time zone DEFAULT now()
+
+TABELA: settings
+================
+   • id                        integer              NOT NULL DEFAULT nextval('settings_id_seq'::regclass)
+   • discord_guild_id          text                 NOT NULL
+   • setting_key               text                 NOT NULL
+   • setting_value             text                
+   • created_at                timestamp without time zone DEFAULT now()
+
+TABELA: users
+=============
+   • id                        integer              NOT NULL DEFAULT nextval('users_id_seq'::regclass)
+   • discord_user_id           text                 NOT NULL
+   • aoe4_world_id             text                
+   • discord_guild_id          text                 NOT NULL
+   • last_game_checkup_at      bigint              
+   • created_at                timestamp without time zone DEFAULT now()
+

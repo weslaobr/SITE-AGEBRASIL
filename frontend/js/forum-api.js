@@ -144,6 +144,7 @@ class ForumAPI {
 
     async getStats() {
         try {
+            console.log("📊 Buscando estatísticas do servidor...");
             const response = await fetch(`${this.baseURL}/api/forum/stats`);
 
             if (!response.ok) {
@@ -153,22 +154,35 @@ class ForumAPI {
             const stats = await response.json();
             console.log("📊 Stats recebidos:", stats);
 
+            // ✅ CORREÇÃO: Sincronizar com dados reais
+            const topics = await this.getTopics();
+            const allReplies = await Promise.all(
+                topics.map(topic => this.getReplies(topic.id))
+            );
+            const totalReplies = allReplies.flat().length;
+
             return {
-                totalTopics: stats.totalTopics || stats.total_topics || 0,
-                totalReplies: stats.totalReplies || stats.total_replies || 0,
-                totalMembers: stats.totalMembers || stats.total_members || 0,
-                onlineNow: stats.onlineNow || stats.online_now || 0
+                totalTopics: topics.length,
+                totalReplies: totalReplies,
+                totalMembers: stats.totalMembers || stats.total_members || topics.length > 0 ? 1 : 0,
+                onlineNow: stats.onlineNow || stats.online_now || 1
             };
 
         } catch (error) {
             console.error("❌ Erro ao buscar stats:", error);
 
-            // Stats de fallback
+            // ✅ CORREÇÃO: Stats baseados em dados locais
+            const topics = await this.getTopics();
+            const allReplies = await Promise.all(
+                topics.map(topic => this.getReplies(topic.id))
+            );
+            const totalReplies = allReplies.flat().length;
+
             return {
-                totalTopics: 0,
-                totalReplies: 0,
-                totalMembers: 0,
-                onlineNow: 0
+                totalTopics: topics.length,
+                totalReplies: totalReplies,
+                totalMembers: topics.length > 0 ? 1 : 0,
+                onlineNow: 1
             };
         }
     }

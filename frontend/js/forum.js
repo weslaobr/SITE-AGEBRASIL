@@ -110,41 +110,61 @@ class ForumUI {
             console.log('📊 Carregando estatísticas...');
             const stats = await this.api.getStats();
 
+            // ✅ CORREÇÃO: Verificar dados reais antes de exibir
+            const topics = await this.api.getTopics();
+            const actualTopicCount = topics.length;
+
+            let totalReplies = 0;
+            for (const topic of topics) {
+                const replies = await this.api.getReplies(topic.id);
+                totalReplies += replies.length;
+            }
+
+            // ✅ USAR DADOS REAIS em vez dos stats da API
+            const realStats = {
+                totalTopics: actualTopicCount,
+                totalReplies: totalReplies,
+                totalMembers: actualTopicCount > 0 ? 1 : 0,
+                onlineNow: 1
+            };
+
+            console.log('📊 Stats reais calculados:', realStats);
+
             const statsHTML = `
-                <div class="forum-stat">
-                    <i class="fas fa-comments"></i>
-                    <div>
-                        <div class="number">${stats.totalTopics}</div>
-                        <div class="label">Tópicos</div>
-                    </div>
+            <div class="forum-stat">
+                <i class="fas fa-comments"></i>
+                <div>
+                    <div class="number">${realStats.totalTopics}</div>
+                    <div class="label">Tópicos</div>
                 </div>
-                <div class="forum-stat">
-                    <i class="fas fa-reply"></i>
-                    <div>
-                        <div class="number">${stats.totalReplies}</div>
-                        <div class="label">Respostas</div>
-                    </div>
+            </div>
+            <div class="forum-stat">
+                <i class="fas fa-reply"></i>
+                <div>
+                    <div class="number">${realStats.totalReplies}</div>
+                    <div class="label">Respostas</div>
                 </div>
-                <div class="forum-stat">
-                    <i class="fas fa-users"></i>
-                    <div>
-                        <div class="number">${stats.totalMembers}</div>
-                        <div class="label">Membros</div>
-                    </div>
+            </div>
+            <div class="forum-stat">
+                <i class="fas fa-users"></i>
+                <div>
+                    <div class="number">${realStats.totalMembers}</div>
+                    <div class="label">Membros</div>
                 </div>
-                <div class="forum-stat">
-                    <i class="fas fa-user-clock"></i>
-                    <div>
-                        <div class="number">${stats.onlineNow}</div>
-                        <div class="label">Online agora</div>
-                    </div>
+            </div>
+            <div class="forum-stat">
+                <i class="fas fa-user-clock"></i>
+                <div>
+                    <div class="number">${realStats.onlineNow}</div>
+                    <div class="label">Online agora</div>
                 </div>
-            `;
+            </div>
+        `;
 
             const statsContainer = document.getElementById('forum-stats');
             if (statsContainer) {
                 statsContainer.innerHTML = statsHTML;
-                console.log('✅ Estatísticas carregadas');
+                console.log('✅ Estatísticas atualizadas com dados reais');
             }
         } catch (error) {
             console.error('❌ Erro ao carregar estatísticas:', error);

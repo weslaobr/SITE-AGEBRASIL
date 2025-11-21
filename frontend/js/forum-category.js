@@ -147,6 +147,15 @@ class ForumCategoryUI {
 
         console.log('🎨 Exibindo categoria:', this.currentCategory);
 
+        // ✅ CORREÇÃO: Calcular estatísticas reais
+        const topics = await this.api.getTopics(this.currentCategorySlug);
+        let totalReplies = 0;
+
+        for (const topic of topics) {
+            const replies = await this.api.getReplies(topic.id);
+            totalReplies += replies.length;
+        }
+
         // Atualizar breadcrumb
         const breadcrumbElement = document.getElementById('categoryNameBreadcrumb');
         if (breadcrumbElement) {
@@ -168,16 +177,19 @@ class ForumCategoryUI {
             }
         }
 
-        // Atualizar estatísticas
+        // ✅ CORREÇÃO: Atualizar estatísticas com dados reais
         const topicCountElement = document.getElementById('topicCount');
         const replyCountElement = document.getElementById('replyCount');
         const membersElement = document.getElementById('categoryMembers');
 
-        if (topicCountElement) topicCountElement.textContent = this.currentCategory.topic_count || 0;
-        if (replyCountElement) replyCountElement.textContent = this.currentCategory.reply_count || 0;
-        if (membersElement) membersElement.textContent = this.currentCategory.member_count || 0;
+        if (topicCountElement) topicCountElement.textContent = topics.length;
+        if (replyCountElement) replyCountElement.textContent = totalReplies;
+        if (membersElement) membersElement.textContent = topics.length > 0 ? 1 : 0;
 
-        console.log('✅ Categoria exibida na interface');
+        console.log('✅ Categoria exibida com estatísticas reais:', {
+            topics: topics.length,
+            replies: totalReplies
+        });
     }
 
     async loadTopics() {

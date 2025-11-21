@@ -42,16 +42,35 @@ class ForumUI {
         }
     }
 
+    // NO forum.js - ADICIONAR FUNÇÃO GLOBAL
+    async forceRefreshCategories() {
+        console.log('🔄 Forçando atualização das categorias...');
+
+        if (window.forumUI) {
+            await window.forumUI.loadCategories();
+            window.forumUI.showNotification('Categorias atualizadas com dados reais!', 'success');
+        }
+    }
+
+// Adicionar ao objeto global
+window.refreshForumData = forceRefreshCategories;
+
+    // NO forum.js - ATUALIZAR O MÉTODO loadAllData()
     async loadAllData() {
         console.log('📥 Carregando todos os dados do fórum...');
 
         try {
+            // ✅ CORREÇÃO: Carregar categorias PRIMEIRO (elas carregam os dados reais)
+            await this.loadCategories();
+
+            // Depois carregar stats e tópicos recentes
             await Promise.all([
                 this.loadStats(),
-                this.loadCategories(),
                 this.loadRecentTopics()
             ]);
-            console.log('✅ Todos os dados carregados');
+
+            console.log('✅ Todos os dados carregados com informações REAIS');
+
         } catch (error) {
             console.error('❌ Erro ao carregar dados:', error);
         }
@@ -208,9 +227,10 @@ class ForumUI {
         }
     }
 
+    // NO forum.js - ATUALIZAR O MÉTODO loadCategories()
     async loadCategories() {
         try {
-            console.log('📂 Carregando categorias na interface...');
+            console.log('📂 Carregando categorias com dados reais...');
 
             // Garantir que as categorias estão carregadas
             const categories = await this.api.ensureCategoriesLoaded();
@@ -224,42 +244,95 @@ class ForumUI {
             if (!categories || categories.length === 0) {
                 console.warn('⚠️ Nenhuma categoria para exibir');
                 categoriesContainer.innerHTML = `
-                    <div class="no-activity">
-                        <i class="fas fa-exclamation-triangle"></i>
-                        <h3>Nenhuma categoria configurada</h3>
-                        <p>Configure as categorias no sistema.</p>
-                    </div>
-                `;
+                <div class="no-activity">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <h3>Nenhuma categoria configurada</h3>
+                    <p>Configure as categorias no sistema.</p>
+                </div>
+            `;
                 return;
             }
 
             console.log(`✅ Exibindo ${categories.length} categorias`);
 
-            const categoriesHTML = categories.map(category => `
-                <div class="category-card" onclick="forumUI.viewCategory('${category.slug}')">
-                    <div class="category-header">
-                        <div class="category-icon" style="background: linear-gradient(135deg, ${category.color}, #3e8ce5);">
-                            <i class="${category.icon}"></i>
+            // ✅ CORREÇÃO: Buscar dados REAIS para cada categoria
+            const categoriesWithRealData = await Promise.all(
+                categories.map(async (category) => {
+                    try {
+                        console.log(`📊 Buscando dados reais para categoria: ${category.name}`);
+
+                        // Buscar tópicos desta categoria
+                        const topics = await this.api.getTopics(category.slug);
+
+                        // Calcular estatísticas REAIS
+                        let totalReplies = 0;
+                        let uniqueMembers = new Set();
+
+                        for (const topic of topics) {
+                            const replies = await this.api.getReplies(topic.id);
+                            totalReplies += replies.length;
+
+                            // Adicionar autor do tópico
+                            if (topic.authorId) uniqueMembers.add(topic.authorId);
+
+                            // Adicionar autores das respostas
+                            replies.forEach(reply => {
+                                if (reply.authorId) uniqueMembers.add(reply.authorId);
+                            });
+                        }
+
+                        return {
+                            ...category,
+                            realTopicCount: topics.length,
+                            realReplyCount: totalReplies,
+                            realMemberCount: uniqueMembers.size
+                        };
+
+                    } catch (error) {
+                        console.error(`❌ Erro ao buscar dados para ${category.name}:`, error);
+                        return {
+                            ...category,
+                            realTopicCount: 0,
+                            realReplyCount: 0,
+                            realMemberCount: 0
+                        };
+                    }
+                })
+            );
+
+            console.log('📈 Dados reais carregados:', categoriesWithRealData);
+
+            const categoriesHTML = categoriesWithRealData.map(category => `
+            <div class="category-card" onclick="forumUI.viewCategory('${category.slug}')">
+                <div class="category-header">
+                    <div class="category-icon" style="background: linear-gradient(135deg, ${category.color}, #3e8ce5);">
+                        <i class="${category.icon}"></i>
+                    </div>
+                    <div class="category-info">
+                        <div class="category-title">${category.name}</div>
+                        <div class="category-description">${category.description}</div>
+                    </div>
+                    <div class="category-stats">
+                        <div class="stat">
+                            <i class="fas fa-comment"></i>
+                            <span>${category.realTopicCount} tópicos</span>
                         </div>
-                        <div class="category-info">
-                            <div class="category-title">${category.name}</div>
-                            <div class="category-description">${category.description}</div>
+                        <div class="stat">
+                            <i class="fas fa-reply"></i>
+                            <span>${category.realReplyCount} respostas</span>
                         </div>
-                        <div class="category-stats">
-                            <div class="stat">
-                                <i class="fas fa-comment"></i>
-                                <span>${category.topic_count} tópicos</span>
-                            </div>
-                            <div class="stat">
-                                <i class="fas fa-reply"></i>
-                                <span>${category.reply_count} respostas</span>
-                            </div>
+                        <div class="stat">
+                            <i class="fas fa-users"></i>
+                            <span>${category.realMemberCount} membros</span>
                         </div>
                     </div>
                 </div>
-            `).join('');
+            </div>
+        `).join('');
 
             categoriesContainer.innerHTML = categoriesHTML;
+
+            console.log('✅ Categorias exibidas com dados REAIS do banco');
 
         } catch (error) {
             console.error('❌ Erro ao carregar categorias:', error);

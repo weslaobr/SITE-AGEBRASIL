@@ -917,6 +917,27 @@
     <script src="js/forum-api.js"></script>
     <script src="js/forum-category.js"></script>
 
+    <div class="debug-info" id="dataStatus" style="display: none;">
+        <i class="fas fa-info-circle"></i>
+        <span>Carregando dados em tempo real...</span>
+        <span class="real-badge">LIVE</span>
+    </div>
+
+    <script>
+        // Adicionar script para mostrar status
+        document.addEventListener('DOMContentLoaded', function () {
+            const dataStatus = document.getElementById('dataStatus');
+            if (dataStatus) {
+                dataStatus.style.display = 'block';
+
+                // Ocultar após 5 segundos
+                setTimeout(() => {
+                    dataStatus.style.display = 'none';
+                }, 5000);
+            }
+        });
+    </script>
+
     <script>
         // DEBUG COMPLETO - FORÇAR CARREGAMENTO
         console.log('=== 🚀 DEBUG INICIADO ===');

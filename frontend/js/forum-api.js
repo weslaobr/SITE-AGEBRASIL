@@ -199,6 +199,61 @@ class ForumAPI {
         return this.categories;
     }
 
+    // NO forum-api.js - ADICIONAR MÉTODO PARA DADOS EM LOTE
+    async getCategoriesWithStats() {
+        try {
+            console.log('📊 Buscando categorias com estatísticas em lote...');
+
+            const response = await fetch(`${this.baseURL}/api/forum/categories`);
+            if (!response.ok) throw new Error(`Erro HTTP: ${response.status}`);
+
+            const categories = await response.json();
+
+            // Buscar estatísticas para todas as categorias de uma vez
+            const categoriesWithStats = await Promise.all(
+                categories.map(async (category) => {
+                    try {
+                        const topicsResponse = await fetch(
+                            `${this.baseURL}/api/forum/categories/${category.slug}/topics`
+                        );
+
+                        if (!topicsResponse.ok) {
+                            return { ...category, realTopicCount: 0, realReplyCount: 0, realMemberCount: 0 };
+                        }
+
+                        const topics = await topicsResponse.json();
+
+                        // Calcular estatísticas
+                        let totalReplies = 0;
+                        let uniqueMembers = new Set();
+
+                        for (const topic of topics) {
+                            totalReplies += topic.reply_count || 0;
+                            if (topic.author_discord_id) uniqueMembers.add(topic.author_discord_id);
+                        }
+
+                        return {
+                            ...category,
+                            realTopicCount: topics.length,
+                            realReplyCount: totalReplies,
+                            realMemberCount: uniqueMembers.size
+                        };
+
+                    } catch (error) {
+                        console.error(`Erro na categoria ${category.name}:`, error);
+                        return { ...category, realTopicCount: 0, realReplyCount: 0, realMemberCount: 0 };
+                    }
+                })
+            );
+
+            return categoriesWithStats;
+
+        } catch (error) {
+            console.error('❌ Erro ao buscar categorias com stats:', error);
+            return [];
+        }
+    }
+
     /* ====================== STATS ====================== */
 
     async getStats() {

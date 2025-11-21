@@ -34,9 +34,14 @@ app.use(express.static(path.join(__dirname, 'frontend'), {
     extensions: ['html', 'js', 'css']
 }));
 
-// Força servir js e css separadamente (mata o bug de vez)
-app.use('/js', express.static(path.join(__dirname, 'frontend/js')));
-app.use('/css', express.static(path.join(__dirname, 'frontend/css')));
+// Corrige o bug do Railway que não serve subpastas js/css
+app.get('/js/*', (req, res) => {
+    res.sendFile(path.join(__dirname, 'frontend', req.path));
+});
+
+app.get('/css/*', (req, res) => {
+    res.sendFile(path.join(__dirname, 'frontend', req.path));
+});
 
 // Rotas para páginas HTML
 app.get('/', (req, res) => {

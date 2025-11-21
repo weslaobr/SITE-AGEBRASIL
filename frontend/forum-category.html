@@ -727,6 +727,24 @@
                 <h2>Novo Tópico</h2>
                 <button class="modal-close" onclick="closeNewTopicModal()">&times;</button>
             </div>
+
+            <!-- No topics-header, após o botão "Novo Tópico" -->
+            <div class="topics-header">
+                <h2>Tópicos</h2>
+                <div style="display: flex; gap: 1rem;">
+                    <button class="new-topic-btn" onclick="openNewTopicModal()">
+                        <i class="fas fa-plus"></i>
+                        Novo Tópico
+                    </button>
+                    <!-- BOTÃO DEBUG TEMPORÁRIO -->
+                    <button class="btn btn-secondary" onclick="forumCategoryUI.debugCategory()"
+                        style="background: #ed8936; color: white;">
+                        <i class="fas fa-bug"></i>
+                        Debug
+                    </button>
+                </div>
+            </div>
+
             <form id="newTopicForm">
                 <div class="form-group">
                     <label for="topicTitle">Título do Tópico</label>

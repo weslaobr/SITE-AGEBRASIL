@@ -28,11 +28,13 @@ app.use(cors({
 }));
 app.use(express.json());
 
-// Servir arquivos estáticos do frontend
-// Servir arquivos estáticos do frontend
-app.use(express.static(path.join(__dirname, 'frontend')));
+// Servir arquivos estáticos do frontend (corrigido para Railway)
+app.use(express.static(path.join(__dirname, 'frontend'), {
+    index: false,
+    extensions: ['html', 'js', 'css']
+}));
 
-// Força servir a pasta js (corrige o bug do Railway)
+// Força servir js e css separadamente (mata o bug de vez)
 app.use('/js', express.static(path.join(__dirname, 'frontend/js')));
 app.use('/css', express.static(path.join(__dirname, 'frontend/css')));
 

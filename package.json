@@ -1,23 +1,13 @@
+
+```json
 {
   "name": "site-agebrasil",
   "version": "1.0.0",
-  "description": "Age of Empires IV Brasil",
+  "main": "server.js",
   "scripts": {
-    "start": "node server.js",
-    "dev": "nodemon server.js",
-    "forum:create-tables": "node create-forum-tables.js",
-    "forum:status": "node check-forum-tables.js",
-    "forum:reset": "node reset-forum-tables.js",
-    "db:init-forum": "node create-forum-tables.js"
+    "start": "node server.js"
   },
-  "dependencies": {
-    "cors": "^2.8.5",
-    "dotenv": "^16.3.1",
-    "express": "^4.18.2",
-    "node-fetch": "^3.3.2",
-    "pg": "^8.11.3"
-  },
-  "devDependencies": {
-    "nodemon": "^3.0.1"
+  "engines": {
+    "node": "20.x"
   }
 }

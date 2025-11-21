@@ -1,4 +1,3 @@
-// forum.js - VAI FAZER O FÓRUM APARECER AGORA MESMO
 class ForumUI {
     constructor() {
         this.api = window.forumAPI;
@@ -6,9 +5,12 @@ class ForumUI {
     }
 
     async init() {
-        await new Promise(r => setTimeout(r, 800)); // espera a API carregar
+        // Espera a API carregar
+        while (!window.forumAPI || window.forumAPI.categories.length === 0) {
+            await new Promise(r => setTimeout(r, 200));
+        }
         this.renderHeader();
-        this.renderEverything();
+        this.renderAll();
     }
 
     renderHeader() {
@@ -28,18 +30,17 @@ class ForumUI {
         }
     }
 
-    renderEverything() {
+    renderAll() {
         // Estatísticas
-        this.api.getStats().then(stats => {
-            document.getElementById('statTopics').textContent = stats.totalTopics || 0;
-            document.getElementById('statReplies').textContent = stats.totalReplies || 0;
-            document.getElementById('statMembers').textContent = stats.totalMembers || 50;
-            document.getElementById('statOnline').textContent = stats.onlineNow || 1;
+        this.api.getStats().then(s => {
+            document.getElementById('statTopics').textContent = s.totalTopics || 0;
+            document.getElementById('statReplies').textContent = s.totalReplies || 0;
+            document.getElementById('statMembers').textContent = s.totalMembers || 50;
+            document.getElementById('statOnline').textContent = s.onlineNow || 1;
         });
 
         // Categorias
-        const catContainer = document.getElementById('categoriesContainer');
-        catContainer.innerHTML = this.api.categories.map(cat => `
+        document.getElementById('categoriesContainer').innerHTML = this.api.categories.map(cat => `
             <div class="category-card" onclick="location.href='forum-category.html?category=${cat.slug}'">
                 <div class="category-icon" style="background:${cat.color || '#5865F2'}">
                     <i class="${cat.icon || 'fas fa-comments'}"></i>
@@ -49,7 +50,7 @@ class ForumUI {
                     <p>${cat.description || ''}</p>
                 </div>
                 <div class="category-stats">
-                    <div><strong>${cat.topic_count ||  || 0}</strong> tópicos</div>
+                    <div><strong>${cat.topic_count || 0}</strong> tópicos</div>
                     <div><strong>${cat.reply_count || 0}</strong> respostas</div>
                 </div>
             </div>
@@ -57,8 +58,7 @@ class ForumUI {
 
         // Tópicos recentes
         this.api.getTopics().then(topics => {
-            const container = document.getElementById('recentTopicsList');
-            container.innerHTML = topics.length === 0 ? '<p style="text-align:center;color:#888;padding:3rem">Nenhum tópico ainda.</p>' : topics.map(t => `
+            document.getElementById('recentTopicsList').innerHTML = topics.length === 0 ? '<p style="text-align:center;color:#888;padding:3rem">Nenhum tópico ainda.</p>' : topics.map(t => `
                 <div class="topic-item" onclick="location.href='forum-topic.html?id=${t.id}'">
                     <div class="topic-avatar"><img src="${t.author_avatar || 'https://cdn.discordapp.com/embed/avatars/0.png'}"></div>
                     <div class="topic-main">

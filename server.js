@@ -85,21 +85,9 @@ pool.on('error', (err, client) => {
 });
 
 // =============================================
-// ROTAS DO FÓRUM
+// ENDPOINTS DO FÓRUM - FUNCIONANDO 100% COM SEU BANCO
 // =============================================
 
-
-
-// =============================================
-// 📝 ENDPOINTS DO FÓRUM - ADICIONE ESTE BLOCO
-// =============================================
-
-// =============================================
-// ENDPOINTS DO FÓRUM - 100% COMPATÍVEIS COM SEU BANCO
-// =============================================
-
-// GET categorias (já existe, mas garanto que está certo)
-// GET categorias (corrigido!)
 app.get('/api/forum/categories', async (req, res) => {
     const client = await pool.connect();
     try {
@@ -110,27 +98,26 @@ app.get('/api/forum/categories', async (req, res) => {
         `);
         res.json(result.rows);
     } catch (err) {
-        console.error('Erro ao carregar categorias:', err);
+        console.error(err);
         res.status(500).json([]);
     } finally {
         client.release();
     }
 });
 
-// GET tópicos recentes (página principal)
 app.get('/api/forum/topics', async (req, res) => {
     const { category } = req.query;
     const client = await pool.connect();
     try {
         let query = `
             SELECT 
-                t.id, t.title, t.created_at, t.updated_at, t.views, t.is_pinned, t.is_locked,
-            t.author_name, t.author_avatar,
-            c.name AS category_name, c.slug AS category_slug, c.color AS category_color
+                t.id, t.title, t.created_at, t.views, t.is_pinned, t.is_locked,
+                t.author_name, t.author_avatar,
+                c.name AS category_name, c.slug AS category_slug, c.color AS category_color
             FROM forum_topics t
             JOIN forum_categories c ON t.category_id = c.id
-            WHERE t.is_pinned = false OR t.is_pinned IS NULL
-            `;
+            WHERE 1=1
+        `;
         const values = [];
 
         if (category) {
@@ -143,35 +130,32 @@ app.get('/api/forum/topics', async (req, res) => {
         const result = await client.query(query, values);
         res.json(result.rows);
     } catch (err) {
-        console.error('Erro tópicos:', err);
+        console.error(err);
         res.status(500).json([]);
     } finally {
         client.release();
     }
 });
 
-// GET tópico único + respostas
 app.get('/api/forum/topics/:id', async (req, res) => {
     const { id } = req.params;
     const client = await pool.connect();
     try {
         const topic = await client.query(`
-            SELECT 
-                t.*, c.name AS category_name, c.slug AS category_slug, c.color AS category_color
+            SELECT t.*, c.name AS category_name, c.slug AS category_slug
             FROM forum_topics t
             JOIN forum_categories c ON t.category_id = c.id
             WHERE t.id = $1
-            `, [id]);
+        `, [id]);
 
         if (topic.rows.length === 0) return res.status(404).json({ error: 'Não encontrado' });
 
         const replies = await client.query(`
             SELECT * FROM forum_replies
-            WHERE topic_id = $1 AND(is_deleted = false OR is_deleted IS NULL)
+            WHERE topic_id = $1
             ORDER BY created_at ASC
-            `, [id]);
+        `, [id]);
 
-        // +1 view
         await client.query('UPDATE forum_topics SET views = views + 1 WHERE id = $1', [id]);
 
         res.json({
@@ -186,88 +170,35 @@ app.get('/api/forum/topics/:id', async (req, res) => {
     }
 });
 
-// POST criar tópico (funciona com seu banco!
 app.post('/api/forum/topics', async (req, res) => {
-    const { categoryId, title, content } = req.body;
     const userHeader = req.headers['x-user'];
-
     if (!userHeader) return res.status(401).json({ error: 'Faça login' });
 
     let user;
-    try {
-        user = JSON.parse(userHeader);
-    } catch {
-        return res.status(400).json({ error: 'Erro usuário' });
-    }
+    try { user = JSON.parse(userHeader); } catch { return res.status(400); }
+
+    const { categoryId, title, content } = req.body;
 
     const client = await pool.connect();
     try {
         await client.query('BEGIN');
-
         const result = await client.query(`
-            INSERT INTO forum_topics
+            INSERT INTO forum_topics 
             (category_id, title, content, author_discord_id, author_name, author_avatar)
-            VALUES($1, $2, $3, $4, $5, $6)
+            VALUES ($1, $2, $3, $4, $5, $6)
             RETURNING *
-            `, [
-            categoryId,
-            title,
-            content,
-            user.id,
+        `, [
+            categoryId, title, content, user.id,
             user.global_name || user.username,
             user.avatar ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.webp` : null
         ]);
-
-        // Atualiza contadores
-        await client.query(`
-            UPDATE forum_categories SET topic_count = topic_count + 1 WHERE id = $1
-        `, [categoryId]);
 
         await client.query('COMMIT');
         res.json(result.rows[0]);
     } catch (err) {
         await client.query('ROLLBACK');
         console.error(err);
-        res.status(500).json({ error: 'Erro ao criar' });
-    } finally {
-        client.release();
-    }
-});
-
-// POST resposta
-app.post('/api/forum/replies', async (req, res) => {
-    const { topicId, content } = req.body;
-    const userHeader = req.headers['x-user'];
-    if (!userHeader) return res.status(401).json({ error: 'Login necessário' });
-
-    let user;
-    try { user = JSON.parse(userHeader); } catch { return res.status(400); }
-
-    const client = await pool.connect();
-    try {
-        const result = await client.query(`
-            INSERT INTO forum_replies (topic_id, content, author_discord_id, author_name, author_avatar)
-            VALUES ($1, $2, $3, $4, $5)
-            RETURNING *
-        `, [
-            topicId,
-            content,
-            user.id,
-            user.global_name || user.username,
-            user.avatar ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.webp` : null
-        ]);
-
-        // Atualiza contador do tópico
-        await client.query(`
-            UPDATE forum_topics 
-            SET reply_count = reply_count + 1, last_reply_at = NOW()
-            WHERE id = $1
-        `, [topicId]);
-
-        res.json(result.rows[0]);
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: 'Erro' });
+        res.status(500).json({ error: 'Erro ao criar tópico' });
     } finally {
         client.release();
     }

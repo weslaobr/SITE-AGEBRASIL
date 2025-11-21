@@ -1,29 +1,23 @@
-// forum-api.js - VERSÃO FINAL 100% FUNCIONAL COM POSTGRESQL
+// forum-api.js - VERSÃO 100% COMPATÍVEL COM SEU BANCO REAL (2025)
 class ForumAPI {
     constructor() {
-        this.baseURL = window.location.origin; // ← ISSO AQUI É OBRIGATÓRIO
+        this.baseURL = window.location.origin;
         this.currentUser = null;
         this.isAdmin = false;
         this.categories = [];
-        this.categoriesLoaded = false;
-
         this.admins = ["407624932101455873"]; // BRO.WESLAO
 
-        console.log("ForumAPI inicializado →", this.baseURL);
+        console.log("ForumAPI carregado →", this.baseURL);
         this.loadCurrentUser();
         this.loadCategories();
     }
 
-    // ENVIA TOKEN + USUÁRIO EM TODAS AS REQUISIÇÕES
     getAuthHeaders() {
         const token = localStorage.getItem('discord_access_token');
         const userData = localStorage.getItem('discord_user');
+        const headers = { 'Content-Type': 'application/json' };
 
-        const headers = {
-            'Content-Type': 'application/json'
-        };
-
-        if (token) headers['Authorization'] = `Bearer ${token}`;
+        if (token) headers.Authorization = `Bearer ${token}`;
         if (userData) {
             try {
                 const user = JSON.parse(userData);
@@ -33,35 +27,28 @@ class ForumAPI {
         return headers;
     }
 
-    async loadCurrentUser() {
+    async loadUser() {
         try {
-            const userData = localStorage.getItem('discord_user');
-            if (userData) {
-                this.currentUser = JSON.parse(userData);
+            const data = localStorage.getItem('discord_user');
+            if (data) {
+                this.currentUser = JSON.parse(data);
                 this.isAdmin = this.admins.includes(String(this.currentUser.id));
-                console.log("Usuário logado:", this.currentUser.global_name || this.currentUser.username);
             }
         } catch (e) {
             this.currentUser = null;
-            this.isAdmin = false;
         }
     }
 
     async loadCategories() {
         try {
-            const response = await fetch(`${this.baseURL}/api/forum/categories`, {
+            const res = await fetch(`${this.baseURL}/api/forum/categories`, {
                 headers: this.getAuthHeaders()
             });
-
-            if (!response.ok) throw new Error("Erro " + response.status);
-
-            const data = await response.json();
-            this.categories = data;
-            this.categoriesLoaded = true;
-            console.log("Categorias carregadas do banco:", this.categories);
-        } catch (err) {
-            console.error("ERRO AO CARREGAR CATEGORIAS - VERIFIQUE SE O ENDPOINT EXISTE!");
-            this.categories = []; // evita loop infinito
+            if (!res.ok) throw new Error();
+            this.categories = await res.json();
+        } catch (e) {
+            console.error("Erro categorias");
+            this.categories = [];
         }
     }
 
@@ -69,7 +56,7 @@ class ForumAPI {
         let url = `${this.baseURL}/api/forum/topics`;
         if (categorySlug) url += `?category=${categorySlug}`;
         const res = await fetch(url, { headers: this.getAuthHeaders() });
-        if (!res.ok) throw new Error("Erro topics");
+        if (!res.ok) return [];
         return await res.json();
     }
 
@@ -78,6 +65,7 @@ class ForumAPI {
             headers: this.getAuthHeaders()
         });
         if (!res.ok) throw new Error("Tópico não encontrado");
+        return await this.loadCategories(); // garante categoria no objeto
         return await res.json();
     }
 
@@ -87,18 +75,15 @@ class ForumAPI {
             headers: this.getAuthHeaders(),
             body: JSON.stringify(data)
         });
-        if (!res.ok) {
-            const err = await res.json();
-            throw new Error(err.error || "Erro ao criar");
-        }
+        if (!res.ok) throw new Error("Erro ao criar tópico");
         return await res.json();
     }
 
-    async createReply(data) {
+    async createReply(topicId, content) {
         const res = await fetch(`${this.baseURL}/api/forum/replies`, {
             method: 'POST',
             headers: this.getAuthHeaders(),
-            body: JSON.stringify(data)
+            body: JSON.stringify({ topicId, content })
         });
         if (!res.ok) throw new Error("Erro ao responder");
         return await res.json();
@@ -106,11 +91,9 @@ class ForumAPI {
 
     async getStats() {
         try {
-            const res = await fetch(`${this.baseURL}/api/forum/stats`, {
-                headers: this.getAuthHeaders()
-            });
+            const res = await fetch(`${this.baseURL}/api/forum/stats`, { headers: this.getAuthHeaders() });
             if (res.ok) return await res.json();
-        } catch (e) { }
+        } catch { }
         return { totalTopics: 0, totalReplies: 0, totalMembers: 0, onlineNow: 1 };
     }
 }

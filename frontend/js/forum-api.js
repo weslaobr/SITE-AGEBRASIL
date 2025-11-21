@@ -1,20 +1,45 @@
 // forum-api.js - VERSÃO CORRIGIDA
 class ForumAPI {
     constructor() {
-        this.baseURL = "https://ageivbrasil.up.railway.app";
-
+        this.baseURL = window.location.origin; // ← já corrigido
         this.currentUser = null;
         this.isAdmin = false;
         this.categories = [];
         this.categoriesLoaded = false;
 
-        this.admins = [
-            "407624932101455873" // WESLEY
-        ];
+        this.admins = ["407624932101455873"]; // BRO.WESLAO
 
         console.log("🚀 ForumAPI inicializado");
         this.loadCurrentUser();
         this.loadCategories();
+    }
+
+    // ==============================================================
+    // MÉTODO NOVO – ENVIA TOKEN + DADOS DO USUÁRIO EM TODAS AS REQUISIÇÕES
+    // ==============================================================
+    getAuthHeaders(extraHeaders = {}) {
+        const token = localStorage.getItem('discord_access_token');
+        const userData = localStorage.getItem('discord_user');
+
+        const headers = {
+            'Content-Type': 'application/json',
+            ...extraHeaders
+        };
+
+        if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
+        }
+
+        if (userData) {
+            try {
+                const user = JSON.parse(userData);
+                headers['X-User'] = JSON.stringify(user); // ← o backend usa isso para saber quem é o usuário
+            } catch (e) {
+                console.warn('Erro ao parsear discord_user do localStorage');
+            }
+        }
+
+        return headers;
     }
 
     /* ====================== AUTH ====================== */
@@ -109,45 +134,29 @@ class ForumAPI {
     async loadCategories() {
         try {
             console.log("📂 Buscando categorias do servidor...");
-            const response = await fetch(`${this.baseURL}/api/forum/categories`);
+            const response = await fetch(`${this.baseURL}/api/forum/categories`, {
+                headers: this.getAuthHeaders() // ← adicionado
+            });
 
-            if (!response.ok) {
-                throw new Error(`Erro HTTP: ${response.status}`);
-            }
+            if (!response.ok) throw new Error(`Erro HTTP: ${response.status}`);
 
             const categoriesData = await response.json();
-            console.log("📦 Dados brutos das categorias:", categoriesData);
-
-            // Verificar a estrutura dos dados retornados
-            if (Array.isArray(categoriesData)) {
-                this.categories = categoriesData.map(cat => ({
-                    id: cat.id,
-                    name: cat.name,
-                    slug: cat.slug,
-                    description: cat.description,
-                    icon: cat.icon || "fas fa-folder",
-                    color: cat.color || "#e53e3e",
-                    topic_count: cat.topic_count || cat.topicCount || 0,
-                    reply_count: cat.reply_count || cat.replyCount || 0,
-                    created_at: cat.created_at
-                }));
-
-                this.categoriesLoaded = true;
-                console.log("✅ Categorias formatadas:", this.categories.length);
-            } else {
-                console.warn("⚠️ Estrutura inesperada de categorias:", categoriesData);
-                this.categories = [];
-            }
-
+            this.categories = categoriesData.map(cat => ({
+                id: cat.id,
+                name: cat.name,
+                slug: cat.slug,
+                description: cat.description,
+                icon: cat.icon || "fas fa-comments",
+                color: cat.color || "#5865F2",
+                topic_count: cat.topic_count || 0,
+                reply_count: cat.reply_count || 0
+            }));
+            this.categoriesLoaded = true;
+            console.log("✅ Categorias carregadas:", this.categories.length);
         } catch (error) {
             console.error("❌ Erro ao carregar categorias:", error);
-            this.categories = [];
-
-            // Criar categorias padrão como fallback
-            this.createFallbackCategories();
         }
     }
-
     createFallbackCategories() {
         console.log("🛠️ Criando categorias de fallback...");
         this.categories = [
@@ -304,101 +313,55 @@ class ForumAPI {
     /* ====================== TOPICS ====================== */
 
     // NO forum-api.js - CORRIGIR getTopics
-    async getTopics(categorySlug = null, limit = null) {
+    async getTopics(categorySlug = null) {
         try {
-            console.log(`📝 Buscando tópicos para categoria: ${categorySlug || 'todas'}`);
-
             let url = `${this.baseURL}/api/forum/topics`;
-            if (categorySlug) {
-                url = `${this.baseURL}/api/forum/categories/${categorySlug}/topics`;
-            }
+            if (categorySlug) url += `?category=${categorySlug}`;
 
-            console.log('🔗 URL:', url);
+            const response = await fetch(url, {
+                headers: this.getAuthHeaders()
+            });
 
-            const response = await fetch(url);
-
-            if (!response.ok) {
-                if (response.status === 404) {
-                    console.log("📭 Nenhum tópico encontrado");
-                    return [];
-                }
-                throw new Error(`Erro HTTP: ${response.status}`);
-            }
-
-            const topics = await response.json();
-            console.log(`📦 Tópicos recebidos: ${topics.length}`);
-
-            // ✅ CORREÇÃO: Log detalhado para debug
-            if (topics.length > 0) {
-                console.log('📋 Primeiro tópico:', {
-                    id: topics[0].id,
-                    title: topics[0].title,
-                    author: topics[0].author_name || topics[0].author,
-                    authorId: topics[0].author_discord_id,
-                    replyCount: topics[0].reply_count
-                });
-            }
-
-            return topics.map(topic => this.formatTopic(topic));
-
+            if (!response.ok) throw new Error('Erro ao carregar tópicos');
+            return await response.json();
         } catch (error) {
-            console.error("❌ Erro ao buscar tópicos:", error);
+            console.error(error);
             return [];
         }
     }
 
-    async getTopic(id) {
+    async getTopic(topicId) {
         try {
-            console.log(`📖 Buscando tópico ID: ${id}`);
-            const response = await fetch(`${this.baseURL}/api/forum/topics/${id}`);
+            const response = await fetch(`${this.baseURL}/api/forum/topics/${topicId}`, {
+                headers: this.getAuthHeaders()
+            });
 
-            if (!response.ok) {
-                throw new Error(`Tópico não encontrado: ${response.status}`);
-            }
-
-            const topic = await response.json();
-            console.log("✅ Tópico encontrado:", topic.title);
-            return this.formatTopic(topic);
-
+            if (!response.ok) throw new Error('Tópico não encontrado');
+            return await response.json();
         } catch (error) {
-            console.error("❌ Erro ao buscar tópico:", error);
+            console.error(error);
             throw error;
         }
     }
 
-    async createTopic(data) {
-        if (!this.currentUser) {
-            throw new Error("Faça login para criar tópicos");
+    async createTopic(topicData) {
+        try {
+            const response = await fetch(`${this.baseURL}/api/forum/topics`, {
+                method: 'POST',
+                headers: this.getAuthHeaders(),
+                body: JSON.stringify(topicData)
+            });
+
+            if (!response.ok) {
+                const err = await response.json();
+                throw new Error(err.error || 'Erro ao criar tópico');
+            }
+
+            return await response.json();
+        } catch (error) {
+            console.error('Erro ao criar tópico:', error);
+            throw error;
         }
-
-        console.log("📝 Criando novo tópico:", data);
-
-        const payload = {
-            category_id: Number(data.categoryId),
-            title: data.title.trim(),
-            content: data.content.trim(),
-            author_discord_id: this.currentUser.id,
-            author_name: this.currentUser.global_name || this.currentUser.username,
-            author_avatar: this.currentUser.avatar
-        };
-
-        const response = await fetch(`${this.baseURL}/api/forum/topics`, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify(payload)
-        });
-
-        if (!response.ok) {
-            const errorText = await response.text();
-            console.error("❌ Erro na resposta:", errorText);
-            throw new Error(errorText || "Erro ao criar tópico");
-        }
-
-        const newTopic = await response.json();
-        console.log("✅ Tópico criado com sucesso:", newTopic.id);
-        return this.formatTopic(newTopic);
     }
 
     /* ====================== REPLIES ====================== */
@@ -436,46 +399,24 @@ class ForumAPI {
         }
     }
 
-    async createReply(data) {
-        if (!this.currentUser) {
-            throw new Error("Faça login para enviar respostas");
+    async createReply(replyData) {
+        try {
+            const response = await fetch(`${this.baseURL}/api/forum/replies`, {
+                method: 'POST',
+                headers: this.getAuthHeaders(),
+                body: JSON.stringify(replyData)
+            });
+
+            if (!response.ok) {
+                const err = await response.json();
+                throw new Error(err.error || 'Erro ao responder');
+            }
+
+            return await response.json();
+        } catch (error) {
+            console.error('Erro ao criar resposta:', error);
+            throw error;
         }
-
-        console.log("💬 Criando nova resposta:", data);
-
-        const payload = {
-            topic_id: Number(data.topicId),
-            content: data.content.trim(),
-            author_discord_id: this.currentUser.id,
-            author_name: this.currentUser.global_name || this.currentUser.username,
-            author_avatar: this.currentUser.avatar
-        };
-
-        const response = await fetch(`${this.baseURL}/api/forum/replies`, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify(payload)
-        });
-
-        if (!response.ok) {
-            const errorText = await response.text();
-            throw new Error(errorText || "Erro ao enviar resposta");
-        }
-
-        const reply = await response.json();
-        console.log("✅ Resposta criada com sucesso:", reply.id);
-
-        return {
-            id: reply.id,
-            topicId: reply.topic_id,
-            content: reply.content,
-            author: reply.author_name,
-            authorId: reply.author_discord_id,
-            authorAvatar: reply.author_avatar,
-            createdAt: reply.created_at
-        };
     }
 
     /* ====================== FORMAT TOPIC ====================== */

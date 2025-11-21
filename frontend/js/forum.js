@@ -1,4 +1,4 @@
-// forum.js - VERSÃO FINAL COMPATÍVEL COM SEU BANCO
+// forum.js - VERSÃO FINAL E FUNCIONAL (21/11/2025)
 class ForumUI {
     constructor() {
         this.api = window.forumAPI;
@@ -19,39 +19,57 @@ class ForumUI {
 
     renderHeader() {
         const user = this.api.currentUser;
-        document.getElementById('userInfo').style.display = user ? 'flex' : 'none';
-        document.getElementById('loginContainer').style.display = user ? 'none' : 'flex';
-        document.getElementById('logoutBtn').style.display = user ? 'flex' : 'none';
-        document.getElementById('noAuthMessage').style.display = user ? 'none' : 'block';
-        document.getElementById('forumContent').style.display = user ? 'block' : 'none' : 'none';
+        const userInfo = document.getElementById('userInfo');
+        const loginContainer = document.getElementById('loginContainer');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const noAuth = document.getElementById('noAuthMessage');
+        const content = document.getElementById('forumContent');
 
         if (user) {
+            userInfo.style.display = 'flex';
+            loginContainer.style.display = 'none';
+            logoutBtn.style.display = 'flex';
+            noAuth.style.display = 'none';
+            content.style.display = 'block';
+
             const avatar = user.avatar
                 ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.webp?size=64`
                 : `https://cdn.discordapp.com/embed/avatars/0.png`;
-            document.getElementById('userInfo').innerHTML = `
-                <div class="user-avatar"><img src="${avatar}"></div>
+
+            userInfo.innerHTML = `
+                <div class="user-avatar"><img src="${avatar}" alt="${user.global_name || user.username}"></div>
                 <div class="user-name">${user.global_name || user.username}</div>
             `;
+        } else {
+            userInfo.style.display = 'none';
+            loginContainer.style.display = 'flex';
+            logoutBtn.style.display = 'none';
+            noAuth.style.display = 'block';
+            content.style.display = 'none';
         }
 
-        // Botões de login/logout
-        document.getElementById('loginBtn')?.addEventListener('click', () => location.href = 'forum-auth.html');
-        document.getElementById('logoutBtn')?.addEventListener('click', () => {
+        // Botões
+        document.querySelectorAll('#loginBtn, .login-btn-header').forEach(btn => {
+            btn.onclick = () => location.href = 'forum-auth.html';
+        });
+        logoutBtn.onclick = () => {
             localStorage.clear();
             location.reload();
-        });
+        };
     }
 
     async loadAll() {
-        const [stats, topics] = await Promise.all([
-            this.api.getStats(),
-            this.api.getTopics()
-        ]);
-
-        this.renderStats(stats);
-        this.renderCategories();
-        this.renderRecentTopics(topics);
+        try {
+            const [stats, topics] = await Promise.all([
+                this.api.getStats(),
+                this.api.getTopics()
+            ]);
+            this.renderStats(stats);
+            this.renderCategories();
+            this.renderRecentTopics(topics);
+        } catch (e) {
+            console.error("Erro ao carregar dados do fórum", e);
+        }
     }
 
     renderStats(stats) {
@@ -61,18 +79,21 @@ class ForumUI {
         document.getElementById('statOnline').textContent = stats.onlineNow || 1;
     }
 
-}
+    renderCategories() {
+        const container = document.getElementById('categoriesContainer');
+        if (this.api.categories.length === 0) {
+            container.innerHTML = '<p style="text-align:center; color:#aaa;">Nenhuma categoria encontrada.</p>';
+            return;
+        }
 
-renderCategories() {
-    const container = document.getElementById('categoriesContainer');
-    const html = this.api.categories.map(cat => `
+        const html = this.api.categories.map(cat => `
             <div class="category-card" onclick="location.href='forum-category.html?category=${cat.slug}'">
-                <div class="category-icon" style="background: ${cat.color || '#5865F2'}">
+                <div class="category-icon" style="background:${cat.color || '#5865F2'}">
                     <i class="${cat.icon || 'fas fa-comments'}"></i>
                 </div>
                 <div class="category-info">
                     <h3>${cat.name}</h3>
-                    <p>${cat.description || 'Sem descrição'}</p>
+                    <p>${cat.description || 'Sem descrição disponível'}</p>
                 </div>
                 <div class="category-stats">
                     <div><strong>${cat.topic_count || 0}</strong> tópicos</div>
@@ -80,25 +101,26 @@ renderCategories() {
                 </div>
             </div>
         `).join('');
-    container.innerHTML = html || '<p>Nenhuma categoria encontrada.</p>';
-}
 
-renderRecentTopics(topics) {
-    const container = document.getElementById('recentTopicsList');
-    if (!topics || topics.length === 0) {
-        container.innerHTML = '<p>Nenhum tópico recente.</p>';
-        return;
+        container.innerHTML = html;
     }
 
-    const html = topics.map(t => `
+    renderRecentTopics(topics) {
+        const container = document.getElementById('recentTopicsList');
+        if (!topics || topics.length === 0) {
+            container.innerHTML = '<p style="text-align:center; color:#aaa; padding:2rem;">Nenhum tópico recente.</p>';
+            return;
+        }
+
+        const html = topics.map(t => `
             <div class="topic-item" onclick="location.href='forum-topic.html?id=${t.id}'">
                 <div class="topic-avatar">
-                    <img src="${t.author_avatar || 'https://cdn.discordapp.com/embed/avatars/0.png'}">
+                    <img src="${t.author_avatar || 'https://cdn.discordapp.com/embed/avatars/0.png'}" alt="avatar">
                 </div>
                 <div class="topic-main">
                     <div class="topic-title">${t.title}</div>
                     <div class="topic-meta">
-                        por ${t.author_name || 'Anônimo'} em ${new Date(t.created_at).toLocaleDateString('pt-BR')}
+                        por <strong>${t.author_name || 'Anônimo'}</strong> • ${new Date(t.created_at).toLocaleDateString('pt-BR')}
                         • ${t.category_name || 'Geral'}
                     </div>
                 </div>
@@ -108,10 +130,13 @@ renderRecentTopics(topics) {
                 </div>
             </div>
         `).join('');
-    container.innerHTML = html;
-}
+
+        container.innerHTML = html;
+    }
 }
 
+// INICIA QUANDO A PÁGINA CARREGA
 document.addEventListener('DOMContentLoaded', () => {
+    window.forumAPI.loadUser(); // garante que o usuário seja carregado
     new ForumUI();
 });

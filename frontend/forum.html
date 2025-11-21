@@ -1027,26 +1027,29 @@
                 closeNewTopicModal();
             }
         });
+
+        // Debug helper - adicione isso temporariamente
+        window.debugForum = function () {
+            console.log('=== DEBUG FORUM ===');
+            console.log('ForumAPI:', window.forumAPI);
+            console.log('ForumUI:', window.forumUI);
+            console.log('DiscordAuth:', window.discordAuth);
+            console.log('Current User:', window.forumAPI?.currentUser);
+            console.log('Categories:', window.forumAPI?.categories);
+
+            if (window.forumAPI) {
+                window.forumAPI.getTopics().then(topics => {
+                    console.log('Topics from API:', topics);
+                });
+            }
+        };
+
     </script>
     <script src="js/discord-login.js"></script>
     <script src="js/forum-api.js"></script>
     <script src="js/forum.js"></script>
 
-    // Debug helper - adicione isso temporariamente
-    window.debugForum = function() {
-    console.log('=== DEBUG FORUM ===');
-    console.log('ForumAPI:', window.forumAPI);
-    console.log('ForumUI:', window.forumUI);
-    console.log('DiscordAuth:', window.discordAuth);
-    console.log('Current User:', window.forumAPI?.currentUser);
-    console.log('Categories:', window.forumAPI?.categories);
 
-    if (window.forumAPI) {
-    window.forumAPI.getTopics().then(topics => {
-    console.log('Topics from API:', topics);
-    });
-    }
-    };
 
 </body>
 

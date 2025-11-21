@@ -95,7 +95,7 @@ class ForumCategoryUI {
         }
     }
 
-    async loadTopics() {
+    async async loadTopics() {
         console.log('📝 Carregando tópicos para:', this.currentCategorySlug);
 
         try {
@@ -108,22 +108,14 @@ class ForumCategoryUI {
             if (!topics || topics.length === 0) {
                 console.log('📭 Nenhum tópico encontrado');
                 topicsList.innerHTML = `
-                    <div class="no-topics">
-                        <i class="fas fa-comments"></i>
-                        <h3>Nenhum tópico encontrado</h3>
-                        <p>Seja o primeiro a criar um tópico nesta categoria!</p>
-                    </div>
-                `;
+                <div class="no-topics">
+                    <i class="fas fa-comments"></i>
+                    <h3>Nenhum tópico encontrado</h3>
+                    <p>Seja o primeiro a criar um tópico nesta categoria!</p>
+                </div>
+            `;
                 return;
             }
-
-            // ✅ CORREÇÃO: Padronizar campos
-            topics = topics.map(t => ({
-                ...t,
-                authorAvatar: t.authorAvatar || t.author_avatar,
-                authorId: t.authorId || t.author_discord_id,
-                author: t.author || t.author_name
-            }));
 
             console.log('🔄 Processando tópicos...');
 
@@ -131,47 +123,44 @@ class ForumCategoryUI {
                 const replies = await this.api.getReplies(topic.id);
                 const replyCount = replies.length;
 
-                const isPinned = topic.isPinned || topic.is_pinned;
-                const isLocked = topic.isLocked || topic.is_locked;
-
                 console.log('📋 Processando tópico:', topic.title);
 
                 return `
-                    <div class="topic-item ${isPinned ? 'pinned' : ''}" onclick="forumCategoryUI.viewTopic(${topic.id})">
-                        <div class="topic-avatar">
-                            ${topic.authorAvatar ?
+                <div class="topic-item ${topic.isPinned ? 'pinned' : ''}" onclick="forumCategoryUI.viewTopic(${topic.id})">
+                    <div class="topic-avatar">
+                        ${topic.authorAvatar ?
                         `<img src="https://cdn.discordapp.com/avatars/${topic.authorId}/${topic.authorAvatar}.webp?size=45"
-                                      onerror="this.src='https://cdn.discordapp.com/embed/avatars/${topic.authorId % 5}.png'">`
+                                  onerror="this.src='https://cdn.discordapp.com/embed/avatars/${topic.authorId % 5}.png'">`
                         :
                         `<span>${(topic.author || '').charAt(0)}</span>`
                     }
+                    </div>
+
+                    <div class="topic-content">
+                        <div class="topic-title">
+                            ${topic.isPinned ? '<i class="fas fa-thumbtack" style="color: #e53e3e; margin-right: 5px;"></i>' : ''}
+                            ${topic.isLocked ? '<i class="fas fa-lock" style="color: #a0aec0; margin-right: 5px;"></i>' : ''}
+                            ${topic.title}
                         </div>
 
-                        <div class="topic-content">
-                            <div class="topic-title">
-                                ${isPinned ? '<i class="fas fa-thumbtack" style="color: #e53e3e; margin-right: 5px;"></i>' : ''}
-                                ${isLocked ? '<i class="fas fa-lock" style="color: #a0aec0; margin-right: 5px;"></i>' : ''}
-                                ${topic.title}
-                            </div>
-
-                            <div class="topic-meta">
-                                <span>por ${topic.author}</span>
-                                <span>${this.formatDate(topic.updatedAt || topic.createdAt)}</span>
-                            </div>
-                        </div>
-
-                        <div class="topic-stats">
-                            <div class="stat">
-                                <i class="fas fa-reply"></i>
-                                <span>${replyCount}</span>
-                            </div>
-                            <div class="stat">
-                                <i class="fas fa-eye"></i>
-                                <span>${topic.views || 0}</span>
-                            </div>
+                        <div class="topic-meta">
+                            <span>por ${topic.author}</span>
+                            <span>${this.formatDate(topic.updatedAt || topic.createdAt)}</span>
                         </div>
                     </div>
-                `;
+
+                    <div class="topic-stats">
+                        <div class="stat">
+                            <i class="fas fa-reply"></i>
+                            <span>${replyCount}</span>
+                        </div>
+                        <div class="stat">
+                            <i class="fas fa-eye"></i>
+                            <span>${topic.views || 0}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
             }));
 
             topicsList.innerHTML = topicsHTML.join('');
@@ -181,19 +170,17 @@ class ForumCategoryUI {
             console.error('❌ Erro ao carregar tópicos:', error);
             const topicsList = document.getElementById('topicsList');
             topicsList.innerHTML = `
-                <div class="no-topics">
-                    <i class="fas fa-exclamation-triangle"></i>
-                    <h3>Erro ao carregar tópicos</h3>
-                    <p>${error.message}</p>
-                    <button onclick="window.location.reload()" style="margin-top: 1rem; padding: 0.5rem 1rem; background: var(--accent-color); color: white; border: none; border-radius: 4px; cursor: pointer;">
-                        Recarregar Página
-                    </button>
-                </div>
-            `;
+            <div class="no-topics">
+                <i class="fas fa-exclamation-triangle"></i>
+                <h3>Erro ao carregar tópicos</h3>
+                <p>${error.message}</p>
+                <button onclick="forumCategoryUI.debug()" style="margin-top: 1rem; padding: 0.5rem 1rem; background: var(--accent-color); color: white; border: none; border-radius: 4px; cursor: pointer;">
+                    Debug
+                </button>
+            </div>
+        `;
         }
     }
-
-    // ... (o resto dos métodos permanece igual)
 
     showError(message) {
         const container = document.getElementById('categoryContent');

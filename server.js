@@ -154,7 +154,7 @@ app.get('/api/forum/topics', async (req, res) => {
     }
 });
 
-// 📝 GET TÓPICOS POR CATEGORIA - VERSÃO CORRIGIDA
+// 📝 GET TÓPICOS POR CATEGORIA - VERSÃO CORRIGIDA E FUNCIONAL
 app.get('/api/forum/categories/:slug/topics', async (req, res) => {
     const { slug } = req.params;
     console.log(`📥 Buscando tópicos da categoria: ${slug}`);
@@ -176,22 +176,22 @@ app.get('/api/forum/categories/:slug/topics', async (req, res) => {
         const categoryId = categoryResult.rows[0].id;
         console.log(`✅ Categoria encontrada - ID: ${categoryId}`);
 
-        // Buscar tópicos com estrutura COMPLETA que o frontend espera
+        // ✅ CORREÇÃO: Buscar tópicos com estrutura COMPATÍVEL com o frontend
         const topicsResult = await client.query(
             `SELECT 
                 t.id,
                 t.category_id,
                 t.title,
                 t.content,
-                t.author_discord_id as "authorId",
-                t.author_name as "author",
-                t.author_avatar as "authorAvatar",
+                t.author_discord_id,
+                t.author_name,
+                t.author_avatar,
                 t.views,
-                t.is_pinned as "isPinned",
-                t.is_locked as "isLocked",
-                t.created_at as "createdAt",
-                t.updated_at as "updatedAt",
-                t.last_reply_at as "lastReplyAt",
+                t.is_pinned,
+                t.is_locked,
+                t.created_at,
+                t.updated_at,
+                t.last_reply_at,
                 c.name as category_name,
                 c.slug as category_slug,
                 (SELECT COUNT(*) FROM forum_replies r WHERE r.topic_id = t.id) as reply_count
@@ -205,7 +205,7 @@ app.get('/api/forum/categories/:slug/topics', async (req, res) => {
 
         console.log(`✅ ${topicsResult.rows.length} tópicos encontrados para categoria ${slug}`);
 
-        // Formatar os dados para o frontend
+        // ✅ CORREÇÃO: Formatar os dados EXATAMENTE como o frontend espera
         const formattedTopics = topicsResult.rows.map(topic => ({
             id: topic.id,
             categoryId: topic.category_id,
@@ -213,19 +213,25 @@ app.get('/api/forum/categories/:slug/topics', async (req, res) => {
             categoryName: topic.category_name,
             title: topic.title,
             content: topic.content,
-            author: topic.author,
-            authorId: topic.authorId,
-            authorAvatar: topic.authorAvatar,
-            views: topic.views,
-            isPinned: topic.isPinned,
-            isLocked: topic.isLocked,
-            createdAt: topic.createdAt,
-            updatedAt: topic.updatedAt,
-            lastReplyAt: topic.lastReplyAt,
+            author: topic.author_name, // ✅ CORRIGIDO: usar author_name
+            authorId: topic.author_discord_id, // ✅ CORRIGIDO: usar author_discord_id
+            authorAvatar: topic.author_avatar,
+            views: topic.views || 0,
+            isPinned: topic.is_pinned || false,
+            isLocked: topic.is_locked || false,
+            createdAt: topic.created_at,
+            updatedAt: topic.updated_at,
+            lastReplyAt: topic.last_reply_at,
             replyCount: parseInt(topic.reply_count) || 0
         }));
 
-        console.log('📋 Tópico formatado (primeiro):', formattedTopics[0]);
+        console.log('📋 Primeiro tópico formatado:', formattedTopics[0] ? {
+            id: formattedTopics[0].id,
+            title: formattedTopics[0].title,
+            author: formattedTopics[0].author,
+            replyCount: formattedTopics[0].replyCount
+        } : 'Nenhum tópico');
+
         res.json(formattedTopics);
 
     } catch (error) {

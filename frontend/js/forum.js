@@ -1,4 +1,4 @@
-// forum.js - VERSÃO CORRIGIDA PARA POSTGRESQL
+// forum.js - VERSÃO CORRIGIDA
 class ForumUI {
     constructor() {
         this.api = window.forumAPI;
@@ -6,14 +6,13 @@ class ForumUI {
     }
 
     async init() {
-        console.log('🔧 Inicializando ForumUI para PostgreSQL...');
+        console.log('🔧 Inicializando ForumUI...');
 
         try {
-            // Aguardar carregamento inicial
-            await this.api.loadCurrentUser();
+            // Aguardar carregamento das dependências
+            await this.waitForDependencies();
 
             console.log('👤 Estado de autenticação:', this.api.currentUser ? 'Logado' : 'Não logado');
-            console.log('📂 Categorias disponíveis:', this.api.categories.length);
 
             this.checkAuthState();
             await this.loadStats();
@@ -21,7 +20,6 @@ class ForumUI {
             await this.loadRecentTopics();
             this.setupEventListeners();
             this.loadCategoryOptions();
-            this.setupAuthListener();
 
             console.log('✅ ForumUI inicializado com sucesso');
 
@@ -30,15 +28,18 @@ class ForumUI {
         }
     }
 
-    setupAuthListener() {
-        document.addEventListener('authStateChanged', (event) => {
-            console.log('🔄 Auth state changed no ForumUI');
-            this.checkAuthState();
-            if (event.detail.user) {
-                this.loadRecentTopics();
-                this.loadStats();
-            }
-        });
+    async waitForDependencies() {
+        let attempts = 0;
+        const maxAttempts = 50;
+
+        while ((!window.forumAPI || !window.discordAuth) && attempts < maxAttempts) {
+            await new Promise(resolve => setTimeout(resolve, 100));
+            attempts++;
+        }
+
+        if (!window.forumAPI) {
+            throw new Error('ForumAPI não carregado');
+        }
     }
 
     checkAuthState() {
@@ -46,27 +47,13 @@ class ForumUI {
         const authElements = document.querySelectorAll('[data-auth-only]');
         const noAuthElements = document.querySelectorAll('[data-no-auth]');
 
-        console.log('🔐 Verificando estado de autenticação:', user ? 'Logado' : 'Não logado');
-
         if (user) {
-            authElements.forEach(el => {
-                el.style.display = '';
-                console.log('✅ Elemento auth-only mostrado:', el.id);
-            });
-            noAuthElements.forEach(el => {
-                el.style.display = 'none';
-                console.log('❌ Elemento no-auth ocultado:', el.id);
-            });
+            authElements.forEach(el => el.style.display = '');
+            noAuthElements.forEach(el => el.style.display = 'none');
             this.updateUserInfo(user);
         } else {
-            authElements.forEach(el => {
-                el.style.display = 'none';
-                console.log('❌ Elemento auth-only ocultado:', el.id);
-            });
-            noAuthElements.forEach(el => {
-                el.style.display = '';
-                console.log('✅ Elemento no-auth mostrado:', el.id);
-            });
+            authElements.forEach(el => el.style.display = 'none');
+            noAuthElements.forEach(el => el.style.display = '');
         }
     }
 
@@ -80,20 +67,15 @@ class ForumUI {
                 </div>
                 <span class="user-name">${user.global_name || user.username}</span>
             `;
-            console.log('👤 Informações do usuário atualizadas');
         }
     }
 
     async loadStats() {
         try {
-            console.log('📊 Carregando estatísticas...');
             const stats = await this.api.getStats();
-
             const statsContainer = document.getElementById('forum-stats');
-            if (!statsContainer) {
-                console.error('❌ Container de stats não encontrado');
-                return;
-            }
+
+            if (!statsContainer) return;
 
             const statsHTML = `
                 <div class="forum-stat">
@@ -127,7 +109,6 @@ class ForumUI {
             `;
 
             statsContainer.innerHTML = statsHTML;
-            console.log('✅ Estatísticas carregadas:', stats);
 
         } catch (error) {
             console.error('❌ Erro ao carregar estatísticas:', error);
@@ -136,19 +117,10 @@ class ForumUI {
 
     async loadCategories() {
         try {
-            console.log('📂 Carregando categorias...');
-
-            // Forçar recarregamento das categorias
-            await this.api.loadCategories();
-
             const categoriesContainer = document.getElementById('categories-list');
-            if (!categoriesContainer) {
-                console.error('❌ Container de categorias não encontrado');
-                return;
-            }
+            if (!categoriesContainer) return;
 
             if (!this.api.categories || this.api.categories.length === 0) {
-                console.warn('⚠️ Nenhuma categoria encontrada!');
                 categoriesContainer.innerHTML = `
                     <div class="no-activity">
                         <i class="fas fa-exclamation-triangle"></i>
@@ -184,7 +156,6 @@ class ForumUI {
             `).join('');
 
             categoriesContainer.innerHTML = categoriesHTML;
-            console.log('✅ Categorias carregadas:', this.api.categories.length);
 
         } catch (error) {
             console.error('❌ Erro ao carregar categorias:', error);
@@ -193,18 +164,13 @@ class ForumUI {
 
     async loadRecentTopics() {
         try {
-            console.log('📝 Carregando tópicos recentes...');
             const topics = await this.api.getTopics();
             const limitedTopics = topics.slice(0, 5);
 
             const topicsContainer = document.getElementById('recent-topics-list');
-            if (!topicsContainer) {
-                console.error('❌ Container de tópicos não encontrado');
-                return;
-            }
+            if (!topicsContainer) return;
 
             if (limitedTopics.length === 0) {
-                console.log('ℹ️ Nenhum tópico encontrado');
                 topicsContainer.innerHTML = `
                     <div class="no-activity">
                         <i class="fas fa-comments"></i>
@@ -214,8 +180,6 @@ class ForumUI {
                 `;
                 return;
             }
-
-            console.log(`📋 ${limitedTopics.length} tópicos para exibir`);
 
             const topicsHTML = await Promise.all(limitedTopics.map(async (topic) => {
                 const category = this.api.categories.find(cat => cat.id == topic.categoryId);
@@ -257,7 +221,6 @@ class ForumUI {
             }));
 
             topicsContainer.innerHTML = topicsHTML.join('');
-            console.log('✅ Tópicos recentes carregados');
 
         } catch (error) {
             console.error('❌ Erro ao carregar tópicos recentes:', error);
@@ -276,18 +239,12 @@ class ForumUI {
 
     loadCategoryOptions() {
         try {
-            console.log('📋 Carregando opções de categoria...');
-
             const select = document.getElementById('topicCategory');
-            if (!select) {
-                console.error('❌ Elemento select não encontrado! ID: topicCategory');
-                return;
-            }
+            if (!select) return;
 
             select.innerHTML = '<option value="">Selecione uma categoria</option>';
 
             if (!this.api.categories || this.api.categories.length === 0) {
-                console.warn('⚠️ Nenhuma categoria disponível para carregar no select');
                 return;
             }
 
@@ -297,8 +254,6 @@ class ForumUI {
                 option.textContent = category.name;
                 select.appendChild(option);
             });
-
-            console.log('✅ Opções de categoria carregadas:', this.api.categories.length);
 
         } catch (error) {
             console.error('❌ Erro ao carregar opções de categoria:', error);
@@ -330,15 +285,24 @@ class ForumUI {
     setupEventListeners() {
         console.log('🔗 Configurando event listeners...');
 
+        // Formulário de novo tópico
         const form = document.getElementById('newTopicForm');
         if (form) {
             form.addEventListener('submit', (e) => {
                 e.preventDefault();
                 this.createNewTopic();
             });
-            console.log('✅ Listener do formulário configurado');
         }
 
+        // Botão de novo tópico
+        const newTopicBtn = document.querySelector('.new-topic-btn');
+        if (newTopicBtn) {
+            newTopicBtn.addEventListener('click', () => {
+                this.openNewTopicModal();
+            });
+        }
+
+        // Botões de login/logout
         const loginBtn = document.getElementById('loginBtn');
         const logoutBtn = document.getElementById('logoutBtn');
 
@@ -347,7 +311,6 @@ class ForumUI {
                 e.preventDefault();
                 this.redirectToLogin();
             });
-            console.log('✅ Listener do login configurado');
         }
 
         if (logoutBtn) {
@@ -355,7 +318,6 @@ class ForumUI {
                 e.preventDefault();
                 this.logout();
             });
-            console.log('✅ Listener do logout configurado');
         }
 
         this.setupAuthGuards();
@@ -374,20 +336,29 @@ class ForumUI {
         });
     }
 
-    redirectToLogin() {
-        localStorage.setItem('returnUrl', window.location.href);
-        if (window.discordAuth) {
-            window.discordAuth.login();
-        } else {
-            window.location.href = 'forum-auth.html';
+    openNewTopicModal() {
+        if (!this.api.currentUser) {
+            this.showNotification('Você precisa fazer login com Discord para criar tópicos.', 'error');
+            this.redirectToLogin();
+            return;
+        }
+
+        const modal = document.getElementById('newTopicModal');
+        if (modal) {
+            modal.style.display = 'block';
         }
     }
 
-    logout() {
-        if (window.discordAuth) {
-            window.discordAuth.logout();
-        } else {
-            window.authManager.clearAuth();
+    closeNewTopicModal() {
+        const modal = document.getElementById('newTopicModal');
+        const form = document.getElementById('newTopicForm');
+
+        if (modal) {
+            modal.style.display = 'none';
+        }
+
+        if (form) {
+            form.reset();
         }
     }
 
@@ -403,8 +374,6 @@ class ForumUI {
         const categoryId = document.getElementById('topicCategory').value;
         const title = document.getElementById('topicTitle').value;
         const content = document.getElementById('topicContent').value;
-
-        console.log('📋 Dados do formulário:', { categoryId, title, content });
 
         if (!categoryId || !title || !content) {
             this.showNotification('Por favor, preencha todos os campos.', 'error');
@@ -428,20 +397,37 @@ class ForumUI {
                 content: content.trim()
             };
 
-            console.log('📤 Enviando dados para criação:', topicData);
-
             await this.api.createTopic(topicData);
 
             await this.loadStats();
             await this.loadCategories();
             await this.loadRecentTopics();
 
-            closeNewTopicModal();
+            this.closeNewTopicModal();
             this.showNotification('Tópico criado com sucesso!', 'success');
 
         } catch (error) {
             console.error('❌ Erro ao criar tópico:', error);
             this.showNotification(error.message, 'error');
+        }
+    }
+
+    redirectToLogin() {
+        localStorage.setItem('returnUrl', window.location.href);
+        if (window.discordAuth) {
+            window.discordAuth.login();
+        } else {
+            window.location.href = 'forum-auth.html';
+        }
+    }
+
+    logout() {
+        if (window.discordAuth) {
+            window.discordAuth.logout();
+        } else {
+            localStorage.removeItem('discord_user');
+            localStorage.removeItem('discord_access_token');
+            window.location.reload();
         }
     }
 
@@ -485,7 +471,6 @@ class ForumUI {
             this.redirectToLogin();
             return;
         }
-        console.log('🔗 Navegando para categoria:', slug);
         window.location.href = `forum-category.html?category=${slug}`;
     }
 
@@ -495,35 +480,26 @@ class ForumUI {
             this.redirectToLogin();
             return;
         }
-        console.log('🔗 Navegando para tópico:', topicId);
         window.location.href = `forum-topic.html?id=${topicId}`;
-    }
-
-    startAuthMonitor() {
-        setInterval(() => {
-            this.api.loadCurrentUser();
-            this.checkAuthState();
-        }, 30000);
     }
 }
 
 // Inicializar quando DOM estiver pronto
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('🚀 DOM carregado, inicializando ForumUI PostgreSQL...');
+    console.log('🚀 DOM carregado, inicializando ForumUI...');
 
+    // Aguardar um pouco para garantir que as dependências estejam carregadas
     setTimeout(() => {
         if (window.forumAPI) {
             window.forumUI = new ForumUI();
-            window.forumUI.startAuthMonitor();
         } else {
             console.error('❌ ForumAPI não está disponível!');
+            // Tentar recarregar após 2 segundos
+            setTimeout(() => {
+                if (window.forumAPI) {
+                    window.forumUI = new ForumUI();
+                }
+            }, 2000);
         }
-    }, 100);
+    }, 500);
 });
-
-// Atualizar estatísticas periodicamente
-setInterval(() => {
-    if (window.forumUI) {
-        window.forumUI.loadStats();
-    }
-}, 60000); // A cada 1 minuto

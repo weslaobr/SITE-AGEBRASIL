@@ -109,42 +109,6 @@ const getUserFromHeaders = (req) => {
     }
 };
 
-// GET - Lista de tópicos (página principal ou por categoria)
-app.get('/api/forum/topics', async (req, res) => {
-    const { category, limit = 50 } = req.query;
-    const client = await pool.connect();
-    try {
-        let query = `
-            SELECT 
-                t.id, t.title, t.created_at, t.updated_at, t.views, t.is_pinned, t.is_locked,
-                t.reply_count, t.author_id,
-                u.username AS author_name, u.avatar AS author_avatar,
-                c.name AS category_name, c.slug AS category_slug, c.color AS category_color
-            FROM forum_topics t
-            JOIN forum_users u ON t.author_id = u.discord_id
-            JOIN forum_categories c ON t.category_id = c.id
-            WHERE t.is_deleted = false
-        `;
-        const params = [];
-
-        if (category) {
-            query += ` AND c.slug = $1`;
-            params.push(category);
-        }
-
-        query += ` ORDER BY t.is_pinned DESC, t.updated_at DESC LIMIT ${limit}`;
-
-        const result = await client.query(query, params);
-
-        res.json(result.rows);
-    } catch (err) {
-        console.error('Erro ao buscar tópicos:', err);
-        res.status(500).json({ error: 'Erro interno do servidor' });
-    } finally {
-        client.release();
-    }
-});
-
 // GET - Tópico específico + respostas
 app.get('/api/forum/topics/:id', async (req, res) => {
     const { id } = req.params;
@@ -323,6 +287,28 @@ app.get('/api/forum/stats', async (req, res) => {
         });
     } catch (err) {
         res.status(500).json({ error: 'Erro' });
+    }
+});
+
+// ESTE É OBRIGATÓRIO PARA AS CATEGORIAS APARECEREM
+app.get('/api/forum/topics', async (req, res) => {
+    const client = await pool.connect();
+    try {
+        const result = await client.query(`
+            SELECT t.*, u.username as author_name, c.name as category_name, c.slug as category_slug
+            FROM forum_topics t
+            JOIN forum_users u ON t.author_id = u.discord_id
+            JOIN forum_categories c ON t.category_id = c.id
+            WHERE t.is_deleted = false
+            ORDER BY t.is_pinned DESC, t.updated_at DESC
+            LIMIT 50
+        `);
+        res.json(result.rows);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json([]);
+    } finally {
+        client.release();
     }
 });
 

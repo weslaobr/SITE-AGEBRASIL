@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fórum - Age of Empires IV Brasil</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="icon" type="image/png" href="https://i.postimg.cc/3JT4W3hz/favicon.png">
+    <style>
+        .category-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin: 1rem 0;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .category-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .category-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            color: white;
+        }
+
+        .topic-item {
+            background: var(--card-bg);
+            padding: 1rem;
+            margin: 0.5rem 0;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .topic-avatar img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+        }
+
+        .stats {
+            display: flex;
+            gap: 2rem;
+            margin: 2rem 0;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat strong {
+            font-size: 2rem;
+            display: block;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <div class="container">
+            <div class="logo">
+                <img src="https://i.postimg.cc/rFNdr7FV/logo.png" class="logo-img">
+                <h1>Age of Empires IV Brasil</h1>
+            </div>
+            <div id="userInfo" style="display:none"></div>
+            <button id="logoutBtn" style="display:none">Sair</button>
+            <button id="loginBtn" style="display:none">Login Discord</button>
+        </div>
+    </header>
+
+    <main class="container">
+        <h2 style="text-center">Fórum da Comunidade</h2>
+
+        <div class="stats">
+            <div class="stat">
+                <strong id="statTopics">0</strong>
+                Tópicos
+            </div>
+            <div class="stat">
+                <strong id="statReplies">0</strong>
+                Respostas
+            </div>
+            <div class="stat">
+                <strong id="statMembers">0</strong>
+                Membros
+            </div>
+            <div class="stat">
+                <strong id="statOnline">0</strong>
+                Online
+            </div>
+        </div>
+
+        <h3>Categorias</h3>
+        <div id="categoriesContainer">Carregando...</div>
+
+        <h3>Tópicos Recentes</h3>
+        <div id="recentTopicsList">Carregando...</div>
+    </main>
+
+    <script>
+        // Simples e funciona 100%
+        const base = window.location.origin;
+
+        async function load() {
+            // Carrega usuário
+            const user = JSON.parse(localStorage.getItem('discord_user') || 'null');
+            if (user) {
+                document.getElementById('userInfo').innerHTML = `<img src="https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.webp?size=64" width="40" style="border-radius:50%"> ${user.global_name || user.username}`;
+                document.getElementById('userInfo').style.display = 'block';
+                document.getElementById('logoutBtn').style.display = 'block';
+                document.getElementById('loginBtn').style.display = 'none';
+            } else {
+                document.getElementById('loginBtn').style.display = 'block';
+                document.getElementById('loginBtn').onclick = () => location.href = 'forum-auth.html';
+            }
+
+            document.getElementById('logoutBtn').onclick = () => {
+                localStorage.clear();
+                location.reload();
+            };
+
+            // Carrega categorias
+            const cats = await fetch(`${base}/api/forum/categories`).then(r => r.json());
+            document.getElementById('categoriesContainer').innerHTML = cats.map(c => `
+        <div class="category-card" onclick="location.href='forum-category.html?category=${c.slug}'">
+            <div class="category-icon" style="background:${c.color || '#5865F2'}">
+                <i class="${c.icon || 'fas fa-comments'}"></i>
+            </div>
+            <div style="flex:1">
+                <h3>${c.name}</h3>
+                <p>${c.description || ''}</p>
+            </div>
+            <div>
+                <div><strong>${c.topic_count || 0}</strong> tópicos</div>
+                <div><strong>${c.reply_count || 0}</strong> respostas</div>
+            </div>
+        </div>
+    `).join('');
+
+            // Carrega tópicos recentes
+            const topics = await fetch(`${base}/api/forum/topics`).then(r => r.json());
+            document.getElementById('recentTopicsList').innerHTML = topics.length === 0 ? '<p>Nenhum tópico ainda.</p>' : topics.map(t => `
+        <div class="topic-item" onclick="location.href='forum-topic.html?id=${t.id}'">
+            <img src="${t.author_avatar || 'https://cdn.discordapp.com/embed/avatars/0.png'}" width="40" style="border-radius:50%">
+            <div style="flex:1">
+                <strong>${t.title}</strong><br>
+                <small>por ${t.author_name} • ${new Date(t.created_at).toLocaleDateString('pt-BR')} • ${t.category_name}</small>
+            </div>
+            <small>${t.reply_count || 0} respostas • ${t.views || 0} views</small>
+        </div>
+    `).join('');
+
+            // Estatísticas rápidas
+            document.getElementById('statTopics').textContent = topics.length;
+        }
+
+        load();
+    </script>
+</body>
+
+</html>

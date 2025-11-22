@@ -385,7 +385,8 @@ app.put('/api/forum/topics/:id/pin', async (req, res) => {
     if (!userHeader) return res.status(401).json({ error: 'Unauthorized' });
     try {
         const user = JSON.parse(decodeURIComponent(userHeader));
-        if (user.username !== 'BRO.WESLAO' && user.id !== 'YOUR_ADMIN_ID') {
+        const admins = ['407624932101455873']; // BRO.WESLAO
+        if (!admins.includes(String(user.id))) {
             return res.status(403).json({ error: 'Forbidden' });
         }
     } catch (e) {
@@ -413,7 +414,8 @@ app.put('/api/forum/topics/:id/lock', async (req, res) => {
     if (!userHeader) return res.status(401).json({ error: 'Unauthorized' });
     try {
         const user = JSON.parse(decodeURIComponent(userHeader));
-        if (user.username !== 'BRO.WESLAO' && user.id !== 'YOUR_ADMIN_ID') {
+        const admins = ['407624932101455873']; // BRO.WESLAO
+        if (!admins.includes(String(user.id))) {
             return res.status(403).json({ error: 'Forbidden' });
         }
     } catch (e) {
@@ -440,7 +442,8 @@ app.delete('/api/forum/topics/:id', async (req, res) => {
     if (!userHeader) return res.status(401).json({ error: 'Unauthorized' });
     try {
         const user = JSON.parse(decodeURIComponent(userHeader));
-        if (user.username !== 'BRO.WESLAO' && user.id !== 'YOUR_ADMIN_ID') {
+        const admins = ['407624932101455873']; // BRO.WESLAO
+        if (!admins.includes(String(user.id))) {
             return res.status(403).json({ error: 'Forbidden' });
         }
     } catch (e) {
@@ -524,7 +527,8 @@ app.delete('/api/forum/replies/:id', async (req, res) => {
     if (!userHeader) return res.status(401).json({ error: 'Unauthorized' });
     try {
         const user = JSON.parse(decodeURIComponent(userHeader));
-        if (user.username !== 'BRO.WESLAO' && user.id !== 'YOUR_ADMIN_ID') {
+        const admins = ['407624932101455873']; // BRO.WESLAO
+        if (!admins.includes(String(user.id))) {
             return res.status(403).json({ error: 'Forbidden' });
         }
     } catch (e) {

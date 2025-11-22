@@ -1,14 +1,54 @@
 // Script para sincronizar avatares do Discord para tópicos e respostas existentes
+require('dotenv').config();
 const { Pool } = require('pg');
-const fetch = require('node-fetch');
+const https = require('https');
 
 const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
     ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
 });
 
+function fetchDiscordUser(discordId, botToken) {
+    return new Promise((resolve, reject) => {
+        const options = {
+            hostname: 'discord.com',
+            path: `/api/v10/users/${discordId}`,
+            method: 'GET',
+            headers: {
+                'Authorization': `Bot ${botToken}`
+            }
+        };
+
+        https.get(options, (res) => {
+            let data = '';
+
+            res.on('data', (chunk) => {
+                data += chunk;
+            });
+
+            res.on('end', () => {
+                if (res.statusCode === 200) {
+                    resolve(JSON.parse(data));
+                } else {
+                    reject(new Error(`HTTP ${res.statusCode}`));
+                }
+            });
+        }).on('error', (err) => {
+            reject(err);
+        });
+    });
+}
+
 async function syncAvatars() {
     console.log('🔄 Iniciando sincronização de avatares...\n');
+
+    if (!process.env.DISCORD_BOT_TOKEN) {
+        console.log('❌ DISCORD_BOT_TOKEN não configurado no .env');
+        console.log('ℹ️  Novos tópicos/respostas terão avatar automaticamente.');
+        console.log('ℹ️  Para sincronizar tópicos antigos, configure o bot token.\n');
+        await pool.end();
+        return;
+    }
 
     try {
         // 1. Buscar todos os tópicos e respostas únicos por author_discord_id
@@ -42,20 +82,7 @@ async function syncAvatars() {
             try {
                 console.log(`🔍 Buscando avatar para ${authorName} (${discordId})...`);
 
-                // Fazer requisição para API do Discord
-                const response = await fetch(`https://discord.com/api/v10/users/${discordId}`, {
-                    headers: {
-                        'Authorization': `Bot ${process.env.DISCORD_BOT_TOKEN}`
-                    }
-                });
-
-                if (!response.ok) {
-                    console.log(`   ⚠️  Erro ao buscar usuário: ${response.status}`);
-                    errors++;
-                    continue;
-                }
-
-                const userData = await response.json();
+                const userData = await fetchDiscordUser(discordId, process.env.DISCORD_BOT_TOKEN);
                 const avatarUrl = userData.avatar
                     ? `https://cdn.discordapp.com/avatars/${discordId}/${userData.avatar}.webp`
                     : null;

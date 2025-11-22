@@ -538,17 +538,28 @@
             const isAdmin = currentUser && (currentUser.id === '407624932101455873');
 
             if (isAdmin) {
+                const isAdmin = currentUser && (currentUser.id === '407624932101455873');:
                 adminControls = `
                     <div class="admin-controls">
                         ${post.isMain ? `
                             <button onclick="togglePin(${post.id}, ${!post.isPinned})" class="admin-btn"><i class="fas fa-thumbtack"></i> ${post.isPinned ? 'Desafixar' : 'Fixar'}</button>
                             <button onclick="toggleLock(${post.id}, ${!post.isLocked})" class="admin-btn"><i class="fas fa-lock"></i> ${post.isLocked ? 'Destrancar' : 'Trancar'}</button>
                             <button onclick="deleteTopic(${post.id})" class="admin-btn delete"><i class="fas fa-trash"></i> Deletar Tópico</button>
+                            
                         ` : `
                             <button onclick="deleteReply(${post.id})" class="admin-btn delete"><i class="fas fa-trash"></i> Deletar</button>
                         `}
                     </div>
                 `;
+            }
+
+            else if (isAuthor && post.isMain) {
+                // Show delete button for topic author (only for main post)
+                adminControls = `
+        <div class="admin-controls">
+            <button onclick="deleteTopic(${post.id})" class="admin-btn delete"><i class="fas fa-trash"></i> Deletar Meu Tópico</button>
+        </div>
+    `;
             }
 
             return `

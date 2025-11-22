@@ -584,7 +584,7 @@ class ForumTopicUI {
         if (!confirm('Tem certeza que deseja alterar o status de fixação deste tópico?')) return;
 
         try {
-            const result = await this.api.togglePin(topicId);
+            const result = await this.api.togglePinTopic(topicId);
             if (result) {
                 alert('Status de fixação atualizado com sucesso!');
                 location.reload();
@@ -599,7 +599,7 @@ class ForumTopicUI {
         if (!confirm('Tem certeza que deseja alterar o status de bloqueio deste tópico?')) return;
 
         try {
-            const result = await this.api.toggleLock(topicId);
+            const result = await this.api.toggleLockTopic(topicId);
             if (result) {
                 alert('Status de bloqueio atualizado com sucesso!');
                 location.reload();

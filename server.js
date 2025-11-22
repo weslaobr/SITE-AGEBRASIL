@@ -563,23 +563,144 @@ app.delete('/api/forum/replies/:id', async (req, res) => {
     // Auth Check
     const userHeader = req.headers['x-user'];
     if (!userHeader) return res.status(401).json({ error: 'Unauthorized' });
+
+    let user;
     try {
-        const user = JSON.parse(decodeURIComponent(userHeader));
-        const admins = ['407624932101455873']; // BRO.WESLAO
-        if (!admins.includes(String(user.id))) {
-            return res.status(403).json({ error: 'Forbidden' });
-        }
+        user = JSON.parse(decodeURIComponent(userHeader));
     } catch (e) {
         return res.status(400).json({ error: 'Invalid user header' });
     }
 
     const client = await pool.connect();
     try {
+        await client.query('BEGIN');
+
+        // Check reply existence and author
+        const replyCheck = await client.query('SELECT author_discord_id FROM forum_replies WHERE id = $1', [id]);
+        if (replyCheck.rows.length === 0) {
+            await client.query('ROLLBACK');
+            return res.status(404).json({ error: 'Reply not found' });
+        }
+
+        const replyAuthorId = replyCheck.rows[0].author_discord_id;
+        const admins = ['407624932101455873']; // BRO.WESLAO
+        const isAdmin = admins.includes(String(user.id));
+        const isAuthor = String(user.id) === String(replyAuthorId);
+
+        if (!isAdmin && !isAuthor) {
+            await client.query('ROLLBACK');
+            return res.status(403).json({ error: 'Forbidden' });
+        }
+
         await client.query('DELETE FROM forum_replies WHERE id = $1', [id]);
+        await client.query('COMMIT');
+        res.json({ success: true });
+    } catch (err) {
+        await client.query('ROLLBACK');
+        console.error(err);
+        res.status(500).json({ error: 'Error deleting reply' });
+    } finally {
+        client.release();
+    }
+});
+
+// Edit Topic Endpoint
+app.put('/api/forum/topics/:id', async (req, res) => {
+    const { id } = req.params;
+    const { title, content } = req.body;
+
+    const userHeader = req.headers['x-user'];
+    if (!userHeader) return res.status(401).json({ error: 'Unauthorized' });
+
+    let user;
+    try {
+        user = JSON.parse(decodeURIComponent(userHeader));
+    } catch (e) {
+        return res.status(400).json({ error: 'Invalid user header' });
+    }
+
+    const client = await pool.connect();
+    try {
+        const topicCheck = await client.query('SELECT author_discord_id FROM forum_topics WHERE id = $1', [id]);
+        if (topicCheck.rows.length === 0) {
+            return res.status(404).json({ error: 'Topic not found' });
+        }
+
+        const topicAuthorId = topicCheck.rows[0].author_discord_id;
+        const admins = ['407624932101455873'];
+        const isAdmin = admins.includes(String(user.id));
+        const isAuthor = String(user.id) === String(topicAuthorId);
+
+        if (!isAdmin && !isAuthor) {
+            return res.status(403).json({ error: 'Forbidden' });
+        }
+
+        // Build update query dynamically
+        const updates = [];
+        const values = [];
+        let idx = 1;
+
+        if (title) {
+            updates.push(`title = $${idx++}`);
+            values.push(title);
+        }
+        if (content) {
+            updates.push(`content = $${idx++}`);
+            values.push(content);
+        }
+
+        if (updates.length === 0) return res.json({ success: true }); // Nothing to update
+
+        values.push(id);
+        await client.query(`UPDATE forum_topics SET ${updates.join(', ')} WHERE id = $${idx}`, values);
+
         res.json({ success: true });
     } catch (err) {
         console.error(err);
-        res.status(500).json({ error: 'Error deleting reply' });
+        res.status(500).json({ error: 'Error updating topic' });
+    } finally {
+        client.release();
+    }
+});
+
+// Edit Reply Endpoint
+app.put('/api/forum/replies/:id', async (req, res) => {
+    const { id } = req.params;
+    const { content } = req.body;
+
+    if (!content) return res.status(400).json({ error: 'Content required' });
+
+    const userHeader = req.headers['x-user'];
+    if (!userHeader) return res.status(401).json({ error: 'Unauthorized' });
+
+    let user;
+    try {
+        user = JSON.parse(decodeURIComponent(userHeader));
+    } catch (e) {
+        return res.status(400).json({ error: 'Invalid user header' });
+    }
+
+    const client = await pool.connect();
+    try {
+        const replyCheck = await client.query('SELECT author_discord_id FROM forum_replies WHERE id = $1', [id]);
+        if (replyCheck.rows.length === 0) {
+            return res.status(404).json({ error: 'Reply not found' });
+        }
+
+        const replyAuthorId = replyCheck.rows[0].author_discord_id;
+        const admins = ['407624932101455873'];
+        const isAdmin = admins.includes(String(user.id));
+        const isAuthor = String(user.id) === String(replyAuthorId);
+
+        if (!isAdmin && !isAuthor) {
+            return res.status(403).json({ error: 'Forbidden' });
+        }
+
+        await client.query('UPDATE forum_replies SET content = $1 WHERE id = $2', [content, id]);
+        res.json({ success: true });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Error updating reply' });
     } finally {
         client.release();
     }

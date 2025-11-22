@@ -28,7 +28,7 @@ class ForumAPI {
         if (userData) {
             try {
                 const user = JSON.parse(userData);
-                headers['X-User'] = JSON.stringify(user);
+                headers['X-User'] = encodeURIComponent(JSON.stringify(user));
             } catch (e) { }
         }
         return headers;

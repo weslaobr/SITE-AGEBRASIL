@@ -499,7 +499,7 @@
                     'Content-Type': 'application/json'
                 };
                 if (token) headers['Authorization'] = `Bearer ${token}`;
-                if (user) headers['X-User'] = JSON.stringify(user);
+                if (user) headers['X-User'] = encodeURIComponent(JSON.stringify(user));
 
                 // 2. Carregar Categorias
                 const cats = await fetch(`${base}/api/forum/categories`, { headers }).then(r => r.json());

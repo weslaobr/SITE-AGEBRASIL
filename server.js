@@ -202,7 +202,7 @@ app.post('/api/forum/categories', async (req, res) => {
     if (!userHeader) return res.status(401).json({ error: 'Unauthorized' });
 
     try {
-        const user = JSON.parse(userHeader);
+        const user = JSON.parse(decodeURIComponent(userHeader));
         // Hardcoded admin check for now as per existing code style
         if (user.username !== 'BRO.WESLAO' && user.id !== 'YOUR_ADMIN_ID') {
             // You might want to add more admins here or use a DB role
@@ -345,7 +345,7 @@ app.post('/api/forum/topics', async (req, res) => {
     if (!userHeader) return res.status(401).json({ error: 'Faça login' });
 
     let user;
-    try { user = JSON.parse(userHeader); } catch { return res.status(400); }
+    try { user = JSON.parse(decodeURIComponent(userHeader)); } catch { return res.status(400); }
 
     const { categoryId, title, content } = req.body;
 
@@ -383,7 +383,7 @@ app.put('/api/forum/topics/:id/pin', async (req, res) => {
     const userHeader = req.headers['x-user'];
     if (!userHeader) return res.status(401).json({ error: 'Unauthorized' });
     try {
-        const user = JSON.parse(userHeader);
+        const user = JSON.parse(decodeURIComponent(userHeader));
         if (user.username !== 'BRO.WESLAO' && user.id !== 'YOUR_ADMIN_ID') {
             return res.status(403).json({ error: 'Forbidden' });
         }
@@ -411,7 +411,7 @@ app.put('/api/forum/topics/:id/lock', async (req, res) => {
     const userHeader = req.headers['x-user'];
     if (!userHeader) return res.status(401).json({ error: 'Unauthorized' });
     try {
-        const user = JSON.parse(userHeader);
+        const user = JSON.parse(decodeURIComponent(userHeader));
         if (user.username !== 'BRO.WESLAO' && user.id !== 'YOUR_ADMIN_ID') {
             return res.status(403).json({ error: 'Forbidden' });
         }
@@ -438,7 +438,7 @@ app.delete('/api/forum/topics/:id', async (req, res) => {
     const userHeader = req.headers['x-user'];
     if (!userHeader) return res.status(401).json({ error: 'Unauthorized' });
     try {
-        const user = JSON.parse(userHeader);
+        const user = JSON.parse(decodeURIComponent(userHeader));
         if (user.username !== 'BRO.WESLAO' && user.id !== 'YOUR_ADMIN_ID') {
             return res.status(403).json({ error: 'Forbidden' });
         }
@@ -467,7 +467,7 @@ app.post('/api/forum/replies', async (req, res) => {
     if (!userHeader) return res.status(401).json({ error: 'Faça login' });
 
     let user;
-    try { user = JSON.parse(userHeader); } catch { return res.status(400); }
+    try { user = JSON.parse(decodeURIComponent(userHeader)); } catch { return res.status(400); }
 
     const { topicId, content } = req.body;
 
@@ -522,7 +522,7 @@ app.delete('/api/forum/replies/:id', async (req, res) => {
     const userHeader = req.headers['x-user'];
     if (!userHeader) return res.status(401).json({ error: 'Unauthorized' });
     try {
-        const user = JSON.parse(userHeader);
+        const user = JSON.parse(decodeURIComponent(userHeader));
         if (user.username !== 'BRO.WESLAO' && user.id !== 'YOUR_ADMIN_ID') {
             return res.status(403).json({ error: 'Forbidden' });
         }

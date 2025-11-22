@@ -81,7 +81,13 @@ function updateUserWidget(user) {
                             </div>
                         </div>
 
-                        <button onclick="logout()" class="discord-btn" style="background: #ef4444; margin-top: 1rem; font-size: 0.9rem; padding: 0.5rem 1rem;">
+                        ${user.id === '407624932101455873' ? `
+                            <a href="admin-panel.html" class="discord-btn" style="background: #ecc94b; color: black; margin-top: 1rem; font-size: 0.9rem; padding: 0.5rem 1rem; display: flex; justify-content: center; align-items: center; gap: 0.5rem; text-decoration: none;">
+                                <i class="fas fa-cogs"></i> Painel Admin
+                            </a>
+                        ` : ''}
+
+                        <button onclick="logout()" class="discord-btn" style="background: #ef4444; margin-top: 0.5rem; font-size: 0.9rem; padding: 0.5rem 1rem;">
                             <i class="fas fa-sign-out-alt"></i> Sair
                         </button>
                     </div>

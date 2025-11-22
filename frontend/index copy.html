@@ -248,6 +248,7 @@
             color: #a0aec0;
         }
 
+        /* ===== ATIVIDADE RECENTE - CORRIGIDO ===== */
         .activity-feed {
             max-height: 400px;
             overflow-y: auto;
@@ -452,227 +453,6 @@
                 text-align: center;
             }
         }
-
-        /* Hero Adjustment */
-        .hero {
-            padding: 3rem 0;
-        }
-
-        /* Content Creators Styles */
-        .content-creators {
-            padding: 4rem 0 2rem 0;
-            /* Reduced bottom padding */
-            background: rgba(0, 0, 0, 0.2);
-        }
-
-        .creators-container {
-            display: grid;
-            gap: 1rem;
-            /* Reduced gap from 2rem */
-        }
-
-        /* Featured Stream */
-        .featured-stream-container {
-            background: #000;
-            border-radius: 8px;
-            overflow: hidden;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
-            border: 1px solid var(--border-color);
-            display: none;
-            /* Hidden by default until live */
-        }
-
-        .featured-stream-container.active {
-            display: block;
-        }
-
-        .stream-embed {
-            position: relative;
-            padding-bottom: 56.25%;
-            /* 16:9 Aspect Ratio */
-            height: 0;
-            overflow: hidden;
-        }
-
-        .stream-embed iframe {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            border: 0;
-        }
-
-        .stream-header {
-            padding: 1rem;
-            background: var(--card-bg);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-top: 1px solid var(--border-color);
-        }
-
-        .live-indicator {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            color: #e91e63;
-            font-weight: 700;
-            font-size: 0.9rem;
-        }
-
-        .live-dot {
-            width: 10px;
-            height: 10px;
-            background: #e91e63;
-            border-radius: 50%;
-            animation: pulse 1.5s infinite;
-        }
-
-        /* Live List (Selector) */
-        .live-list {
-            display: flex;
-            gap: 1rem;
-            overflow-x: auto;
-            padding-bottom: 1rem;
-            margin-bottom: 0.5rem;
-            /* Reduced from 1rem */
-            scrollbar-width: thin;
-            scrollbar-color: var(--accent-color) var(--card-bg);
-        }
-
-        .live-item {
-            flex-shrink: 0;
-            width: 200px;
-            background: var(--card-bg);
-            border-radius: 6px;
-            cursor: pointer;
-            border: 1px solid var(--border-color);
-            transition: all 0.2s;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .live-item:hover,
-        .live-item.active {
-            border-color: var(--accent-color);
-            transform: translateY(-2px);
-        }
-
-        .live-item-thumb {
-            height: 112px;
-            background: #000;
-            position: relative;
-        }
-
-        .live-item-thumb img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .live-item-info {
-            padding: 0.5rem;
-            font-size: 0.85rem;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        /* Compact Grid for All Creators */
-        .creators-compact-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-            gap: 1rem;
-            margin-top: 0.5rem;
-            /* Reduced from 1.5rem */
-            margin-bottom: 0;
-        }
-
-        .creator-compact-card {
-            background: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
-            padding: 0.8rem;
-            display: flex;
-            align-items: center;
-            gap: 0.8rem;
-            transition: all 0.2s;
-        }
-
-        .creator-compact-card:hover {
-            border-color: var(--accent-color);
-            background: rgba(255, 255, 255, 0.05);
-        }
-
-        .compact-avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            overflow: hidden;
-            border: 2px solid var(--border-color);
-        }
-
-        .compact-avatar img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .compact-info {
-            flex: 1;
-            min-width: 0;
-        }
-
-        .compact-name {
-            font-weight: 600;
-            font-size: 0.9rem;
-            color: var(--text-color);
-            margin-bottom: 0.2rem;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .compact-links {
-            display: flex;
-            gap: 0.5rem;
-        }
-
-        .compact-link {
-            color: #718096;
-            font-size: 0.8rem;
-            transition: color 0.2s;
-        }
-
-        .compact-link:hover {
-            color: var(--accent-color);
-        }
-
-        .compact-link.twitch:hover {
-            color: #9146ff;
-        }
-
-        .compact-link.youtube:hover {
-            color: #ff0000;
-        }
-
-        @keyframes pulse {
-            0% {
-                opacity: 1;
-                box-shadow: 0 0 0 0 rgba(233, 30, 99, 0.7);
-            }
-
-            70% {
-                opacity: 1;
-                box-shadow: 0 0 0 6px rgba(233, 30, 99, 0);
-            }
-
-            100% {
-                opacity: 1;
-                box-shadow: 0 0 0 0 rgba(233, 30, 99, 0);
-            }
-        }
     </style>
 </head>
 
@@ -719,40 +499,6 @@
                     <div class="hero-stat">
                         <span class="number">0</span>
                         <span class="label">Ativos hoje</span>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Content Creators Section -->
-        <section class="content-creators">
-            <div class="container">
-                <h2 class="section-title">🎥 Criadores de Conteúdo</h2>
-
-                <div class="creators-container">
-                    <!-- Featured Stream Player -->
-                    <div id="featured-stream" class="featured-stream-container">
-                        <div class="stream-embed">
-                            <div id="twitch-embed"></div>
-                        </div>
-                        <div class="stream-header">
-                            <div class="live-indicator">
-                                <div class="live-dot"></div>
-                                <span id="featured-channel-name">AO VIVO AGORA</span>
-                            </div>
-
-                        </div>
-                    </div>
-
-                    <!-- Live List Selector (Visible if > 1 live) -->
-                    <div id="live-list" class="live-list" style="display: none;"></div>
-
-                    <!-- Compact Grid for All Creators -->
-                    <h3 style="font-size: 1.1rem; margin-top: 0.5rem; color: #a0aec0;">Todos os Criadores</h3>
-                    <div class="creators-compact-grid" id="creators-grid">
-                        <div class="loading">
-                            <i class="fas fa-video"></i> Carregando criadores...
-                        </div>
                     </div>
                 </div>
             </div>
@@ -847,7 +593,6 @@
 
     <script src="js/api.js"></script>
     <script src="js/home.js"></script>
-    <script src="js/creators.js"></script>
 
 </body>
 

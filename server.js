@@ -4418,4 +4418,150 @@ app.post('/api/tournaments/sync', async (req, res) => {
     }
 });
 
+// ==========================================
+// CONTENT CREATORS API
+// ==========================================
+
+const CREATORS = [
+    { id: 1, name: "Gks", twitch: "gks_aoe", youtube: "https://youtube.com/@gks_aoe", youtubeId: "UC68u_vTF3ynM1plO_kihJ0Q" },
+    { id: 2, name: "Utinowns", twitch: "utinowns", youtube: "https://youtube.com/@utinowns9776", youtubeId: "UClTZTtes7vCnMNbU_PTWFcQ" },
+    { id: 3, name: "VicentiN", twitch: "vicentin", youtube: "https://youtube.com/@vitorvicentin", youtubeId: "UCrAbkIFpoh8EZWof6y6DfmA" },
+    { id: 4, name: "CaioFora", twitch: "cai0fora", youtube: "https://youtube.com/@caiofora", youtubeId: "UCd54zjiewBgbTQHV_jbmM-Q" },
+    { id: 5, name: "EricBR", twitch: "ericbr_", youtubeId: "UCqTMXy2p7tjyh4BbcOCNooA" }, // EricAoM
+    { id: 6, name: "Vitruvius TV", twitch: "vitruvius_tv" },
+    { id: 7, name: "Nyxel TV", twitch: "nyxel_tv" },
+    { id: 8, name: "LegoWzz", twitch: "legowzz" }
+];
+
+let twitchAccessToken = null;
+let twitchTokenExpiresAt = 0;
+
+async function getTwitchAccessToken() {
+    if (twitchAccessToken && Date.now() < twitchTokenExpiresAt) {
+        return twitchAccessToken;
+    }
+
+    try {
+        const response = await fetch('https://id.twitch.tv/oauth2/token', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: new URLSearchParams({
+                client_id: process.env.TWITCH_CLIENT_ID,
+                client_secret: process.env.TWITCH_CLIENT_SECRET,
+                grant_type: 'client_credentials'
+            })
+        });
+        const data = await response.json();
+        if (data.access_token) {
+            twitchAccessToken = data.access_token;
+            twitchTokenExpiresAt = Date.now() + (data.expires_in * 1000) - 60000; // Buffer of 1 min
+            return twitchAccessToken;
+        }
+        throw new Error('Failed to get Twitch token');
+    } catch (err) {
+        console.error('Twitch Auth Error:', err);
+        return null;
+    }
+}
+
+async function getCreatorsData() {
+    const token = await getTwitchAccessToken();
+    if (!token) return CREATORS.map(c => ({ ...c, isLive: false }));
+
+    // 1. Prepare User Logins
+    const userLogins = CREATORS.map(c => c.twitch).join('&login=');
+    const streamLogins = CREATORS.map(c => c.twitch).join('&user_login=');
+
+    let liveStreams = [];
+    let userInfos = [];
+
+    try {
+        // Fetch Streams
+        const streamsResponse = await fetch(`https://api.twitch.tv/helix/streams?user_login=${streamLogins}`, {
+            headers: {
+                'Client-ID': process.env.TWITCH_CLIENT_ID,
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        const streamsData = await streamsResponse.json();
+        liveStreams = streamsData.data || [];
+
+        // Fetch Users (for Avatars)
+        const usersResponse = await fetch(`https://api.twitch.tv/helix/users?login=${userLogins}`, {
+            headers: {
+                'Client-ID': process.env.TWITCH_CLIENT_ID,
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        const usersData = await usersResponse.json();
+        userInfos = usersData.data || [];
+
+    } catch (error) {
+        console.error('Twitch API Error:', error);
+    }
+
+    // 2. Merge Data & Fetch YouTube if needed
+    const results = await Promise.all(CREATORS.map(async creator => {
+        const stream = liveStreams.find(s => s.user_login.toLowerCase() === creator.twitch.toLowerCase());
+        const userInfo = userInfos.find(u => u.login.toLowerCase() === creator.twitch.toLowerCase());
+
+        let latestVideo = null;
+
+        // Only fetch YouTube if NOT live and has ID
+        if (!stream && creator.youtubeId && process.env.YOUTUBE_API_KEY) {
+            try {
+                const ytUrl = `https://www.googleapis.com/youtube/v3/search?key=${process.env.YOUTUBE_API_KEY}&channelId=${creator.youtubeId}&part=snippet,id&order=date&maxResults=1&type=video`;
+                const ytRes = await fetch(ytUrl);
+                const ytData = await ytRes.json();
+
+                if (ytData.items && ytData.items.length > 0) {
+                    const video = ytData.items[0];
+                    latestVideo = {
+                        id: video.id.videoId,
+                        title: video.snippet.title,
+                        thumbnail_url: video.snippet.thumbnails.medium.url,
+                        publishedAt: video.snippet.publishedAt
+                    };
+                }
+            } catch (e) {
+                console.error(`YouTube API Error for ${creator.name}:`, e.message);
+            }
+        }
+
+        return {
+            ...creator,
+            isLive: !!stream,
+            avatar_url: userInfo ? userInfo.profile_image_url : null,
+            streamInfo: stream ? {
+                title: stream.title,
+                viewer_count: stream.viewer_count,
+                thumbnail_url: stream.thumbnail_url.replace('{width}', '320').replace('{height}', '180'),
+                game_name: stream.game_name
+            } : null,
+            latestVideo: latestVideo
+        };
+    }));
+
+    // Sort: Live first, then by YouTube video date
+    return results.sort((a, b) => {
+        if (a.isLive && !b.isLive) return -1;
+        if (!a.isLive && b.isLive) return 1;
+        // If neither live, sort by video date
+        if (a.latestVideo && b.latestVideo) {
+            return new Date(b.latestVideo.publishedAt) - new Date(a.latestVideo.publishedAt);
+        }
+        return 0;
+    });
+}
+
+app.get('/api/creators', async (req, res) => {
+    try {
+        const data = await getCreatorsData();
+        res.json(data);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Failed to fetch creators' });
+    }
+});
+
 module.exports = app;

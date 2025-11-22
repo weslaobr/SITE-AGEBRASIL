@@ -22,11 +22,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const urlParams = new URLSearchParams(window.location.search);
         const slug = urlParams.get('slug');
         if (slug) loadCategoryTopics(slug);
-    } else if (path.includes('forum-topic.html')) {
-        const urlParams = new URLSearchParams(window.location.search);
-        const id = urlParams.get('id');
-        if (id) loadTopic(id);
     }
+    // forum-topic.html has its own inline script that handles loadTopic()
 });
 
 // ==========================================

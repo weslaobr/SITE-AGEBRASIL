@@ -407,7 +407,7 @@
 
     <script src="js/forum.js"></script>
     <script>
-        // Editor Logic (Duplicated for simplicity, could be in forum.js)
+        // Editor Logic
         function insertFormat(start, end) {
             const textarea = document.getElementById('reply-content');
             const startPos = textarea.selectionStart;
@@ -451,7 +451,9 @@
                     content: topic.content,
                     createdAt: topic.createdAt,
                     isMain: true,
-                    authorId: topic.authorId
+                    authorId: topic.authorId,
+                    isPinned: topic.isPinned,
+                    isLocked: topic.isLocked
                 });
 
                 // Render Replies
@@ -466,208 +468,53 @@
                     document.getElementById('reply-form-section').innerHTML = '<div style="text-align: center; padding: 2rem; color: #e53e3e;"><i class="fas fa-lock"></i> Este tópico está trancado e não aceita novas respostas.</div>';
                     document.getElementById('login-to-reply').style.display = 'none';
                 } else {
-                    ```html
+                    // Check Auth for Reply Form
+                    if (!currentUser) {
+                        document.getElementById('reply-form-section').style.display = 'none';
+                        document.getElementById('login-to-reply').style.display = 'block';
 
-        .admin-controls {
-            margin-top: 1rem;
-            padding-top: 1rem;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-            display: flex;
-            gap: 1rem;
-        }
-
-        .admin-btn {
-            background: rgba(255, 255, 255, 0.1);
-            border: none;
-            color: #cbd5e0;
-            padding: 0.4rem 0.8rem;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 0.8rem;
-        }
-
-        .admin-btn:hover {
-            background: rgba(255, 255, 255, 0.2);
-        }
-
-        .admin-btn.delete {
-            background: rgba(229, 62, 62, 0.2);
-            color: #fc8181;
-        }
-
-        .admin-btn.delete:hover {
-            background: rgba(229, 62, 62, 0.4);
-        }
-    </style>
-</head>
-
-<body>
-    <header>
-        <div class="container">
-            <div class="header-content">
-                <div class="logo">
-                    <img src="https://i.postimg.cc/rFNdr7FV/logo.png" alt="Age of Empires IV Brasil" class="logo-img">
-                    <h1>Age of Empires IV Brasil</h1>
-                </div>
-                <nav>
-                    <ul>
-                        <li><a href="index.html">Início</a></li>
-                        <li><a href="forum.html" class="active">Fórum</a></li>
-                        <li><a href="leaderboard.html">Tabela de classificação</a></li>
-                        <li><a href="torneios.html">Torneios</a></li>
-                        <li><a href="about.html">Sobre</a></li>
-                    </ul>
-                </nav>
-            </div>
-        </div>
-    </header>
-
-    <div class="forum-header-small">
-        <div class="container">
-            <div class="breadcrumb">
-                <a href="forum.html">Fórum</a> <i class="fas fa-chevron-right"></i> <a href="#"
-                    id="category-link">...</a> <i class="fas fa-chevron-right"></i> <span
-                    id="topic-breadcrumb">...</span>
-            </div>
-            <h2 class="topic-header-title" id="topic-title">Carregando...</h2>
-            <div class="topic-header-meta">
-                <span id="topic-status-badges"></span>
-            </div>
-        </div>
-    </div>
-
-    <main class="container">
-        <div class="post-container" id="posts-container">
-            <!-- Original Post and Replies will be loaded here -->
-            <div class="loading">
-                <i class="fas fa-spinner fa-spin"></i> Carregando tópico...
-            </div>
-        </div>
-
-        <!-- Reply Section -->
-        <div class="reply-section" id="reply-form-section">
-            <div class="reply-header">Responder ao Tópico</div>
-            <form id="reply-form">
-                <div class="editor-toolbar">
-                    <button type="button" class="editor-btn" onclick="insertFormat('**', '**')" title="Negrito"><i
-                            class="fas fa-bold"></i></button>
-                    <button type="button" class="editor-btn" onclick="insertFormat('*', '*')" title="Itálico"><i
-                            class="fas fa-italic"></i></button>
-                    <button type="button" class="editor-btn" onclick="insertFormat('__', '__')" title="Sublinhado"><i
-                            class="fas fa-underline"></i></button>
-                    <button type="button" class="editor-btn" onclick="insertFormat('`', '`')" title="Código"><i
-                            class="fas fa-code"></i></button>
-                    <button type="button" class="editor-btn" onclick="insertFormat('![Imagem](', ')')" title="Imagem"><i
-                            class="fas fa-image"></i></button>
-                    <button type="button" class="editor-btn" onclick="insertFormat('[Link](', ')')" title="Link"><i
-                            class="fas fa-link"></i></button>
-                </div>
-                <textarea id="reply-content" class="form-control" placeholder="Escreva sua resposta aqui..."
-                    required></textarea>
-                <div style="text-align: right;">
-                    <button type="submit" class="submit-reply-btn">Enviar Resposta</button>
-                </div>
-            </form>
-        </div>
-
-        <div id="login-to-reply" class="reply-section" style="display: none; text-align: center;">
-            <p style="color: #a0aec0; margin-bottom: 1rem;">Você precisa estar logado para responder.</p>
-            <a href="#" id="topic-login-btn" class="discord-btn"
-                style="display: inline-flex; width: auto; background: #5865F2; color: white; padding: 0.8rem 1.5rem; border-radius: 4px; text-decoration: none; align-items: center; gap: 0.5rem;">
-                <i class="fab fa-discord"></i> Entrar com Discord
-            </a>
-        </div>
-    </main>
-
-    <footer>
-        <div class="container">
-            <div class="footer-content">
-                <div class="logo">
-                    <img src="https://i.postimg.cc/rFNdr7FV/logo.png" alt="Age of Empires IV Brasil" class="logo-img">
-                    <h2>Age of Empires IV Brasil</h2>
-                </div>
-                <div class="footer-links">
-                    <a href="index.html">Início</a>
-                    <a href="forum.html">Fórum</a>
-                    <a href="leaderboard.html">Tabela de classificação</a>
-                    <a href="torneios.html">Torneios</a>
-                    <a href="about.html">Sobre</a>
-                </div>
-                <div class="copyright">
-                    &copy; 2025 - Age of Empires IV Brasil. Dados de aoe4world.com. Este site não possui qualquer
-                    vínculo com a Microsoft ou a Relic Entertainment.
-                        // Render Main Post
-                        let html = renderPost({
-                            id: topic.id,
-                            author: topic.author,
-                            authorAvatar: topic.authorAvatar,
-                            content: topic.content,
-                            createdAt: topic.createdAt,
-                            isMain: true,
-                            authorId: topic.authorId,
-                            isPinned: topic.isPinned,
-                            isLocked: topic.isLocked
-                        });
-
-                        // Render Replies
-                        if (topic.replies && topic.replies.length > 0) {
-                            html += topic.replies.map(reply => renderPost(reply)).join('');
-                        }
-
-                        container.innerHTML = html;
-
-                        // Handle Locked State
-                        if (topic.isLocked) {
-                            document.getElementById('reply-form-section').innerHTML = '<div style="text-align: center; padding: 2rem; color: #e53e3e;"><i class="fas fa-lock"></i> Este tópico está trancado e não aceita novas respostas.</div>';
-                            document.getElementById('login-to-reply').style.display = 'none';
-                        } else {
-                            // Check Auth for Reply Form
-                            if (!currentUser) {
-                                document.getElementById('reply-form-section').style.display = 'none';
-                                document.getElementById('login-to-reply').style.display = 'block';
-
-                                const authUrl = `https://discord.com/api/oauth2/authorize?client_id=${DISCORD_CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=code&scope=identify%20email`;
-                    document.getElementById('topic-login-btn').href = authUrl;
-                }
-            }
-
-                        // Setup Reply Submit
-                        const replyForm = document.getElementById('reply-form');
-            if (replyForm) {
-                replyForm.onsubmit = async (e) => {
-                    e.preventDefault();
-                    const content = document.getElementById('reply-content').value;
-
-                    try {
-                        const res = await fetch(`${API_BASE_URL}/forum/replies`, {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'x-user': encodeURIComponent(JSON.stringify(currentUser))
-                            },
-                            body: JSON.stringify({
-                                topicId: topic.id,
-                                content
-                            })
-                        });
-
-                        if (res.ok) {
-                            window.location.reload();
-                        } else {
-                            alert('Erro ao enviar resposta.');
-                        }
-                    } catch (err) {
-                        console.error(err);
-                        alert('Erro ao conectar ao servidor.');
+                        const authUrl = `https://discord.com/api/oauth2/authorize?client_id=${DISCORD_CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=code&scope=identify%20email`;
+                        document.getElementById('topic-login-btn').href = authUrl;
                     }
-                };
-            }
-
-        } catch (error) {
-            console.error('Erro ao carregar tópico:', error);
-            container.innerHTML = '<div class="error-msg">Erro ao carregar tópico ou tópico não encontrado.</div>';
-        }
                 }
+
+                // Setup Reply Submit
+                const replyForm = document.getElementById('reply-form');
+                if (replyForm) {
+                    replyForm.onsubmit = async (e) => {
+                        e.preventDefault();
+                        const content = document.getElementById('reply-content').value;
+
+                        try {
+                            const res = await fetch(`${API_BASE_URL}/forum/replies`, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'x-user': encodeURIComponent(JSON.stringify(currentUser))
+                                },
+                                body: JSON.stringify({
+                                    topicId: topic.id,
+                                    content
+                                })
+                            });
+
+                            if (res.ok) {
+                                window.location.reload();
+                            } else {
+                                alert('Erro ao enviar resposta.');
+                            }
+                        } catch (err) {
+                            console.error(err);
+                            alert('Erro ao conectar ao servidor.');
+                        }
+                    };
+                }
+
+            } catch (error) {
+                console.error('Erro ao carregar tópico:', error);
+                container.innerHTML = '<div class="error-msg">Erro ao carregar tópico ou tópico não encontrado.</div>';
+            }
+        }
 
         function renderPost(post) {
             const avatar = post.authorAvatar || 'https://cdn.discordapp.com/embed/avatars/0.png';

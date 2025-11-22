@@ -529,40 +529,27 @@
                 .replace(/__(.*?)__/g, '<u>$1</u>')
                 .replace(/`([^`]+)`/g, '<code style="background: rgba(255,255,255,0.1); padding: 0.2rem 0.4rem; border-radius: 3px;">$1</code>')
                 .replace(/!\[(.*?)\]\((.*?)\)/g, '<img src="$2" alt="$1">')
-                .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank">$1</a>')
-                .replace(/\n/g, '<br>');
-
-            // Admin Controls Check
-            let adminControls = '';
-            // Hardcoded Admin ID check (matches server.js)
-            const isAdmin = currentUser && (currentUser.id === '407624932101455873');
-
-            if (isAdmin) {
-
-                adminControls = `
-                    <div class="admin-controls">
-                        ${post.isMain ? `
-                            <button onclick="togglePin(${post.id}, ${!post.isPinned})" class="admin-btn"><i class="fas fa-thumbtack"></i> ${post.isPinned ? 'Desafixar' : 'Fixar'}</button>
+                < button onclick = "togglePin(${post.id}, ${!post.isPinned})" class="admin-btn" > <i class="fas fa-thumbtack"></i> ${ post.isPinned ? 'Desafixar' : 'Fixar' }</button >
                             <button onclick="toggleLock(${post.id}, ${!post.isLocked})" class="admin-btn"><i class="fas fa-lock"></i> ${post.isLocked ? 'Destrancar' : 'Trancar'}</button>
                             <button onclick="deleteTopic(${post.id})" class="admin-btn delete"><i class="fas fa-trash"></i> Deletar Tópico</button>
-                            
-                        ` : `
-                            <button onclick="deleteReply(${post.id})" class="admin-btn delete"><i class="fas fa-trash"></i> Deletar</button>
-                        `}
+
+            ` : `
+                < button onclick = "deleteReply(${post.id})" class="admin-btn delete" > <i class="fas fa-trash"></i> Deletar</button >
+                    `}
                     </div>
                 `;
-            }
+        }
 
             else if (isAuthor && post.isMain) {
-                // Show delete button for topic author (only for main post)
-                adminControls = `
+            // Show delete button for topic author (only for main post)
+            adminControls = `
         <div class="admin-controls">
             <button onclick="deleteTopic(${post.id})" class="admin-btn delete"><i class="fas fa-trash"></i> Deletar Meu Tópico</button>
         </div>
     `;
-            }
+        }
 
-            return `
+        return `
                 <div class="post-card" id="post-${post.id}">
                     <div class="post-sidebar">
                         <div class="post-avatar">

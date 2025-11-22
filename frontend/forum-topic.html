@@ -596,27 +596,6 @@
                 <div class="copyright">
                     &copy; 2025 - Age of Empires IV Brasil. Dados de aoe4world.com. Este site não possui qualquer
                     vínculo com a Microsoft ou a Relic Entertainment.
-        // Topic Logic
-        async function loadTopic(id) {
-                    const container = document.getElementById('posts-container');
-
-                    try {
-                        const response = await fetch(`${ API_BASE_URL } /forum/topics / ${ id } `);
-                        if (!response.ok) throw new Error('Tópico não encontrado');
-
-                        const topic = await response.json();
-
-                        // Update Header
-                        document.getElementById('topic-title').textContent = topic.title;
-                        document.getElementById('topic-breadcrumb').textContent = topic.title;
-                        document.getElementById('category-link').textContent = topic.categoryName;
-                        document.getElementById('category-link').href = `forum - category.html ? slug = ${ topic.categorySlug } `;
-
-                        let badges = '';
-                        if (topic.isPinned) badges += '<span class="stat-badge" style="background: var(--accent-color); color: black; margin-right: 0.5rem;"><i class="fas fa-thumbtack"></i> Fixado</span>';
-                        if (topic.isLocked) badges += '<span class="stat-badge" style="background: #e53e3e; margin-right: 0.5rem;"><i class="fas fa-lock"></i> Trancado</span>';
-                        document.getElementById('topic-status-badges').innerHTML = badges;
-
                         // Render Main Post
                         let html = renderPost({
                             id: topic.id,

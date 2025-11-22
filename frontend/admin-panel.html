@@ -123,7 +123,6 @@
             justify-content: center;
             align-items: center;
             z-index: 9999;
-            /* Fix for header appearing inside */
         }
 
         .modal-content {
@@ -219,7 +218,8 @@
         async function loadCategories() {
             const container = document.getElementById('category-list');
             try {
-                const res = await fetch(`${API_BASE_URL}/forum/categories`);
+                // Add timestamp to prevent caching
+                const res = await fetch(`${API_BASE_URL}/forum/categories?t=${Date.now()}`);
                 currentCategories = await res.json();
 
                 container.innerHTML = currentCategories.map((cat, index) => `
@@ -242,11 +242,13 @@
                     </div>
                 `).join('');
             } catch (err) {
+                console.error('Erro ao carregar categorias:', err);
                 container.innerHTML = '<div class="error-msg">Erro ao carregar categorias.</div>';
             }
         }
 
         async function moveCategory(index, direction) {
+            console.log(`Moving category ${index} direction ${direction}`);
             const newIndex = index + direction;
             if (newIndex < 0 || newIndex >= currentCategories.length) return;
 
@@ -257,7 +259,6 @@
 
             // Optimistic update
             const container = document.getElementById('category-list');
-            // Re-render immediately
             container.innerHTML = currentCategories.map((cat, idx) => `
                     <div class="category-item">
                         <div class="category-info">
@@ -280,9 +281,11 @@
 
             // Send new order to backend
             const order = currentCategories.map(c => c.id);
+            console.log('Sending new order:', order);
+
             try {
                 const currentUser = JSON.parse(localStorage.getItem('forum_user'));
-                await fetch(`${API_BASE_URL}/forum/categories/reorder`, {
+                const res = await fetch(`${API_BASE_URL}/forum/categories/reorder`, {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json',
@@ -290,6 +293,11 @@
                     },
                     body: JSON.stringify({ order })
                 });
+
+                if (!res.ok) {
+                    throw new Error('Falha ao salvar ordem');
+                }
+
                 // Reload to confirm
                 loadCategories();
             } catch (err) {

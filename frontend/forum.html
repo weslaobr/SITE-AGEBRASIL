@@ -10,305 +10,263 @@
     <link rel="stylesheet" href="css/responsive.css">
     <link rel="icon" type="image/png" href="https://i.postimg.cc/3JT4W3hz/favicon.png">
     <style>
-        /* Top Bar Styles */
-        .top-bar {
-            background-color: #0f1218;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-            padding: 0.5rem 0;
-            font-size: 0.9rem;
-        }
-
-        .top-bar .container {
-            display: flex;
-            justify-content: flex-end;
-            align-items: center;
-        }
-
-        /* Header Adjustments */
-        header {
-            background-color: var(--header-bg);
-            padding: 1rem 0;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-
-        .header-content {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        /* User Actions in Top Bar */
-        .user-actions {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
-
-        .login-btn-header {
-            background: transparent;
-            border: 1px solid var(--accent-color);
-            color: var(--accent-color);
-            padding: 0.3rem 1rem;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-weight: 600;
-            font-size: 0.8rem;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .login-btn-header:hover {
-            background: var(--accent-color);
-            color: white;
-        }
-
-        .user-info-display {
-            display: flex;
-            align-items: center;
-            gap: 0.8rem;
-            padding: 0.2rem 0.8rem;
-            border-radius: 20px;
-            background: rgba(255, 255, 255, 0.05);
-        }
-
-        .user-info-display img {
-            width: 24px;
-            height: 24px;
-            border-radius: 50%;
-        }
-
-        .user-info-display span {
-            font-weight: 600;
-            font-size: 0.85rem;
-            color: #e2e8f0;
-        }
-
-        .admin-badge {
-            background: var(--accent-color);
-            color: white;
-            padding: 0.1rem 0.5rem;
-            border-radius: 10px;
-            font-size: 0.7rem;
-            margin-left: 0.5rem;
-        }
-
-        @media (max-width: 768px) {
-            .header-content {
-                flex-direction: column;
-                gap: 1rem;
-            }
-
-            .top-bar .container {
-                justify-content: center;
-            }
-        }
-
-        /* Estilos específicos do Fórum */
-        .forum-hero {
+        /* Forum Specific Styles */
+        .forum-header {
+            background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url('https://wallpaperaccess.com/full/6367736.jpg');
+            background-size: cover;
+            background-position: center;
+            padding: 4rem 0;
             text-align: center;
-            padding: 3rem 0;
-            background: linear-gradient(to bottom, rgba(0, 0, 0, 0.2), transparent);
             margin-bottom: 2rem;
+            border-bottom: 1px solid var(--border-color);
         }
 
-        .forum-hero h2 {
-            font-size: 2.5rem;
-            margin-bottom: 0.5rem;
+        .forum-stats-bar {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-top: 1rem;
+            flex-wrap: wrap;
         }
 
-        .forum-hero p {
-            color: #a0aec0;
-            font-size: 1.1rem;
-        }
-
-        .forum-stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1.5rem;
-            margin-bottom: 3rem;
-        }
-
-        .stat-card {
-            background: var(--card-bg);
-            padding: 1.5rem;
-            border-radius: 8px;
-            text-align: center;
-            border: 1px solid var(--border-color);
-            transition: transform 0.3s ease;
-        }
-
-        .stat-card:hover {
-            transform: translateY(-5px);
-            border-color: var(--accent-color);
-        }
-
-        .stat-card strong {
-            font-size: 2.5rem;
-            color: var(--accent-color);
-            display: block;
-            margin-bottom: 0.5rem;
-        }
-
-        .stat-card span {
-            color: #a0aec0;
+        .forum-stat {
+            background: rgba(0, 0, 0, 0.5);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
             font-size: 0.9rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
+            color: #cbd5e0;
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
-        .category-grid {
+        .forum-stat i {
+            color: var(--accent-color);
+            margin-right: 0.5rem;
+        }
+
+        .forum-container {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-            gap: 1.5rem;
+            grid-template-columns: 1fr 300px;
+            gap: 2rem;
             margin-bottom: 3rem;
+        }
+
+        @media (max-width: 900px) {
+            .forum-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Categories */
+        .category-group {
+            margin-bottom: 2rem;
         }
 
         .category-card {
             background: var(--card-bg);
-            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
             padding: 1.5rem;
+            margin-bottom: 1rem;
             display: flex;
             align-items: center;
             gap: 1.5rem;
-            cursor: pointer;
             transition: all 0.3s ease;
-            border: 1px solid var(--border-color);
+            text-decoration: none;
+            color: inherit;
         }
 
         .category-card:hover {
-            transform: translateY(-5px);
+            transform: translateX(5px);
             border-color: var(--accent-color);
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+            background: rgba(255, 255, 255, 0.08);
         }
 
         .category-icon {
-            width: 60px;
-            height: 60px;
+            width: 50px;
+            height: 50px;
             border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.8rem;
-            color: white;
+            font-size: 1.5rem;
             flex-shrink: 0;
         }
 
-        .category-info h3 {
-            margin: 0 0 0.5rem 0;
-            color: var(--text-color);
-        }
-
-        .category-info p {
-            margin: 0;
-            color: #a0aec0;
-            font-size: 0.9rem;
-            line-height: 1.4;
-        }
-
-        .category-stats {
-            margin-top: 1rem;
-            display: flex;
-            gap: 1rem;
-            font-size: 0.8rem;
-            color: #718096;
-        }
-
-        .topic-list {
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-        }
-
-        .topic-item {
-            background: var(--card-bg);
-            padding: 1.2rem;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            gap: 1.5rem;
-            border: 1px solid var(--border-color);
-            transition: all 0.3s ease;
-            cursor: pointer;
-        }
-
-        .topic-item:hover {
-            background: rgba(255, 255, 255, 0.05);
-            border-color: var(--accent-color);
-            transform: translateX(5px);
-        }
-
-        .topic-avatar img {
-            width: 45px;
-            height: 45px;
-            border-radius: 50%;
-            border: 2px solid var(--secondary-color);
-        }
-
-        .topic-content {
+        .category-content {
             flex: 1;
         }
 
-        .topic-title {
-            font-weight: 600;
-            color: var(--text-color);
-            font-size: 1.1rem;
+        .category-title {
+            font-size: 1.2rem;
+            font-weight: 700;
             margin-bottom: 0.3rem;
-            display: block;
+            color: var(--text-color);
         }
 
-        .topic-meta {
+        .category-desc {
+            font-size: 0.9rem;
             color: #a0aec0;
-            font-size: 0.85rem;
+            margin: 0;
         }
 
-        .topic-stats-mini {
-            text-align: right;
-            color: #a0aec0;
-            font-size: 0.85rem;
+        .category-stats {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 0.3rem;
             min-width: 100px;
+            font-size: 0.85rem;
+            color: #718096;
         }
 
-        @media (max-width: 768px) {
-            .category-card {
-                flex-direction: column;
-                text-align: center;
-            }
+        .stat-badge {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 0.2rem 0.6rem;
+            border-radius: 4px;
+        }
 
-            .topic-item {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 1rem;
-            }
+        /* Sidebar */
+        .forum-sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
 
-            .topic-stats-mini {
-                text-align: left;
-            }
+        .sidebar-widget {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1.5rem;
+        }
+
+        .widget-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid var(--accent-color);
+            display: inline-block;
+        }
+
+        .recent-topic-item {
+            display: flex;
+            gap: 0.8rem;
+            padding: 0.8rem 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .recent-topic-item:last-child {
+            border-bottom: none;
+        }
+
+        .recent-topic-avatar {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            background: var(--secondary-color);
+            overflow: hidden;
+        }
+
+        .recent-topic-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .recent-topic-content h4 {
+            font-size: 0.95rem;
+            margin: 0 0 0.2rem 0;
+        }
+
+        .recent-topic-content h4 a {
+            color: var(--text-color);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .recent-topic-content h4 a:hover {
+            color: var(--accent-color);
+        }
+
+        .recent-topic-meta {
+            font-size: 0.75rem;
+            color: #718096;
+        }
+
+        .login-card {
+            text-align: center;
+            padding: 2rem 1.5rem;
+        }
+
+        .discord-btn {
+            background: #5865F2;
+            color: white;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 4px;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            text-decoration: none;
+            transition: background 0.3s;
+            width: 100%;
+            justify-content: center;
+        }
+
+        .discord-btn:hover {
+            background: #4752c4;
+        }
+
+        .user-profile-widget {
+            text-align: center;
+        }
+
+        .user-avatar-large {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            margin: 0 auto 1rem;
+            border: 3px solid var(--accent-color);
+            overflow: hidden;
+        }
+
+        .user-avatar-large img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .user-stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.5rem;
+            margin-top: 1rem;
+            text-align: left;
+        }
+
+        .user-stat-item {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 0.5rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+        }
+
+        .user-stat-label {
+            color: #718096;
+            display: block;
+            font-size: 0.7rem;
+        }
+
+        .user-stat-value {
+            font-weight: 700;
+            color: var(--text-color);
         }
     </style>
 </head>
 
 <body>
-    <!-- Top Bar -->
-    <div class="top-bar">
-        <div class="container">
-            <div class="user-actions">
-                <div id="userInfo" style="display:none" class="user-info-display"></div>
-                <a id="loginBtn" href="forum-auth.html" class="login-btn-header" style="display:none">
-                    <i class="fab fa-discord"></i> Entrar
-                </a>
-                <button id="logoutBtn" class="login-btn-header" style="display:none">
-                    <i class="fas fa-sign-out-alt"></i> Sair
-                </button>
-            </div>
-        </div>
-    </div>
-
     <header>
         <div class="container">
             <div class="header-content">
@@ -329,46 +287,50 @@
         </div>
     </header>
 
-    <main class="container">
-        <section class="forum-hero">
-            <div class="container">
-                <h2>Fórum da Comunidade</h2>
-                <p>Discuta estratégias, compartilhe dicas e encontre outros jogadores.</p>
+    <div class="forum-header">
+        <div class="container">
+            <h2>Comunidade Age of Empires IV</h2>
+            <p>Discuta estratégias, tire dúvidas e encontre parceiros de jogo</p>
+            <div class="forum-stats-bar" id="forum-stats">
+                <div class="forum-stat"><i class="fas fa-comments"></i> <span id="total-topics">0</span> Tópicos</div>
+                <div class="forum-stat"><i class="fas fa-reply"></i> <span id="total-replies">0</span> Respostas</div>
+                <div class="forum-stat"><i class="fas fa-users"></i> <span id="total-members">0</span> Membros</div>
             </div>
-        </section>
+        </div>
+    </div>
 
-        <div class="forum-stats-grid">
-            <div class="stat-card">
-                <strong id="statTopics">0</strong>
-                <span>Tópicos</span>
-            </div>
-            <div class="stat-card">
-                <strong id="statReplies">0</strong>
-                <span>Respostas</span>
-            </div>
-            <div class="stat-card">
-                <strong id="statMembers">0</strong>
-                <span>Membros</span>
-            </div>
-            <div class="stat-card">
-                <strong id="statOnline">0</strong>
-                <span>Online</span>
+    <main class="container forum-container">
+        <!-- Main Content: Categories -->
+        <div class="forum-main">
+            <div id="categories-list">
+                <div class="loading">
+                    <i class="fas fa-spinner fa-spin"></i> Carregando categorias...
+                </div>
             </div>
         </div>
 
-        <h3 class="section-title"><i class="fas fa-layer-group"></i> Categorias</h3>
-        <div id="categoriesContainer" class="category-grid">
-            <div class="loading" style="grid-column: 1/-1; text-align: center; padding: 2rem;">
-                <i class="fas fa-spinner fa-spin"></i> Carregando categorias...
+        <!-- Sidebar -->
+        <aside class="forum-sidebar">
+            <!-- User Widget (Login or Profile) -->
+            <div class="sidebar-widget" id="user-widget">
+                <div class="login-card">
+                    <h3>Participe da Comunidade</h3>
+                    <p style="color: #a0aec0; font-size: 0.9rem; margin-bottom: 1.5rem;">Faça login com o Discord para
+                        criar tópicos e responder.</p>
+                    <a href="#" id="discord-login-btn" class="discord-btn">
+                        <i class="fab fa-discord"></i> Entrar com Discord
+                    </a>
+                </div>
             </div>
-        </div>
 
-        <h3 class="section-title"><i class="fas fa-comments"></i> Tópicos Recentes</h3>
-        <div id="recentTopicsList" class="topic-list">
-            <div class="loading" style="text-align: center; padding: 2rem;">
-                <i class="fas fa-spinner fa-spin"></i> Carregando tópicos...
+            <!-- Recent Topics -->
+            <div class="sidebar-widget">
+                <h3 class="widget-title">Tópicos Recentes</h3>
+                <div id="recent-topics-list">
+                    <div class="loading-mini">Carregando...</div>
+                </div>
             </div>
-        </div>
+        </aside>
     </main>
 
     <footer>
@@ -393,191 +355,7 @@
         </div>
     </footer>
 
-    <script>
-        // Determina a URL base da API
-        const getBaseUrl = () => {
-            const {
-                hostname,
-                port,
-                protocol
-            } = window.location;
-
-            // Se estiver rodando localmente (Live Server ou arquivo direto), aponta para o backend na 3001
-            if (hostname === 'localhost' || hostname === '127.0.0.1') {
-                // Se a porta for diferente da do backend (ex: 5500 do Live Server), força a 3001
-                if (port !== '3001') {
-                    return `${protocol}//${hostname}:3001`;
-                }
-            }
-
-            // Em produção ou se estiver servido pelo próprio backend, usa a origem atual
-            return window.location.origin;
-        };
-
-        const base = getBaseUrl();
-        console.log('API Base URL:', base);
-
-        async function load() {
-            // 1. Gerenciar Usuário
-            const user = JSON.parse(localStorage.getItem('discord_user') || 'null');
-            const token = localStorage.getItem('discord_access_token');
-            const userInfo = document.getElementById('userInfo');
-            const loginBtn = document.getElementById('loginBtn');
-            const logoutBtn = document.getElementById('logoutBtn');
-
-            let isAdmin = false;
-            if (user && user.username === 'BRO.WESLAO') {
-                isAdmin = true;
-            }
-
-            if (user) {
-                userInfo.innerHTML = `
-                    <img src="${user.avatar ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.webp` : 'https://cdn.discordapp.com/embed/avatars/0.png'}" alt="Avatar">
-                    <span>${user.global_name || user.username}</span>
-                    ${isAdmin ? '<span class="admin-badge">ADMIN</span>' : ''}
-                `;
-                userInfo.style.display = 'flex';
-
-                // Add Admin Button
-                if (isAdmin) {
-                    const adminBtn = document.createElement('a');
-                    adminBtn.href = 'forum-admin.html';
-                    adminBtn.className = 'login-btn-header';
-                    adminBtn.innerHTML = '<i class="fas fa-cogs"></i> Admin';
-                    adminBtn.style.marginLeft = '10px';
-                    if (logoutBtn) userInfo.parentNode.insertBefore(adminBtn, logoutBtn);
-                }
-
-                if (logoutBtn) logoutBtn.style.display = 'inline-flex';
-                if (loginBtn) loginBtn.style.display = 'none';
-            } else {
-                if (loginBtn) loginBtn.style.display = 'inline-flex';
-                if (userInfo) userInfo.style.display = 'none';
-                if (logoutBtn) logoutBtn.style.display = 'none';
-
-                // SE NÃO ESTIVER LOGADO: Mostrar mensagem e parar
-                const catsContainer = document.getElementById('categoriesContainer');
-                if (catsContainer) {
-                    catsContainer.innerHTML = `
-                        <div class="no-auth-message" style="grid-column: 1/-1; text-align: center; padding: 3rem; background: var(--card-bg); border-radius: 12px; border: 1px solid var(--border-color);">
-                            <i class="fas fa-lock" style="font-size: 3rem; color: var(--accent-color); margin-bottom: 1rem;"></i>
-                            <h3 style="margin-bottom: 1rem;">Login Necessário</h3>
-                            <p style="color: #a0aec0; margin-bottom: 1.5rem;">Você precisa estar logado com o Discord para visualizar o fórum.</p>
-                            <button onclick="window.discordAuth.login()" class="btn btn-primary">
-                                <i class="fab fa-discord"></i> Entrar com Discord
-                            </button>
-                        </div>
-                    `;
-                    localStorage.removeItem('discord_user');
-                    localStorage.removeItem('discord_access_token');
-                    location.reload();
-                };
-            }
-
-            if (loginBtn) {
-                loginBtn.onclick = (e) => {
-                    e.preventDefault();
-                    window.discordAuth.login();
-                };
-            }
-
-            try {
-                // Headers para autenticação
-                const headers = {
-                    'Content-Type': 'application/json'
-                };
-                if (token) headers['Authorization'] = `Bearer ${token}`;
-                if (user) headers['X-User'] = encodeURIComponent(JSON.stringify(user));
-
-                // 2. Carregar Categorias
-                const cats = await fetch(`${base}/api/forum/categories`, { headers }).then(r => r.json());
-                const catsContainer = document.getElementById('categoriesContainer');
-
-                if (cats.length > 0) {
-                    catsContainer.innerHTML = cats.map(c => `
-                        <div class="category-card" onclick="location.href='forum-category.html?category=${c.slug}'">
-                            <div class="category-icon" style="background:${c.color || '#5865F2'}">
-                                <i class="${c.icon || 'fas fa-comments'}"></i>
-                            </div>
-                            <div class="category-info" style="flex:1">
-                                <h3>${c.name}</h3>
-                                <p>${c.description || 'Sem descrição'}</p>
-                                <div class="category-stats">
-                                    <span><i class="fas fa-file-alt"></i> ${c.topic_count || 0} tópicos</span>
-                                    <span><i class="fas fa-reply"></i> ${c.reply_count || 0} respostas</span>
-                                </div>
-                            </div>
-                        </div>
-                    `).join('');
-                } else {
-                    catsContainer.innerHTML = '<p class="text-center">Nenhuma categoria encontrada.</p>';
-                }
-
-                // 3. Carregar Tópicos Recentes
-                const topics = await fetch(`${base}/api/forum/topics`, { headers }).then(r => r.json());
-                const topicsList = document.getElementById('recentTopicsList');
-
-                if (topics.length > 0) {
-                    topicsList.innerHTML = topics.map(t => `
-                        <div class="topic-item" onclick="location.href='forum-topic.html?id=${t.id}'">
-                            <div class="topic-avatar">
-                                <img src="${t.authorAvatar ? `https://cdn.discordapp.com/avatars/${t.authorId}/${t.authorAvatar}.webp` : 'https://cdn.discordapp.com/embed/avatars/0.png'}" 
-                                     onerror="this.src='https://cdn.discordapp.com/embed/avatars/0.png'">
-                            </div>
-                            <div class="topic-content">
-                                <span class="topic-title">${t.title}</span>
-                                <div class="topic-meta">
-                                    <span><i class="fas fa-user"></i> ${t.author}</span>
-                                    <span style="margin: 0 5px">•</span>
-                                    <span><i class="far fa-clock"></i> ${new Date(t.createdAt).toLocaleDateString('pt-BR')}</span>
-                                    <span style="margin: 0 5px">•</span>
-                                    <span style="color: ${t.categoryColor || '#a0aec0'}"><i class="fas fa-tag"></i> ${t.categoryName}</span>
-                                </div>
-                            </div>
-                            <div class="topic-stats-mini">
-                                <div><i class="fas fa-eye"></i> ${t.views || 0}</div>
-                                <div><i class="fas fa-comment"></i> ${t.repliesCount || 0}</div>
-                            </div>
-                        </div>
-                    `).join('');
-
-                    // Atualizar contador de tópicos
-                    const statTopics = document.getElementById('statTopics');
-                    if (statTopics) statTopics.textContent = topics.length;
-                } else {
-                    topicsList.innerHTML = `
-                        <div style="text-align: center; padding: 2rem; color: #a0aec0;">
-                            <i class="fas fa-inbox" style="font-size: 2rem; margin-bottom: 1rem;"></i>
-                            <p>Nenhum tópico recente.</p>
-                        </div>`;
-                }
-
-                // 4. Carregar Estatísticas (Opcional, se houver endpoint)
-                try {
-                    const stats = await fetch(`${base}/api/forum/stats`, { headers }).then(r => r.json());
-                    if (stats) {
-                        if (document.getElementById('statTopics')) document.getElementById('statTopics').textContent = stats.totalTopics || topics.length;
-                        if (document.getElementById('statReplies')) document.getElementById('statReplies').textContent = stats.totalReplies || 0;
-                        if (document.getElementById('statMembers')) document.getElementById('statMembers').textContent = stats.totalMembers || 0;
-                        if (document.getElementById('statOnline')) document.getElementById('statOnline').textContent = stats.onlineNow || 0;
-                    }
-                } catch (e) {
-                    console.log('Stats endpoint not available or error');
-                }
-
-            } catch (error) {
-                console.error('Erro ao carregar dados:', error);
-                const catsContainer = document.getElementById('categoriesContainer');
-                const topicsList = document.getElementById('recentTopicsList');
-                if (catsContainer) catsContainer.innerHTML = '<p style="color: #e53e3e">Erro ao carregar categorias. Verifique o console.</p>';
-                if (topicsList) topicsList.innerHTML = '<p style="color: #e53e3e">Erro ao carregar tópicos. Verifique o console.</p>';
-            }
-        }
-
-        document.addEventListener('DOMContentLoaded', load);
-    </script>
-    <script src="js/forum-api.js"></script>
-    <script src="js/discord-login.js"></script>
+    <script src="js/forum.js"></script>
 </body>
 
 </html>

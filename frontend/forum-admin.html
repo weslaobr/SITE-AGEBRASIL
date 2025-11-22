@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Fórum - Age of Empires IV Brasil</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .admin-container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+
+        .admin-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .admin-card h2 {
+            margin-bottom: 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #a0aec0;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 0.8rem;
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            color: white;
+        }
+
+        .btn-admin {
+            background: var(--accent-color);
+            color: white;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .btn-admin:hover {
+            background: #c53030;
+        }
+
+        .topic-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .btn-sm {
+            padding: 0.4rem 0.8rem;
+            font-size: 0.8rem;
+        }
+
+        .btn-danger {
+            background: #e53e3e;
+        }
+
+        .btn-warning {
+            background: #d69e2e;
+            color: black;
+        }
+
+        .btn-info {
+            background: #3182ce;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <h1>Admin Fórum</h1>
+                </div>
+                <nav>
+                    <ul>
+                        <li><a href="forum.html">Voltar ao Fórum</a></li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <main class="admin-container">
+        <!-- Nova Categoria -->
+        <div class="admin-card">
+            <h2><i class="fas fa-folder-plus"></i> Criar Nova Categoria</h2>
+            <form id="createCategoryForm">
+                <div class="form-group">
+                    <label>Nome da Categoria</label>
+                    <input type="text" name="name" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label>Slug (URL amigável)</label>
+                    <input type="text" name="slug" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label>Descrição</label>
+                    <input type="text" name="description" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label>Ícone (FontAwesome, ex: fas fa-comments)</label>
+                    <input type="text" name="icon" class="form-control" value="fas fa-comments">
+                </div>
+                <div class="form-group">
+                    <label>Cor (Hex)</label>
+                    <input type="color" name="color" class="form-control" value="#5865F2" style="height: 50px">
+                </div>
+                <div class="form-group">
+                    <label>Ordem de Exibição</label>
+                    <input type="number" name="display_order" class="form-control" value="0">
+                </div>
+                <button type="submit" class="btn-admin">Criar Categoria</button>
+            </form>
+        </div>
+
+        <!-- Gerenciar Tópicos Recentes -->
+        <div class="admin-card">
+            <h2><i class="fas fa-tasks"></i> Gerenciar Tópicos Recentes</h2>
+            <div id="recentTopicsList" class="topic-list">
+                <p>Carregando...</p>
+            </div>
+        </div>
+    </main>
+
+    <script src="js/forum-admin.js"></script>
+</body>
+
+</html>

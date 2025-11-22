@@ -436,6 +436,17 @@
                     ${isAdmin ? '<span class="admin-badge">ADMIN</span>' : ''}
                 `;
                 userInfo.style.display = 'flex';
+
+                // Add Admin Button
+                if (isAdmin) {
+                    const adminBtn = document.createElement('a');
+                    adminBtn.href = 'forum-admin.html';
+                    adminBtn.className = 'login-btn-header';
+                    adminBtn.innerHTML = '<i class="fas fa-cogs"></i> Admin';
+                    adminBtn.style.marginLeft = '10px';
+                    if (logoutBtn) userInfo.parentNode.insertBefore(adminBtn, logoutBtn);
+                }
+
                 if (logoutBtn) logoutBtn.style.display = 'inline-flex';
                 if (loginBtn) loginBtn.style.display = 'none';
             } else {

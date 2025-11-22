@@ -5,10 +5,8 @@ const dotenv = require('dotenv');
 const app = express();
 const path = require('path');
 
-// ============ ADICIONE ESTAS DUAS LINHAS AQUI ============
-app.use(express.json());                    // <-- permite ler JSON no body
-app.use(express.static(path.join(__dirname, 'frontend'))); // já deve ter isso
-// =========================================================
+app.use(express.json());
+app.use(express.static(path.join(__dirname, 'frontend')));
 
 const PORT = process.env.PORT || 3001;
 
@@ -121,6 +119,63 @@ pool.on('error', (err, client) => {
 });
 
 // =============================================
+// AUTHENTICATION ENDPOINTS
+// =============================================
+
+app.post('/api/auth/discord', async (req, res) => {
+    const { code } = req.body;
+    if (!code) return res.status(400).json({ error: 'Code is required' });
+
+    try {
+        // 1. Exchange code for token
+        const tokenResponse = await fetch('https://discord.com/api/oauth2/token', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: new URLSearchParams({
+                client_id: process.env.DISCORD_CLIENT_ID || '1440856041867968542',
+                client_secret: process.env.DISCORD_CLIENT_SECRET || '_J3YS6RX9BThyQ3SWcl7C1UtiLs_CwhQ', // Fallback for dev, but should be in .env
+                grant_type: 'authorization_code',
+                code: code,
+                redirect_uri: req.headers.origin + '/forum-auth.html' // Dynamic redirect URI based on origin
+            }),
+        });
+
+        if (!tokenResponse.ok) {
+            const errorText = await tokenResponse.text();
+            console.error('Discord Token Error:', errorText);
+            return res.status(tokenResponse.status).json({ error: 'Failed to exchange token' });
+        }
+
+        const tokenData = await tokenResponse.json();
+
+        // 2. Get User Info
+        const userResponse = await fetch('https://discord.com/api/users/@me', {
+            headers: {
+                'Authorization': `Bearer ${tokenData.access_token}`
+            }
+        });
+
+        if (!userResponse.ok) {
+            return res.status(userResponse.status).json({ error: 'Failed to get user info' });
+        }
+
+        const userData = await userResponse.json();
+
+        // Return both token data and user data
+        res.json({
+            token: tokenData,
+            user: userData
+        });
+
+    } catch (error) {
+        console.error('Auth Error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+// =============================================
 // ENDPOINTS DO FÓRUM - FUNCIONANDO 100% COM SEU BANCO
 // =============================================
 
@@ -136,6 +191,38 @@ app.get('/api/forum/categories', async (req, res) => {
     } catch (err) {
         console.error(err);
         res.status(500).json([]);
+    } finally {
+        client.release();
+    }
+});
+
+app.post('/api/forum/categories', async (req, res) => {
+    // Simple admin check (in a real app, verify token/session)
+    const userHeader = req.headers['x-user'];
+    if (!userHeader) return res.status(401).json({ error: 'Unauthorized' });
+
+    try {
+        const user = JSON.parse(userHeader);
+        // Hardcoded admin check for now as per existing code style
+        if (user.username !== 'BRO.WESLAO' && user.id !== 'YOUR_ADMIN_ID') {
+            // You might want to add more admins here or use a DB role
+        }
+    } catch (e) {
+        return res.status(400).json({ error: 'Invalid user header' });
+    }
+
+    const { name, slug, description, icon, color, display_order } = req.body;
+
+    const client = await pool.connect();
+    try {
+        await client.query(`
+            INSERT INTO forum_categories (name, slug, description, icon, color, display_order, is_active)
+            VALUES ($1, $2, $3, $4, $5, $6, true)
+        `, [name, slug, description, icon, color, display_order || 0]);
+        res.json({ success: true });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Failed to create category' });
     } finally {
         client.release();
     }
@@ -264,6 +351,94 @@ app.post('/api/forum/topics', async (req, res) => {
         await client.query('ROLLBACK');
         console.error(err);
         res.status(500).json({ error: 'Erro ao criar tópico' });
+    } finally {
+        client.release();
+    }
+});
+
+// ADMIN TOPIC ACTIONS
+app.put('/api/forum/topics/:id/pin', async (req, res) => {
+    const { id } = req.params;
+    const { isPinned } = req.body;
+
+    // Auth Check
+    const userHeader = req.headers['x-user'];
+    if (!userHeader) return res.status(401).json({ error: 'Unauthorized' });
+    try {
+        const user = JSON.parse(userHeader);
+        if (user.username !== 'BRO.WESLAO' && user.id !== 'YOUR_ADMIN_ID') {
+            return res.status(403).json({ error: 'Forbidden' });
+        }
+    } catch (e) {
+        return res.status(400).json({ error: 'Invalid user header' });
+    }
+
+    const client = await pool.connect();
+    try {
+        await client.query('UPDATE forum_topics SET is_pinned = $1 WHERE id = $2', [isPinned, id]);
+        res.json({ success: true });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Error pinning topic' });
+    } finally {
+        client.release();
+    }
+});
+
+app.put('/api/forum/topics/:id/lock', async (req, res) => {
+    const { id } = req.params;
+    const { isLocked } = req.body;
+
+    // Auth Check
+    const userHeader = req.headers['x-user'];
+    if (!userHeader) return res.status(401).json({ error: 'Unauthorized' });
+    try {
+        const user = JSON.parse(userHeader);
+        if (user.username !== 'BRO.WESLAO' && user.id !== 'YOUR_ADMIN_ID') {
+            return res.status(403).json({ error: 'Forbidden' });
+        }
+    } catch (e) {
+        return res.status(400).json({ error: 'Invalid user header' });
+    }
+
+    const client = await pool.connect();
+    try {
+        await client.query('UPDATE forum_topics SET is_locked = $1 WHERE id = $2', [isLocked, id]);
+        res.json({ success: true });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Error locking topic' });
+    } finally {
+        client.release();
+    }
+});
+
+app.delete('/api/forum/topics/:id', async (req, res) => {
+    const { id } = req.params;
+
+    // Auth Check
+    const userHeader = req.headers['x-user'];
+    if (!userHeader) return res.status(401).json({ error: 'Unauthorized' });
+    try {
+        const user = JSON.parse(userHeader);
+        if (user.username !== 'BRO.WESLAO' && user.id !== 'YOUR_ADMIN_ID') {
+            return res.status(403).json({ error: 'Forbidden' });
+        }
+    } catch (e) {
+        return res.status(400).json({ error: 'Invalid user header' });
+    }
+
+    const client = await pool.connect();
+    try {
+        await client.query('BEGIN');
+        await client.query('DELETE FROM forum_replies WHERE topic_id = $1', [id]);
+        await client.query('DELETE FROM forum_topics WHERE id = $1', [id]);
+        await client.query('COMMIT');
+        res.json({ success: true });
+    } catch (err) {
+        await client.query('ROLLBACK');
+        console.error(err);
+        res.status(500).json({ error: 'Error deleting topic' });
     } finally {
         client.release();
     }

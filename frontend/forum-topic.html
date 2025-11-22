@@ -713,6 +713,18 @@
                             <span>${user.global_name || user.username}</span>
                             ${isAdmin ? '<span class="admin-badge">ADMIN</span>' : ''}
                         `;
+
+                        // Add Admin Button
+                        if (isAdmin) {
+                            const adminBtn = document.createElement('a');
+                            adminBtn.href = 'forum-admin.html';
+                            adminBtn.className = 'login-btn-header';
+                            adminBtn.innerHTML = '<i class="fas fa-cogs"></i> Admin';
+                            adminBtn.style.marginLeft = '10px';
+                            if (!userInfo.parentNode.querySelector('a[href="forum-admin.html"]')) {
+                                userInfo.parentNode.insertBefore(adminBtn, logoutBtn);
+                            }
+                        }
                     }
                     if (loginBtn) loginBtn.style.display = 'none';
                     if (logoutBtn) logoutBtn.style.display = 'flex';

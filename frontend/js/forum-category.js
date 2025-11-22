@@ -310,6 +310,17 @@ class ForumCategoryUI {
         }
     }
 
+    openNewTopicModal() {
+        const modal = document.getElementById('newTopicModal');
+        if (modal) {
+            modal.style.display = 'block';
+            setTimeout(() => {
+                const titleInput = document.getElementById('topicTitle');
+                if (titleInput) titleInput.focus();
+            }, 100);
+        }
+    }
+
     closeNewTopicModal() {
         const modal = document.getElementById('newTopicModal');
         const form = document.getElementById('newTopicForm');

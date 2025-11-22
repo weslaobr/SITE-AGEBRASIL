@@ -419,71 +419,6 @@ class ForumTopicUI {
                     <i class="fas fa-exclamation-triangle" style="font-size: 3rem; margin-bottom: 1rem;"></i>
                     <h3>Erro ao carregar respostas</h3>
                     <p>Tente recarregar a página</p>
-                </div>
-            `;
-        }
-    }
-
-    async createReply() {
-        if (!this.api.currentUser) {
-            this.showNotification('Faça login para responder.', 'error');
-            this.redirectToLogin();
-            return;
-        }
-
-        if (this.currentTopic && this.currentTopic.isLocked) {
-            this.showNotification('Este tópico está bloqueado. Não é possível responder.', 'error');
-            return;
-        }
-
-        const content = document.getElementById('replyContent').value.trim();
-
-        if (!content) {
-            this.showNotification('Digite uma resposta.', 'error');
-            return;
-        }
-
-        if (content.length < 5) {
-            this.showNotification('A resposta deve ter pelo menos 5 caracteres.', 'error');
-            return;
-        }
-
-        try {
-            const replyData = {
-                topicId: parseInt(this.currentTopicId),
-                content: content
-            };
-
-            // ✅ CORREÇÃO: Usar método assíncrono do PostgreSQL
-            await this.api.createReply(replyData);
-
-            // Recarregar respostas
-            await this.loadReplies();
-
-            // Limpar formulário
-            document.getElementById('replyContent').value = '';
-
-            // Mostrar sucesso
-            this.showNotification('Resposta enviada com sucesso!', 'success');
-
-            // Scroll para o topo das respostas
-            setTimeout(() => {
-                const repliesSection = document.querySelector('.replies-section');
-                if (repliesSection) {
-                    repliesSection.scrollIntoView({ behavior: 'smooth' });
-                }
-            }, 500);
-
-        } catch (error) {
-            console.error('Erro ao criar resposta:', error);
-            this.showNotification(error.message, 'error');
-        }
-    }
-
-    // 🔧 MÉTODOS DE MODERAÇÃO
-
-    async deleteTopic(topicId) {
-        if (!confirm('Tem certeza que deseja deletar este tópico? Esta ação não pode ser desfeita.')) {
             return;
         }
 
@@ -521,7 +456,7 @@ class ForumTopicUI {
     async togglePinTopic(topicId) {
         try {
             const topic = await this.api.togglePinTopic(topicId);
-            this.showNotification(`Tópico ${topic.isPinned ? 'fixado' : 'desfixado'} com sucesso!`, 'success');
+            this.showNotification(`Tópico ${ topic.isPinned ? 'fixado' : 'desfixado' } com sucesso!`, 'success');
             await this.loadTopic(); // Recarregar o tópico para atualizar a interface
 
         } catch (error) {
@@ -533,7 +468,7 @@ class ForumTopicUI {
     async toggleLockTopic(topicId) {
         try {
             const topic = await this.api.toggleLockTopic(topicId);
-            this.showNotification(`Tópico ${topic.isLocked ? 'bloqueado' : 'desbloqueado'} com sucesso!`, 'success');
+            this.showNotification(`Tópico ${ topic.isLocked ? 'bloqueado' : 'desbloqueado' } com sucesso!`, 'success');
             await this.loadTopic(); // Recarregar o tópico para atualizar a interface
             await this.loadReplies(); // Recarregar respostas para mostrar/ocultar formulário
 
@@ -561,7 +496,7 @@ class ForumTopicUI {
         this.api.getReplies(this.currentTopicId).then(replies => {
             const reply = replies.find(r => r.id == replyId);
             if (reply) {
-                const quoteText = `> ${reply.content}\n\n`;
+                const quoteText = `> ${ reply.content } \n\n`;
                 const textarea = document.getElementById('replyContent');
                 textarea.value = quoteText + textarea.value;
                 textarea.focus();
@@ -588,82 +523,13 @@ class ForumTopicUI {
         const diffDays = Math.floor(diffMs / 86400000);
 
         if (diffMins < 1) return 'Agora mesmo';
-        if (diffMins < 60) return `${diffMins} min atrás`;
-        if (diffHours < 24) return `${diffHours} h atrás`;
-        if (diffDays < 7) return `${diffDays} dias atrás`;
+        if (diffMins < 60) return `${ diffMins } min atrás`;
+        if (diffHours < 24) return `${ diffHours } h atrás`;
+        if (diffDays < 7) return `${ diffDays } dias atrás`;
 
         return date.toLocaleDateString('pt-BR', {
             day: '2-digit',
             month: '2-digit',
             year: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-        });
-    }
-
-    showNotification(message, type = 'info') {
-        const notification = document.createElement('div');
-        notification.className = `notification ${type === 'error' ? 'notification-error' : type === 'warning' ? 'notification-warning' : ''}`;
-
-        const icon = type === 'success' ? 'check-circle' :
-            type === 'error' ? 'exclamation-triangle' : 'info-circle';
-
-        notification.innerHTML = `
-            <div style="display: flex; align-items: center; gap: 0.5rem;">
-                <i class="fas fa-${icon}"></i>
-                <span>${message}</span>
-            </div>
-        `;
-
-        notification.style.cssText = `
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: ${type === 'success' ? '#48bb78' :
-                type === 'error' ? '#e53e3e' : '#3e8ce5'};
-            color: white;
-            padding: 1rem 1.5rem;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-            z-index: 1001;
-            animation: slideInRight 0.3s ease;
-            max-width: 400px;
-            border-left: 4px solid ${type === 'success' ? '#38a169' :
-                type === 'error' ? '#c53030' : '#3182ce'};
-        `;
-
-        document.body.appendChild(notification);
-
-        setTimeout(() => {
-            notification.style.animation = 'slideOutRight 0.3s ease';
-            setTimeout(() => {
-                if (notification.parentNode) {
-                    notification.parentNode.removeChild(notification);
-                }
-            }, 300);
-        }, 5000);
-    }
-
-    showError(message) {
-        const topicContent = document.getElementById('topicContent');
-        if (topicContent) {
-            topicContent.innerHTML = `
-                <div class="no-auth-message">
-                    <i class="fas fa-exclamation-triangle"></i>
-                    <h3>Erro</h3>
-                    <p>${message}</p>
-                    <button class="login-btn" onclick="window.location.href = 'forum.html'">
-                        <i class="fas fa-arrow-left"></i>
-                        Voltar ao Fórum
-                    </button>
-                </div>
-            `;
-        }
-    }
-}
-
-// Inicializar quando DOM estiver pronto
-document.addEventListener('DOMContentLoaded', () => {
-    console.log('🚀 DOM carregado, inicializando ForumTopicUI...');
     window.forumTopicUI = new ForumTopicUI();
 });

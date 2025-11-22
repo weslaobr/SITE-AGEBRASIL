@@ -692,119 +692,108 @@
             </div>
         </div>
     </footer>
-    modal.style.display = 'block';
-    setTimeout(() => {
-    const titleInput = document.getElementById('topicTitle');
-    if (titleInput) titleInput.focus();
-    }, 100);
-    }
-    }
 
-    function closeNewTopicModal() {
-    const modal = document.getElementById('newTopicModal');
-    const form = document.getElementById('newTopicForm');
-    if (modal) modal.style.display = 'none';
-    if (form) form.reset();
-    }
+    <!-- Scripts -->
+    <script src="js/discord-login.js"></script>
+    <script src="js/forum-api.js"></script>
+    <script src="js/forum-category.js"></script>
+    <script>
+        // Funções globais para o modal (acessíveis via onclick)
+        function openNewTopicModal() {
+            if (window.forumCategoryUI) {
+                window.forumCategoryUI.openNewTopicModal();
+            }
+        }
 
+        function closeNewTopicModal() {
+            if (window.forumCategoryUI) {
+                window.forumCategoryUI.closeNewTopicModal();
+            }
+        }
 
-    // Fechar modal ao clicar fora
-    window.addEventListener('click', function (event) {
-    const modal = document.getElementById('newTopicModal');
-    if (event.target === modal) {
-    closeNewTopicModal();
-    }
-    });
+        // Fechar modal ao clicar fora
+        window.addEventListener('click', function (event) {
+            const modal = document.getElementById('newTopicModal');
+            if (event.target === modal) {
+                closeNewTopicModal();
+            }
+        });
 
-    // Gerenciamento de Usuário e Header
-    document.addEventListener('DOMContentLoaded', () => {
-    const userInfo = document.getElementById('userInfo');
-    const loginBtn = document.getElementById('loginBtn');
-    const loginBtnBig = document.getElementById('loginBtnBig');
-    const logoutBtn = document.getElementById('logoutBtn');
-    const noAuthMessage = document.getElementById('noAuthMessage');
-    const content = document.getElementById('categoryContent');
+        // Lógica do Header e Login
+        document.addEventListener('DOMContentLoaded', () => {
+            const userInfo = document.getElementById('userInfo');
+            const loginBtn = document.getElementById('loginBtn');
+            const logoutBtn = document.getElementById('logoutBtn');
 
-    function renderHeader() {
-    let user = null;
-    let isAdmin = false;
+            function renderHeader() {
+                let user = null;
+                let isAdmin = false;
 
-    try {
-    const userData = localStorage.getItem('discord_user');
-    user = userData ? JSON.parse(userData) : null;
-    } catch (e) {
-    user = null;
-    }
+                try {
+                    const userData = localStorage.getItem('discord_user');
+                    user = userData ? JSON.parse(userData) : null;
+                } catch (e) {
+                    user = null;
+                }
 
-    if (user && user.username === 'BRO.WESLAO') {
-    isAdmin = true;
-    }
+                if (user && user.username === 'BRO.WESLAO') {
+                    isAdmin = true;
+                }
 
-    if (user) {
-    // Logado
-    if (userInfo) {
-    userInfo.style.display = 'flex';
-    const avatar = user.avatar
-    ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.webp?size=64`
-    : `https://cdn.discordapp.com/embed/avatars/${user.discriminator % 5}.png`;
+                if (user) {
+                    // Logado
+                    if (userInfo) {
+                        userInfo.style.display = 'flex';
+                        const avatar = user.avatar
+                            ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.webp?size=64`
+                            : `https://cdn.discordapp.com/embed/avatars/${user.discriminator % 5}.png`;
 
-    userInfo.innerHTML = `
-    <img src="${avatar}" alt="${user.username}">
-    <span>${user.global_name || user.username}</span>
-    ${isAdmin ? '<span class="admin-badge">ADMIN</span>' : ''}
-    `;
+                        userInfo.innerHTML = `
+                            <img src="${avatar}" alt="${user.username}">
+                            <span>${user.global_name || user.username}</span>
+                            ${isAdmin ? '<span class="admin-badge">ADMIN</span>' : ''}
+                        `;
 
-    // Add Admin Button
-    if (isAdmin) {
-    const adminBtn = document.createElement('a');
-    adminBtn.href = 'forum-admin.html';
-    adminBtn.className = 'login-btn-header';
-    adminBtn.innerHTML = '<i class="fas fa-cogs"></i> Admin';
-    adminBtn.style.marginLeft = '10px';
-    if (!userInfo.parentNode.querySelector('a[href="forum-admin.html"]')) {
-    userInfo.parentNode.insertBefore(adminBtn, logoutBtn);
-    }
-    }
-    }
-    if (loginBtn) loginBtn.style.display = 'none';
-    if (logoutBtn) logoutBtn.style.display = 'flex';
-    if (noAuthMessage) noAuthMessage.style.display = 'none';
-    if (content) content.style.display = 'block';
-    } else {
-    // Não Logado
-    if (userInfo) userInfo.style.display = 'none';
-    if (loginBtn) loginBtn.style.display = 'flex';
-    if (logoutBtn) logoutBtn.style.display = 'none';
-    if (noAuthMessage) noAuthMessage.style.display = 'block';
-    if (content) content.style.display = 'none';
-    }
-    }
+                        // Add Admin Button
+                        if (isAdmin) {
+                            const adminBtn = document.createElement('a');
+                            adminBtn.href = 'forum-admin.html';
+                            adminBtn.className = 'login-btn-header';
+                            adminBtn.innerHTML = '<i class="fas fa-cogs"></i> Admin';
+                            adminBtn.style.marginLeft = '10px';
+                            if (!userInfo.parentNode.querySelector('a[href="forum-admin.html"]')) {
+                                userInfo.parentNode.insertBefore(adminBtn, logoutBtn);
+                            }
+                        }
+                    }
+                    if (loginBtn) loginBtn.style.display = 'none';
+                    if (logoutBtn) logoutBtn.style.display = 'flex';
+                } else {
+                    // Não Logado
+                    if (userInfo) userInfo.style.display = 'none';
+                    if (loginBtn) loginBtn.style.display = 'flex';
+                    if (logoutBtn) logoutBtn.style.display = 'none';
+                }
+            }
 
-    if (logoutBtn) {
-    logoutBtn.addEventListener('click', (e) => {
-    e.preventDefault();
-    localStorage.removeItem('discord_user');
-    localStorage.removeItem('discord_access_token');
-    location.reload();
-    });
-    }
+            // Event Listeners
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    window.discordAuth.logout();
+                });
+            }
 
-    if (loginBtn) {
-    loginBtn.addEventListener('click', (e) => {
-    e.preventDefault();
-    window.discordAuth.login();
-    });
-    }
+            if (loginBtn) {
+                loginBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    window.discordAuth.login();
+                });
+            }
 
-    if (loginBtnBig) {
-    loginBtnBig.addEventListener('click', (e) => {
-    e.preventDefault();
-    window.discordAuth.login();
-    });
-    }
-
-    renderHeader();
-    });
+            // Inicializar Header
+            renderHeader();
+        });
     </script>
 </body>
 

@@ -605,40 +605,6 @@
             const response = await fetch(`${API_BASE_URL}/forum/topics?category=${slug}`);
             const topics = await response.json();
 
-            if (topics.length === 0) {
-                container.innerHTML = '<div class="no-activity" style="padding: 3rem;">Nenhum tópico encontrado nesta categoria. Seja o primeiro a postar!</div>';
-            return;
-                }
-
-                container.innerHTML = topics.map(topic => `
-            <div class="topic-row">
-                <div class="topic-status-icon ${topic.isPinned ? 'pinned' : ''} ${topic.isLocked ? 'locked' : ''}">
-                    <i class="fas ${topic.isPinned ? 'fa-thumbtack' : (topic.isLocked ? 'fa-lock' : 'fa-comment')}"></i>
-                </div>
-                <div class="topic-main">
-                    <div class="topic-title">
-                        <a href="forum-topic.html?id=${topic.id}">${topic.title}</a>
-                    </div>
-                    <div class="topic-meta">
-                        Iniciado por <span style="color: var(--accent-color);">${topic.author}</span> • ${formatDate(topic.createdAt)}
-                    </div>
-                </div>
-                <div class="topic-stats">
-                    <div class="topic-stat">
-                        <span>${topic.repliesCount || 0}</span> Respostas
-                    </div>
-                    <div class="topic-stat">
-                        <span>${topic.views || 0}</span> Visitas
-                    </div>
-                </div>
-            </div>
-            `).join('');
-
-                // Setup Form Submit
-                document.getElementById('new-topic-form').onsubmit = async (e) => {
-                e.preventDefault();
-            const title = document.getElementById('topic-title-input').value;
-            const content = document.getElementById('topic-content').value;
 
             try {
                         const res = await fetch(`${API_BASE_URL}/forum/topics`, {

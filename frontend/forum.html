@@ -468,18 +468,6 @@
                             </button>
                         </div>
                     `;
-                }
-                const topicsList = document.getElementById('recentTopicsList');
-                if (topicsList) {
-                    topicsList.innerHTML = '';
-                }
-                return; // Interrompe o carregamento
-            }
-
-            // Event Listeners for Login/Logout
-            if (logoutBtn) {
-                logoutBtn.onclick = (e) => {
-                    e.preventDefault();
                     localStorage.removeItem('discord_user');
                     localStorage.removeItem('discord_access_token');
                     location.reload();

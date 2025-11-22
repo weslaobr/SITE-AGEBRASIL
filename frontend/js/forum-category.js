@@ -36,173 +36,129 @@ class ForumCategoryUI {
             const path = window.location.pathname;
             const match = path.match(/forum-category\.html\?category=([^&]+)/);
             if (match) categorySlug = match[1];
-        }
-
-        console.log('🎯 Slug final:', categorySlug);
-        return categorySlug;
-    }
-
-    async waitForAuthAndCategories() {
-        console.log('⏳ Aguardando carregamento...');
-        let attempts = 0;
-        const maxAttempts = 50;
-
-        while (attempts < maxAttempts) {
-            if (this.api.currentUser !== undefined && this.api.categories.length > 0) {
-                console.log('✅ Usuário e categorias carregados');
-                return true;
-            }
-            await new Promise(resolve => setTimeout(resolve, 100));
-            attempts++;
-        }
-        console.warn('⚠️ Timeout ao aguardar carregamento');
-    }
-
-    setupEventListeners() {
-        const form = document.getElementById('newTopicForm');
-        if (form) {
             form.addEventListener('submit', (e) => {
                 e.preventDefault();
                 this.createNewTopic();
             });
         }
+
+    } catch(error) {
+        console.error('❌ Erro ao carregar categoria:', error);
+        this.showError('Erro ao carregar categoria: ' + error.message);
     }
-
-    async loadCategory() {
-        console.log('📂 Carregando categoria:', this.currentCategorySlug);
-
-        try {
-            // ✅ BUSCAR CATEGORIA REAL
-            this.currentCategory = this.api.categories.find(
-                cat => cat.slug === this.currentCategorySlug
-            );
-
-            if (!this.currentCategory) {
-                this.showError(`Categoria "${this.currentCategorySlug}" não encontrada`);
-                return;
-            }
-
-            console.log('✅ Categoria encontrada:', this.currentCategory.name);
-            await this.displayCategoryWithRealData();
-            await this.loadTopics();
-
-        } catch (error) {
-            console.error('❌ Erro ao carregar categoria:', error);
-            this.showError('Erro ao carregar categoria: ' + error.message);
-        }
-    }
+}
 
     // ✅ MÉTODO NOVO: Carregar dados REAIS
     async displayCategoryWithRealData() {
-        if (!this.currentCategory) return;
+    if (!this.currentCategory) return;
 
-        console.log('🎨 Exibindo categoria com dados REAIS...');
+    console.log('🎨 Exibindo categoria com dados REAIS...');
 
-        try {
-            // Buscar tópicos REAIS desta categoria
-            const topics = await this.api.getTopics(this.currentCategorySlug);
+    try {
+        // Buscar tópicos REAIS desta categoria
+        const topics = await this.api.getTopics(this.currentCategorySlug);
 
-            // Calcular estatísticas REAIS
-            let totalReplies = 0;
-            let uniqueMembers = new Set();
+        // Calcular estatísticas REAIS
+        let totalReplies = 0;
+        let uniqueMembers = new Set();
 
-            for (const topic of topics) {
-                // Agora usamos repliesCount que vem do backend
-                totalReplies += (topic.repliesCount || 0);
+        for (const topic of topics) {
+            // Agora usamos repliesCount que vem do backend
+            totalReplies += (topic.repliesCount || 0);
 
-                if (topic.authorId) uniqueMembers.add(topic.authorId);
-            }
+            if (topic.authorId) uniqueMembers.add(topic.authorId);
+        }
 
-            const realTopicCount = topics.length;
-            const realReplyCount = totalReplies;
-            const realMemberCount = uniqueMembers.size;
+        const realTopicCount = topics.length;
+        const realReplyCount = totalReplies;
+        const realMemberCount = uniqueMembers.size;
 
-            console.log('📊 Dados REAIS calculados:', {
-                topics: realTopicCount,
-                replies: realReplyCount,
-                members: realMemberCount
-            });
+        console.log('📊 Dados REAIS calculados:', {
+            topics: realTopicCount,
+            replies: realReplyCount,
+            members: realMemberCount
+        });
 
-            // Atualizar interface
-            this.updateCategoryHeader(realTopicCount, realReplyCount, realMemberCount);
+        // Atualizar interface
+        this.updateCategoryHeader(realTopicCount, realReplyCount, realMemberCount);
 
-        } catch (error) {
-            console.error('❌ Erro ao carregar dados reais:', error);
-            this.updateCategoryHeader(0, 0, 0);
+    } catch (error) {
+        console.error('❌ Erro ao carregar dados reais:', error);
+        this.updateCategoryHeader(0, 0, 0);
+    }
+}
+
+updateCategoryHeader(topicCount, replyCount, memberCount) {
+    // Atualizar breadcrumb
+    const breadcrumbElement = document.getElementById('categoryNameBreadcrumb');
+    if (breadcrumbElement) {
+        breadcrumbElement.textContent = this.currentCategory.name;
+    }
+
+    // Atualizar título
+    const titleElement = document.getElementById('categoryTitle');
+    const descriptionElement = document.getElementById('categoryDescription');
+    const iconElement = document.getElementById('categoryIconLarge');
+
+    if (titleElement) titleElement.textContent = this.currentCategory.name;
+    if (descriptionElement) descriptionElement.textContent = this.currentCategory.description;
+
+    if (iconElement) {
+        iconElement.innerHTML = `<i class="${this.currentCategory.icon || 'fas fa-folder'}"></i>`;
+        if (this.currentCategory.color) {
+            iconElement.style.background = `linear-gradient(135deg, ${this.currentCategory.color}, #3e8ce5)`;
         }
     }
 
-    updateCategoryHeader(topicCount, replyCount, memberCount) {
-        // Atualizar breadcrumb
-        const breadcrumbElement = document.getElementById('categoryNameBreadcrumb');
-        if (breadcrumbElement) {
-            breadcrumbElement.textContent = this.currentCategory.name;
-        }
+    // ✅ ATUALIZAR COM DADOS REAIS
+    const topicCountElement = document.getElementById('topicCount');
+    const replyCountElement = document.getElementById('replyCount');
+    const membersElement = document.getElementById('categoryMembers');
 
-        // Atualizar título
-        const titleElement = document.getElementById('categoryTitle');
-        const descriptionElement = document.getElementById('categoryDescription');
-        const iconElement = document.getElementById('categoryIconLarge');
-
-        if (titleElement) titleElement.textContent = this.currentCategory.name;
-        if (descriptionElement) descriptionElement.textContent = this.currentCategory.description;
-
-        if (iconElement) {
-            iconElement.innerHTML = `<i class="${this.currentCategory.icon || 'fas fa-folder'}"></i>`;
-            if (this.currentCategory.color) {
-                iconElement.style.background = `linear-gradient(135deg, ${this.currentCategory.color}, #3e8ce5)`;
-            }
-        }
-
-        // ✅ ATUALIZAR COM DADOS REAIS
-        const topicCountElement = document.getElementById('topicCount');
-        const replyCountElement = document.getElementById('replyCount');
-        const membersElement = document.getElementById('categoryMembers');
-
-        if (topicCountElement) {
-            topicCountElement.textContent = topicCount;
-            console.log('✅ Tópicos atualizados:', topicCount);
-        }
-        if (replyCountElement) {
-            replyCountElement.textContent = replyCount;
-            console.log('✅ Respostas atualizadas:', replyCount);
-        }
-        if (membersElement) {
-            membersElement.textContent = memberCount;
-            console.log('✅ Membros atualizados:', memberCount);
-        }
+    if (topicCountElement) {
+        topicCountElement.textContent = topicCount;
+        console.log('✅ Tópicos atualizados:', topicCount);
     }
+    if (replyCountElement) {
+        replyCountElement.textContent = replyCount;
+        console.log('✅ Respostas atualizadas:', replyCount);
+    }
+    if (membersElement) {
+        membersElement.textContent = memberCount;
+        console.log('✅ Membros atualizados:', memberCount);
+    }
+}
 
     async loadTopics() {
-        console.log('📝 Carregando tópicos para:', this.currentCategorySlug);
+    console.log('📝 Carregando tópicos para:', this.currentCategorySlug);
 
-        try {
-            const topics = await this.api.getTopics(this.currentCategorySlug);
-            const topicsList = document.getElementById('topicsList');
+    try {
+        const topics = await this.api.getTopics(this.currentCategorySlug);
+        const topicsList = document.getElementById('topicsList');
 
-            if (!topics || topics.length === 0) {
-                topicsList.innerHTML = `
+        if (!topics || topics.length === 0) {
+            topicsList.innerHTML = `
                     <div class="no-topics">
                         <i class="fas fa-comments"></i>
                         <h3>Nenhum tópico encontrado</h3>
                         <p>Seja o primeiro a criar um tópico nesta categoria!</p>
                     </div>
                 `;
-                return;
-            }
+            return;
+        }
 
-            const topicsHTML = topics.map(topic => {
-                const replyCount = topic.repliesCount || 0;
+        const topicsHTML = topics.map(topic => {
+            const replyCount = topic.repliesCount || 0;
 
-                return `
+            return `
                     <div class="topic-item ${topic.isPinned ? 'pinned' : ''}" 
                          data-id="${topic.id}">
                         <div class="topic-avatar">
                             ${topic.authorAvatar ?
-                        `<img src="https://cdn.discordapp.com/avatars/${topic.authorId}/${topic.authorAvatar}.webp?size=45"
+                    `<img src="https://cdn.discordapp.com/avatars/${topic.authorId}/${topic.authorAvatar}.webp?size=45"
                                       onerror="this.src='https://cdn.discordapp.com/embed/avatars/${topic.authorId % 5}.png'">` :
-                        `<span>${(topic.author || '').charAt(0)}</span>`
-                    }
+                    `<span>${(topic.author || '').charAt(0)}</span>`
+                }
                         </div>
                         <div class="topic-content">
                             <div class="topic-title">
@@ -227,135 +183,135 @@ class ForumCategoryUI {
                         </div>
                     </div>
                 `;
+        });
+
+        topicsList.innerHTML = topicsHTML.join('');
+
+        // Adicionar event listeners para clique
+        document.querySelectorAll('.topic-item').forEach(item => {
+            item.addEventListener('click', (e) => {
+                const id = item.dataset.id;
+                console.log('🔹 Clicou no tópico:', id);
+                window.location.href = `forum-topic.html?id=${id}`;
             });
+        });
 
-            topicsList.innerHTML = topicsHTML.join('');
+        console.log('✅ Tópicos carregados na interface');
 
-            // Adicionar event listeners para clique
-            document.querySelectorAll('.topic-item').forEach(item => {
-                item.addEventListener('click', (e) => {
-                    const id = item.dataset.id;
-                    console.log('🔹 Clicou no tópico:', id);
-                    window.location.href = `forum-topic.html?id=${id}`;
-                });
-            });
-
-            console.log('✅ Tópicos carregados na interface');
-
-        } catch (error) {
-            console.error('❌ Erro ao carregar tópicos:', error);
-            const topicsList = document.getElementById('topicsList');
-            topicsList.innerHTML = `
+    } catch (error) {
+        console.error('❌ Erro ao carregar tópicos:', error);
+        const topicsList = document.getElementById('topicsList');
+        topicsList.innerHTML = `
                 <div class="no-topics">
                     <i class="fas fa-exclamation-triangle"></i>
                     <h3>Erro ao carregar tópicos</h3>
                     <p>${error.message}</p>
                 </div>
             `;
-        }
     }
+}
 
     // ✅ MÉTODO CORRIGIDO: Criar novo tópico
     async createNewTopic() {
-        console.log('📝 Criando novo tópico...');
+    console.log('📝 Criando novo tópico...');
 
-        if (!this.api.currentUser) {
-            alert('Faça login para criar tópicos.');
-            return;
-        }
-
-        const title = document.getElementById('topicTitle').value.trim();
-        const content = document.getElementById('topicContent').value.trim();
-
-        console.log('📋 Dados do formulário:', { title, content });
-
-        // Validações
-        if (!title || !content) {
-            alert('Preencha todos os campos.');
-            return;
-        }
-
-        if (title.length < 5) {
-            alert('O título deve ter pelo menos 5 caracteres.');
-            return;
-        }
-
-        if (content.length < 10) {
-            alert('O conteúdo deve ter pelo menos 10 caracteres.');
-            return;
-        }
-
-        try {
-            const topicData = {
-                categoryId: this.currentCategory.id,
-                title: title,
-                content: content
-            };
-
-            console.log('📤 Enviando tópico:', topicData);
-
-            const newTopic = await this.api.createTopic(topicData);
-            console.log('✅ Tópico criado com sucesso:', newTopic);
-
-            // Fechar modal
-            this.closeNewTopicModal();
-
-            // Recarregar dados
-            await this.displayCategoryWithRealData();
-            await this.loadTopics();
-
-            alert('Tópico criado com sucesso!');
-
-        } catch (error) {
-            console.error('❌ Erro ao criar tópico:', error);
-            alert('Erro ao criar tópico: ' + error.message);
-        }
+    if (!this.api.currentUser) {
+        alert('Faça login para criar tópicos.');
+        return;
     }
 
-    openNewTopicModal() {
-        const modal = document.getElementById('newTopicModal');
-        if (modal) {
-            modal.style.display = 'block';
-            setTimeout(() => {
-                const titleInput = document.getElementById('topicTitle');
-                if (titleInput) titleInput.focus();
-            }, 100);
-        }
+    const title = document.getElementById('topicTitle').value.trim();
+    const content = document.getElementById('topicContent').value.trim();
+
+    console.log('📋 Dados do formulário:', { title, content });
+
+    // Validações
+    if (!title || !content) {
+        alert('Preencha todos os campos.');
+        return;
     }
 
-    closeNewTopicModal() {
-        const modal = document.getElementById('newTopicModal');
-        const form = document.getElementById('newTopicForm');
-        if (modal) modal.style.display = 'none';
-        if (form) form.reset();
+    if (title.length < 5) {
+        alert('O título deve ter pelo menos 5 caracteres.');
+        return;
     }
 
-    formatDate(dateString) {
-        if (!dateString) return 'Data desconhecida';
-        try {
-            const date = new Date(dateString);
-            const now = new Date();
-            const diffMs = now - date;
-            const diffMins = Math.floor(diffMs / 60000);
-            const diffHours = Math.floor(diffMs / 3600000);
-            const diffDays = Math.floor(diffMs / 86400000);
-
-            if (diffMins < 1) return 'Agora mesmo';
-            if (diffMins < 60) return `${diffMins} min atrás`;
-            if (diffHours < 24) return `${diffHours} h atrás`;
-            if (diffDays < 7) return `${diffDays} dias atrás`;
-
-            return date.toLocaleDateString('pt-BR');
-        } catch (error) {
-            return 'Data inválida';
-        }
+    if (content.length < 10) {
+        alert('O conteúdo deve ter pelo menos 10 caracteres.');
+        return;
     }
 
-    showError(message) {
-        const container = document.getElementById('categoryContent');
-        if (!container) return;
+    try {
+        const topicData = {
+            categoryId: this.currentCategory.id,
+            title: title,
+            content: content
+        };
 
-        container.innerHTML = `
+        console.log('📤 Enviando tópico:', topicData);
+
+        const newTopic = await this.api.createTopic(topicData);
+        console.log('✅ Tópico criado com sucesso:', newTopic);
+
+        // Fechar modal
+        this.closeNewTopicModal();
+
+        // Recarregar dados
+        await this.displayCategoryWithRealData();
+        await this.loadTopics();
+
+        alert('Tópico criado com sucesso!');
+
+    } catch (error) {
+        console.error('❌ Erro ao criar tópico:', error);
+        alert('Erro ao criar tópico: ' + error.message);
+    }
+}
+
+openNewTopicModal() {
+    const modal = document.getElementById('newTopicModal');
+    if (modal) {
+        modal.style.display = 'block';
+        setTimeout(() => {
+            const titleInput = document.getElementById('topicTitle');
+            if (titleInput) titleInput.focus();
+        }, 100);
+    }
+}
+
+closeNewTopicModal() {
+    const modal = document.getElementById('newTopicModal');
+    const form = document.getElementById('newTopicForm');
+    if (modal) modal.style.display = 'none';
+    if (form) form.reset();
+}
+
+formatDate(dateString) {
+    if (!dateString) return 'Data desconhecida';
+    try {
+        const date = new Date(dateString);
+        const now = new Date();
+        const diffMs = now - date;
+        const diffMins = Math.floor(diffMs / 60000);
+        const diffHours = Math.floor(diffMs / 3600000);
+        const diffDays = Math.floor(diffMs / 86400000);
+
+        if (diffMins < 1) return 'Agora mesmo';
+        if (diffMins < 60) return `${diffMins} min atrás`;
+        if (diffHours < 24) return `${diffHours} h atrás`;
+        if (diffDays < 7) return `${diffDays} dias atrás`;
+
+        return date.toLocaleDateString('pt-BR');
+    } catch (error) {
+        return 'Data inválida';
+    }
+}
+
+showError(message) {
+    const container = document.getElementById('categoryContent');
+    if (!container) return;
+
+    container.innerHTML = `
             <div class="no-auth-message">
                 <i class="fas fa-exclamation-triangle"></i>
                 <h3>Erro</h3>
@@ -365,13 +321,13 @@ class ForumCategoryUI {
                 </button>
             </div>
         `;
-    }
+}
 
-    showLoginRequired() {
-        const container = document.getElementById('categoryContent');
-        if (!container) return;
+showLoginRequired() {
+    const container = document.getElementById('categoryContent');
+    if (!container) return;
 
-        container.innerHTML = `
+    container.innerHTML = `
             <div class="no-auth-message" style="text-align: center; padding: 3rem; background: var(--card-bg); border-radius: 12px; border: 1px solid var(--border-color);">
                 <i class="fas fa-lock" style="font-size: 3rem; color: var(--accent-color); margin-bottom: 1rem;"></i>
                 <h3 style="margin-bottom: 1rem;">Login Necessário</h3>
@@ -381,7 +337,7 @@ class ForumCategoryUI {
                 </button>
             </div>
         `;
-    }
+}
 }
 
 // ✅ INICIALIZAÇÃO SIMPLIFICADA

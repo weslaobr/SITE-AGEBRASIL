@@ -805,42 +805,6 @@ app.post('/api/forum/categories', async (req, res) => {
     }
 });
 
-// Update Category
-app.put('/api/forum/categories/:id', async (req, res) => {
-    const { id } = req.params;
-    const { name, slug, description, icon } = req.body;
-
-    // Auth Check
-    const userHeader = req.headers['x-user'];
-    if (!userHeader) return res.status(401).json({ error: 'Unauthorized' });
-    try {
-        const user = JSON.parse(decodeURIComponent(userHeader));
-        const admins = ['407624932101455873'];
-        if (!admins.includes(String(user.id))) {
-            return res.status(403).json({ error: 'Forbidden' });
-        }
-    } catch (e) {
-        return res.status(400).json({ error: 'Invalid user header' });
-    }
-
-    const client = await pool.connect();
-    try {
-        const result = await client.query(
-            'UPDATE forum_categories SET name = $1, slug = $2, description = $3, icon = $4 WHERE id = $5 RETURNING *',
-            [name, slug, description, icon, id]
-        );
-        if (result.rows.length === 0) {
-            return res.status(404).json({ error: 'Category not found' });
-        }
-        res.json(result.rows[0]);
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: 'Error updating category' });
-    } finally {
-        client.release();
-    }
-});
-
 // Reorder Categories
 app.put('/api/forum/categories/reorder', async (req, res) => {
     const { order } = req.body; // Array of IDs in new order
@@ -872,6 +836,42 @@ app.put('/api/forum/categories/reorder', async (req, res) => {
         await client.query('ROLLBACK');
         console.error(err);
         res.status(500).json({ error: 'Error reordering categories' });
+    } finally {
+        client.release();
+    }
+});
+
+// Update Category
+app.put('/api/forum/categories/:id', async (req, res) => {
+    const { id } = req.params;
+    const { name, slug, description, icon } = req.body;
+
+    // Auth Check
+    const userHeader = req.headers['x-user'];
+    if (!userHeader) return res.status(401).json({ error: 'Unauthorized' });
+    try {
+        const user = JSON.parse(decodeURIComponent(userHeader));
+        const admins = ['407624932101455873'];
+        if (!admins.includes(String(user.id))) {
+            return res.status(403).json({ error: 'Forbidden' });
+        }
+    } catch (e) {
+        return res.status(400).json({ error: 'Invalid user header' });
+    }
+
+    const client = await pool.connect();
+    try {
+        const result = await client.query(
+            'UPDATE forum_categories SET name = $1, slug = $2, description = $3, icon = $4 WHERE id = $5 RETURNING *',
+            [name, slug, description, icon, id]
+        );
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'Category not found' });
+        }
+        res.json(result.rows[0]);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Error updating category' });
     } finally {
         client.release();
     }

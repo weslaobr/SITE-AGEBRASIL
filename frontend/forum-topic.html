@@ -596,85 +596,64 @@
                 <div class="copyright">
                     &copy; 2025 - Age of Empires IV Brasil. Dados de aoe4world.com. Este site não possui qualquer
                     vínculo com a Microsoft ou a Relic Entertainment.
-            </div>
-        </div>
-    </footer>
-
-    <script src="js/forum.js"></script>
-    <script>
-        // Editor Logic
-        function insertFormat(start, end) {
-            const textarea = document.getElementById('reply-content');
-            const startPos = textarea.selectionStart;
-            const endPos = textarea.selectionEnd;
-            const text = textarea.value;
-            const selectedText = text.substring(startPos, endPos);
-
-            const newText = text.substring(0, startPos) + start + selectedText + end + text.substring(endPos);
-            textarea.value = newText;
-            textarea.focus();
-            textarea.selectionStart = startPos + start.length;
-            textarea.selectionEnd = endPos + start.length;
-        }
-
         // Topic Logic
         async function loadTopic(id) {
-            const container = document.getElementById('posts-container');
+                    const container = document.getElementById('posts-container');
 
-            try {
-                const response = await fetch(`${ API_BASE_URL } /forum/topics / ${ id } `);
-                if (!response.ok) throw new Error('Tópico não encontrado');
+                    try {
+                        const response = await fetch(`${ API_BASE_URL } /forum/topics / ${ id } `);
+                        if (!response.ok) throw new Error('Tópico não encontrado');
 
-                const topic = await response.json();
+                        const topic = await response.json();
 
-                // Update Header
-                document.getElementById('topic-title').textContent = topic.title;
-                document.getElementById('topic-breadcrumb').textContent = topic.title;
-                document.getElementById('category-link').textContent = topic.categoryName;
-                document.getElementById('category-link').href = `forum - category.html ? slug = ${ topic.categorySlug } `;
+                        // Update Header
+                        document.getElementById('topic-title').textContent = topic.title;
+                        document.getElementById('topic-breadcrumb').textContent = topic.title;
+                        document.getElementById('category-link').textContent = topic.categoryName;
+                        document.getElementById('category-link').href = `forum - category.html ? slug = ${ topic.categorySlug } `;
 
-                let badges = '';
-                if (topic.isPinned) badges += '<span class="stat-badge" style="background: var(--accent-color); color: black; margin-right: 0.5rem;"><i class="fas fa-thumbtack"></i> Fixado</span>';
-                if (topic.isLocked) badges += '<span class="stat-badge" style="background: #e53e3e; margin-right: 0.5rem;"><i class="fas fa-lock"></i> Trancado</span>';
-                document.getElementById('topic-status-badges').innerHTML = badges;
+                        let badges = '';
+                        if (topic.isPinned) badges += '<span class="stat-badge" style="background: var(--accent-color); color: black; margin-right: 0.5rem;"><i class="fas fa-thumbtack"></i> Fixado</span>';
+                        if (topic.isLocked) badges += '<span class="stat-badge" style="background: #e53e3e; margin-right: 0.5rem;"><i class="fas fa-lock"></i> Trancado</span>';
+                        document.getElementById('topic-status-badges').innerHTML = badges;
 
-                // Render Main Post
-                let html = renderPost({
-                    id: topic.id,
-                    author: topic.author,
-                    authorAvatar: topic.authorAvatar,
-                    content: topic.content,
-                    createdAt: topic.createdAt,
-                    isMain: true,
-                    authorId: topic.authorId,
-                    isPinned: topic.isPinned,
-                    isLocked: topic.isLocked
-                });
+                        // Render Main Post
+                        let html = renderPost({
+                            id: topic.id,
+                            author: topic.author,
+                            authorAvatar: topic.authorAvatar,
+                            content: topic.content,
+                            createdAt: topic.createdAt,
+                            isMain: true,
+                            authorId: topic.authorId,
+                            isPinned: topic.isPinned,
+                            isLocked: topic.isLocked
+                        });
 
-                // Render Replies
-                if (topic.replies && topic.replies.length > 0) {
-                    html += topic.replies.map(reply => renderPost(reply)).join('');
-                }
+                        // Render Replies
+                        if (topic.replies && topic.replies.length > 0) {
+                            html += topic.replies.map(reply => renderPost(reply)).join('');
+                        }
 
-                container.innerHTML = html;
+                        container.innerHTML = html;
 
-                // Handle Locked State
-                if (topic.isLocked) {
-                    document.getElementById('reply-form-section').innerHTML = '<div style="text-align: center; padding: 2rem; color: #e53e3e;"><i class="fas fa-lock"></i> Este tópico está trancado e não aceita novas respostas.</div>';
-                    document.getElementById('login-to-reply').style.display = 'none';
-                } else {
-                    // Check Auth for Reply Form
-                    if (!currentUser) {
-                        document.getElementById('reply-form-section').style.display = 'none';
-                        document.getElementById('login-to-reply').style.display = 'block';
+                        // Handle Locked State
+                        if (topic.isLocked) {
+                            document.getElementById('reply-form-section').innerHTML = '<div style="text-align: center; padding: 2rem; color: #e53e3e;"><i class="fas fa-lock"></i> Este tópico está trancado e não aceita novas respostas.</div>';
+                            document.getElementById('login-to-reply').style.display = 'none';
+                        } else {
+                            // Check Auth for Reply Form
+                            if (!currentUser) {
+                                document.getElementById('reply-form-section').style.display = 'none';
+                                document.getElementById('login-to-reply').style.display = 'block';
 
-                        const authUrl = `https://discord.com/api/oauth2/authorize?client_id=${DISCORD_CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=code&scope=identify%20email`;
+                                const authUrl = `https://discord.com/api/oauth2/authorize?client_id=${DISCORD_CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=code&scope=identify%20email`;
                     document.getElementById('topic-login-btn').href = authUrl;
                 }
             }
 
-                // Setup Reply Submit
-                const replyForm = document.getElementById('reply-form');
+                        // Setup Reply Submit
+                        const replyForm = document.getElementById('reply-form');
             if (replyForm) {
                 replyForm.onsubmit = async (e) => {
                     e.preventDefault();
@@ -709,7 +688,7 @@
             console.error('Erro ao carregar tópico:', error);
             container.innerHTML = '<div class="error-msg">Erro ao carregar tópico ou tópico não encontrado.</div>';
         }
-        }
+                }
 
         function renderPost(post) {
             const avatar = post.authorAvatar || 'https://cdn.discordapp.com/embed/avatars/0.png';
@@ -806,6 +785,15 @@
                 headers: { 'x-user': JSON.stringify(currentUser) }
             });
             window.location.reload();
+        }
+
+        // Initialize
+        const urlParams = new URLSearchParams(window.location.search);
+        const id = urlParams.get('id');
+        if (id) {
+            loadTopic(id);
+        } else {
+            document.getElementById('posts-container').innerHTML = '<div class="error-msg">Tópico não especificado.</div>';
         }
     </script>
 </body>

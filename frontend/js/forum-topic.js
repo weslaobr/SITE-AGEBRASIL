@@ -116,7 +116,6 @@ class ForumTopicUI {
         console.log('📖 Carregando tópico:', this.currentTopicId);
 
         try {
-            // ✅ CORREÇÃO: Usar método assíncrono do PostgreSQL
             this.currentTopic = await this.api.getTopic(this.currentTopicId);
 
             if (!this.currentTopic) {
@@ -186,11 +185,10 @@ class ForumTopicUI {
         // Atualizar conteúdo
         document.getElementById('topicContentText').innerHTML = this.formatContent(topic.content);
 
-        // 🔧 ADICIONAR BOTÕES DE MODERAÇÃO SE FOR ADMIN
+        // Adicionar botões de moderação se for admin
         this.addModerationButtons(topic);
     }
 
-    // 🔧 ADICIONAR BOTÕES DE MODERAÇÃO
     addModerationButtons(topic) {
         const topicActions = document.querySelector('.topic-actions');
 
@@ -227,8 +225,6 @@ class ForumTopicUI {
             `;
 
             topicActions.appendChild(modButtons);
-
-            // Adicionar estilos para os botões de moderação
             this.addModerationStyles();
         }
     }
@@ -289,14 +285,6 @@ class ForumTopicUI {
                     background: rgba(229, 62, 62, 0.1);
                     transform: scale(1.1);
                 }
-                .edit-info {
-                    border-top: 1px solid #4a5568;
-                    padding-top: 0.5rem;
-                    font-size: 0.8rem;
-                    color: #a0aec0;
-                    font-style: italic;
-                    margin-top: 0.5rem;
-                }
                 @media (max-width: 768px) {
                     .moderation-actions {
                         border-left: none;
@@ -316,7 +304,6 @@ class ForumTopicUI {
 
     async loadReplies() {
         try {
-            // ✅ CORREÇÃO: Usar método assíncrono do PostgreSQL
             const replies = await this.api.getReplies(this.currentTopicId);
             const repliesList = document.getElementById('repliesList');
             const repliesCount = document.getElementById('repliesCount');
@@ -327,22 +314,25 @@ class ForumTopicUI {
                 replyForm.style.display = this.currentTopic.isLocked ? 'none' : 'block';
 
                 if (this.currentTopic.isLocked) {
-                    const lockedMessage = document.createElement('div');
-                    lockedMessage.className = 'locked-message';
-                    lockedMessage.style.cssText = `
-                        background: var(--card-bg);
-                        border: 1px solid var(--border-color);
-                        border-radius: 8px;
-                        padding: 1rem;
-                        text-align: center;
-                        color: #a0aec0;
-                        margin-bottom: 1rem;
-                    `;
-                    lockedMessage.innerHTML = `
-                        <i class="fas fa-lock" style="font-size: 1.5rem; margin-bottom: 0.5rem;"></i>
-                        <p>Este tópico está bloqueado. Não é possível responder.</p>
-                    `;
-                    replyForm.parentNode.insertBefore(lockedMessage, replyForm);
+                    const existingMessage = document.querySelector('.locked-message');
+                    if (!existingMessage) {
+                        const lockedMessage = document.createElement('div');
+                        lockedMessage.className = 'locked-message';
+                        lockedMessage.style.cssText = `
+                            background: var(--card-bg);
+                            border: 1px solid var(--border-color);
+                            border-radius: 8px;
+                            padding: 1rem;
+                            text-align: center;
+                            color: #a0aec0;
+                            margin-bottom: 1rem;
+                        `;
+                        lockedMessage.innerHTML = `
+                            <i class="fas fa-lock" style="font-size: 1.5rem; margin-bottom: 0.5rem;"></i>
+                            <p>Este tópico está bloqueado. Não é possível responder.</p>
+                        `;
+                        replyForm.parentNode.insertBefore(lockedMessage, replyForm);
+                    }
                 }
             }
 
@@ -390,11 +380,6 @@ class ForumTopicUI {
                     </div>
                     <div class="reply-content">
                         ${this.formatContent(reply.content)}
-                        ${reply.lastEditedBy ? `
-                            <div class="edit-info">
-                                Editado por ${reply.lastEditedBy} em ${this.formatDate(reply.lastEditedAt)}
-                            </div>
-                        ` : ''}
                     </div>
                     <div class="reply-actions">
                         <button class="reply-action" onclick="forumTopicUI.likeReply(${reply.id})">
@@ -419,6 +404,61 @@ class ForumTopicUI {
                     <i class="fas fa-exclamation-triangle" style="font-size: 3rem; margin-bottom: 1rem;"></i>
                     <h3>Erro ao carregar respostas</h3>
                     <p>Tente recarregar a página</p>
+                </div>
+            `;
+        }
+    }
+
+    async createReply() {
+        if (!this.api.currentUser) {
+            this.showNotification('Faça login para responder.', 'error');
+            this.redirectToLogin();
+            return;
+        }
+
+        if (this.currentTopic && this.currentTopic.isLocked) {
+            this.showNotification('Este tópico está bloqueado. Não é possível responder.', 'error');
+            return;
+        }
+
+        const content = document.getElementById('replyContent').value.trim();
+
+        if (!content) {
+            this.showNotification('Digite uma resposta.', 'error');
+            return;
+        }
+
+        if (content.length < 5) {
+            this.showNotification('A resposta deve ter pelo menos 5 caracteres.', 'warning');
+            return;
+        }
+
+        try {
+            console.log('📤 Enviando resposta...');
+            await this.api.createReply(this.currentTopicId, content);
+
+            document.getElementById('replyContent').value = '';
+            this.showNotification('Resposta enviada com sucesso!', 'success');
+
+            // Recarregar respostas
+            await this.loadReplies();
+
+            // Scroll para o topo das respostas
+            setTimeout(() => {
+                const repliesSection = document.querySelector('.replies-section');
+                if (repliesSection) {
+                    repliesSection.scrollIntoView({ behavior: 'smooth' });
+                }
+            }, 500);
+
+        } catch (error) {
+            console.error('Erro ao criar resposta:', error);
+            this.showNotification(error.message, 'error');
+        }
+    }
+
+    async deleteTopic(topicId) {
+        if (!confirm('Tem certeza que deseja deletar este tópico? Esta ação não pode ser desfeita.')) {
             return;
         }
 
@@ -445,7 +485,7 @@ class ForumTopicUI {
         try {
             await this.api.deleteReply(replyId);
             this.showNotification('Resposta deletada com sucesso!', 'success');
-            await this.loadReplies(); // Recarregar a lista de respostas
+            await this.loadReplies();
 
         } catch (error) {
             console.error('Erro ao deletar resposta:', error);
@@ -456,8 +496,8 @@ class ForumTopicUI {
     async togglePinTopic(topicId) {
         try {
             const topic = await this.api.togglePinTopic(topicId);
-            this.showNotification(`Tópico ${ topic.isPinned ? 'fixado' : 'desfixado' } com sucesso!`, 'success');
-            await this.loadTopic(); // Recarregar o tópico para atualizar a interface
+            this.showNotification(`Tópico ${topic.isPinned ? 'fixado' : 'desfixado'} com sucesso!`, 'success');
+            await this.loadTopic();
 
         } catch (error) {
             console.error('Erro ao fixar/desfixar tópico:', error);
@@ -468,9 +508,9 @@ class ForumTopicUI {
     async toggleLockTopic(topicId) {
         try {
             const topic = await this.api.toggleLockTopic(topicId);
-            this.showNotification(`Tópico ${ topic.isLocked ? 'bloqueado' : 'desbloqueado' } com sucesso!`, 'success');
-            await this.loadTopic(); // Recarregar o tópico para atualizar a interface
-            await this.loadReplies(); // Recarregar respostas para mostrar/ocultar formulário
+            this.showNotification(`Tópico ${topic.isLocked ? 'bloqueado' : 'desbloqueado'} com sucesso!`, 'success');
+            await this.loadTopic();
+            await this.loadReplies();
 
         } catch (error) {
             console.error('Erro ao bloquear/desbloquear tópico:', error);
@@ -492,11 +532,10 @@ class ForumTopicUI {
             return;
         }
 
-        // ✅ CORREÇÃO: Buscar reply do PostgreSQL
         this.api.getReplies(this.currentTopicId).then(replies => {
             const reply = replies.find(r => r.id == replyId);
             if (reply) {
-                const quoteText = `> ${ reply.content } \n\n`;
+                const quoteText = `> ${reply.content}\n\n`;
                 const textarea = document.getElementById('replyContent');
                 textarea.value = quoteText + textarea.value;
                 textarea.focus();
@@ -506,7 +545,6 @@ class ForumTopicUI {
     }
 
     formatContent(content) {
-        // Simples formatação de texto
         return content
             .replace(/\n/g, '<br>')
             .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
@@ -523,13 +561,82 @@ class ForumTopicUI {
         const diffDays = Math.floor(diffMs / 86400000);
 
         if (diffMins < 1) return 'Agora mesmo';
-        if (diffMins < 60) return `${ diffMins } min atrás`;
-        if (diffHours < 24) return `${ diffHours } h atrás`;
-        if (diffDays < 7) return `${ diffDays } dias atrás`;
+        if (diffMins < 60) return `${diffMins} min atrás`;
+        if (diffHours < 24) return `${diffHours} h atrás`;
+        if (diffDays < 7) return `${diffDays} dias atrás`;
 
         return date.toLocaleDateString('pt-BR', {
             day: '2-digit',
             month: '2-digit',
             year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    }
+
+    showNotification(message, type = 'info') {
+        const notification = document.createElement('div');
+        notification.className = `notification ${type === 'error' ? 'notification-error' : type === 'warning' ? 'notification-warning' : ''}`;
+
+        const icon = type === 'success' ? 'check-circle' :
+            type === 'error' ? 'exclamation-triangle' : 'info-circle';
+
+        notification.innerHTML = `
+            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                <i class="fas fa-${icon}"></i>
+                <span>${message}</span>
+            </div>
+        `;
+
+        notification.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: ${type === 'success' ? '#48bb78' :
+                type === 'error' ? '#e53e3e' : '#3e8ce5'};
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            z-index: 1001;
+            animation: slideInRight 0.3s ease;
+            max-width: 400px;
+            border-left: 4px solid ${type === 'success' ? '#38a169' :
+                type === 'error' ? '#c53030' : '#3182ce'};
+        `;
+
+        document.body.appendChild(notification);
+
+        setTimeout(() => {
+            notification.style.animation = 'slideOutRight 0.3s ease';
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.parentNode.removeChild(notification);
+                }
+            }, 300);
+        }, 5000);
+    }
+
+    showError(message) {
+        const topicContent = document.getElementById('topicContent');
+        if (topicContent) {
+            topicContent.innerHTML = `
+                <div class="no-auth-message">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <h3>Erro</h3>
+                    <p>${message}</p>
+                    <button class="login-btn" onclick="window.location.href = 'forum.html'">
+                        <i class="fas fa-arrow-left"></i>
+                        Voltar ao Fórum
+                    </button>
+                </div>
+            `;
+        }
+    }
+}
+
+// Inicializar quando DOM estiver pronto
+document.addEventListener('DOMContentLoaded', () => {
+    console.log('🚀 DOM carregado, inicializando ForumTopicUI...');
     window.forumTopicUI = new ForumTopicUI();
 });

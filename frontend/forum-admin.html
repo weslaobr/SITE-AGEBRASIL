@@ -4,14 +4,147 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Fórum - Age of Empires IV Brasil</title>
+    <title>Painel Admin - Fórum Age of Empires IV Brasil</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="css/style.css">
+    <link rel="icon" type="image/png" href="https://i.postimg.cc/3JT4W3hz/favicon.png">
+
     <style>
+        :root {
+            --admin-primary: #e53e3e;
+            --admin-secondary: #3182ce;
+            --admin-success: #48bb78;
+            --admin-warning: #ed8936;
+            --admin-danger: #e53e3e;
+        }
+
         .admin-container {
-            max-width: 1200px;
+            max-width: 1400px;
             margin: 2rem auto;
             padding: 0 1rem;
+        }
+
+        .admin-header {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .admin-header h1 {
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .admin-header h1 i {
+            color: var(--admin-primary);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+        }
+
+        .stat-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .stat-icon.primary {
+            background: rgba(229, 62, 62, 0.1);
+            color: var(--admin-primary);
+        }
+
+        .stat-icon.secondary {
+            background: rgba(49, 130, 206, 0.1);
+            color: var(--admin-secondary);
+        }
+
+        .stat-icon.success {
+            background: rgba(72, 187, 120, 0.1);
+            color: var(--admin-success);
+        }
+
+        .stat-icon.warning {
+            background: rgba(237, 137, 54, 0.1);
+            color: var(--admin-warning);
+        }
+
+        .stat-info h3 {
+            margin: 0 0 0.5rem 0;
+            font-size: 2rem;
+            color: var(--text-color);
+        }
+
+        .stat-info p {
+            margin: 0;
+            color: #a0aec0;
+            font-size: 0.9rem;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            border-bottom: 2px solid var(--border-color);
+            overflow-x: auto;
+        }
+
+        .tab {
+            background: none;
+            border: none;
+            color: #a0aec0;
+            padding: 1rem 1.5rem;
+            cursor: pointer;
+            font-weight: 600;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .tab:hover {
+            color: var(--text-color);
+        }
+
+        .tab.active {
+            color: var(--admin-primary);
+            border-bottom-color: var(--admin-primary);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
         }
 
         .admin-card {
@@ -23,65 +156,195 @@
         }
 
         .admin-card h2 {
-            margin-bottom: 1.5rem;
+            margin: 0 0 1.5rem 0;
+            padding-bottom: 1rem;
             border-bottom: 1px solid var(--border-color);
-            padding-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
         }
 
         .form-group {
-            margin-bottom: 1rem;
+            margin-bottom: 1.5rem;
         }
 
         .form-group label {
             display: block;
             margin-bottom: 0.5rem;
-            color: #a0aec0;
+            color: var(--text-color);
+            font-weight: 600;
         }
 
         .form-control {
             width: 100%;
             padding: 0.8rem;
-            background: rgba(0, 0, 0, 0.2);
+            background: var(--secondary-color);
             border: 1px solid var(--border-color);
-            border-radius: 6px;
-            color: white;
+            border-radius: 8px;
+            color: var(--text-color);
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--admin-primary);
         }
 
         .btn-admin {
-            background: var(--accent-color);
+            background: var(--admin-primary);
             color: white;
             border: none;
             padding: 0.8rem 1.5rem;
-            border-radius: 6px;
+            border-radius: 8px;
             cursor: pointer;
-            font-weight: bold;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
         }
 
         .btn-admin:hover {
             background: #c53030;
+            transform: translateY(-2px);
         }
 
-        .topic-actions {
+        .btn-secondary {
+            background: var(--admin-secondary);
+        }
+
+        .btn-secondary:hover {
+            background: #2c5282;
+        }
+
+        .btn-success {
+            background: var(--admin-success);
+        }
+
+        .btn-success:hover {
+            background: #38a169;
+        }
+
+        .btn-warning {
+            background: var(--admin-warning);
+        }
+
+        .btn-warning:hover {
+            background: #dd6b20;
+        }
+
+        .btn-danger {
+            background: var(--admin-danger);
+        }
+
+        .btn-danger:hover {
+            background: #c53030;
+        }
+
+        .btn-sm {
+            padding: 0.5rem 1rem;
+            font-size: 0.85rem;
+        }
+
+        .table-container {
+            overflow-x: auto;
+        }
+
+        .admin-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .admin-table th,
+        .admin-table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .admin-table th {
+            background: rgba(255, 255, 255, 0.02);
+            font-weight: 600;
+            color: var(--text-color);
+        }
+
+        .admin-table tr:hover {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .action-buttons {
             display: flex;
             gap: 0.5rem;
         }
 
-        .btn-sm {
-            padding: 0.4rem 0.8rem;
-            font-size: 0.8rem;
+        .badge {
+            padding: 0.3rem 0.8rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
         }
 
-        .btn-danger {
-            background: #e53e3e;
+        .badge-success {
+            background: rgba(72, 187, 120, 0.2);
+            color: var(--admin-success);
         }
 
-        .btn-warning {
-            background: #d69e2e;
-            color: black;
+        .badge-warning {
+            background: rgba(237, 137, 54, 0.2);
+            color: var(--admin-warning);
         }
 
-        .btn-info {
-            background: #3182ce;
+        .badge-danger {
+            background: rgba(229, 62, 62, 0.2);
+            color: var(--admin-danger);
+        }
+
+        .badge-info {
+            background: rgba(49, 130, 206, 0.2);
+            color: var(--admin-secondary);
+        }
+
+        .search-bar {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .search-bar input {
+            flex: 1;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: #a0aec0;
+        }
+
+        .empty-state i {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .admin-header {
+                flex-direction: column;
+                gap: 1rem;
+                text-align: center;
+            }
+
+            .tabs {
+                flex-wrap: wrap;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+            }
         }
     </style>
 </head>
@@ -91,11 +354,14 @@
         <div class="container">
             <div class="header-content">
                 <div class="logo">
-                    <h1>Admin Fórum</h1>
+                    <img src="https://i.postimg.cc/rFNdr7FV/logo.png" alt="Age of Empires IV Brasil" class="logo-img">
+                    <h1>Age of Empires IV Brasil</h1>
                 </div>
                 <nav>
                     <ul>
-                        <li><a href="forum.html">Voltar ao Fórum</a></li>
+                        <li><a href="index.html">Início</a></li>
+                        <li><a href="forum.html">Fórum</a></li>
+                        <li><a href="forum-admin.html" class="active">Admin</a></li>
                     </ul>
                 </nav>
             </div>
@@ -103,47 +369,262 @@
     </header>
 
     <main class="admin-container">
-        <!-- Nova Categoria -->
-        <div class="admin-card">
-            <h2><i class="fas fa-folder-plus"></i> Criar Nova Categoria</h2>
-            <form id="createCategoryForm">
-                <div class="form-group">
-                    <label>Nome da Categoria</label>
-                    <input type="text" name="name" class="form-control" required>
-                </div>
-                <div class="form-group">
-                    <label>Slug (URL amigável)</label>
-                    <input type="text" name="slug" class="form-control" required>
-                </div>
-                <div class="form-group">
-                    <label>Descrição</label>
-                    <input type="text" name="description" class="form-control">
-                </div>
-                <div class="form-group">
-                    <label>Ícone (FontAwesome, ex: fas fa-comments)</label>
-                    <input type="text" name="icon" class="form-control" value="fas fa-comments">
-                </div>
-                <div class="form-group">
-                    <label>Cor (Hex)</label>
-                    <input type="color" name="color" class="form-control" value="#5865F2" style="height: 50px">
-                </div>
-                <div class="form-group">
-                    <label>Ordem de Exibição</label>
-                    <input type="number" name="display_order" class="form-control" value="0">
-                </div>
-                <button type="submit" class="btn-admin">Criar Categoria</button>
-            </form>
+        <!-- Header -->
+        <div class="admin-header">
+            <h1>
+                <i class="fas fa-shield-alt"></i>
+                Painel de Administração
+            </h1>
+            <button class="btn-admin" onclick="window.location.href='forum.html'">
+                <i class="fas fa-arrow-left"></i>
+                Voltar ao Fórum
+            </button>
         </div>
 
-        <!-- Gerenciar Tópicos Recentes -->
-        <div class="admin-card">
-            <h2><i class="fas fa-tasks"></i> Gerenciar Tópicos Recentes</h2>
-            <div id="recentTopicsList" class="topic-list">
-                <p>Carregando...</p>
+        <!-- Estatísticas -->
+        <div class="stats-grid" id="statsGrid">
+            <div class="stat-card">
+                <div class="stat-icon primary">
+                    <i class="fas fa-comments"></i>
+                </div>
+                <div class="stat-info">
+                    <h3 id="totalTopics">0</h3>
+                    <p>Total de Tópicos</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon secondary">
+                    <i class="fas fa-reply"></i>
+                </div>
+                <div class="stat-info">
+                    <h3 id="totalReplies">0</h3>
+                    <p>Total de Respostas</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon success">
+                    <i class="fas fa-users"></i>
+                </div>
+                <div class="stat-info">
+                    <h3 id="totalUsers">0</h3>
+                    <p>Usuários Ativos</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon warning">
+                    <i class="fas fa-folder"></i>
+                </div>
+                <div class="stat-info">
+                    <h3 id="totalCategories">0</h3>
+                    <p>Categorias</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('dashboard')">
+                <i class="fas fa-chart-line"></i> Dashboard
+            </button>
+            <button class="tab" onclick="switchTab('categories')">
+                <i class="fas fa-folder"></i> Categorias
+            </button>
+            <button class="tab" onclick="switchTab('topics')">
+                <i class="fas fa-comments"></i> Tópicos
+            </button>
+            <button class="tab" onclick="switchTab('users')">
+                <i class="fas fa-users"></i> Usuários
+            </button>
+        </div>
+
+        <!-- Dashboard Tab -->
+        <div id="dashboard-tab" class="tab-content active">
+            <div class="admin-card">
+                <h2><i class="fas fa-fire"></i> Tópicos Mais Populares</h2>
+                <div class="table-container">
+                    <table class="admin-table" id="popularTopicsTable">
+                        <thead>
+                            <tr>
+                                <th>Tópico</th>
+                                <th>Categoria</th>
+                                <th>Respostas</th>
+                                <th>Autor</th>
+                                <th>Data</th>
+                            </tr>
+                        </thead>
+                        <tbody id="popularTopicsBody">
+                            <tr>
+                                <td colspan="5" class="empty-state">
+                                    <i class="fas fa-spinner fa-spin"></i>
+                                    <p>Carregando...</p>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="admin-card">
+                <h2><i class="fas fa-clock"></i> Atividade Recente</h2>
+                <div id="recentActivity">
+                    <div class="empty-state">
+                        <i class="fas fa-spinner fa-spin"></i>
+                        <p>Carregando atividades...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Categorias Tab -->
+        <div id="categories-tab" class="tab-content">
+            <div class="admin-card">
+                <h2><i class="fas fa-folder-plus"></i> Nova Categoria</h2>
+                <form id="createCategoryForm">
+                    <div class="form-group">
+                        <label>Nome da Categoria</label>
+                        <input type="text" name="name" class="form-control" required placeholder="Ex: Estratégias">
+                    </div>
+                    <div class="form-group">
+                        <label>Slug (URL amigável)</label>
+                        <input type="text" name="slug" class="form-control" required placeholder="Ex: estrategias">
+                    </div>
+                    <div class="form-group">
+                        <label>Descrição</label>
+                        <input type="text" name="description" class="form-control"
+                            placeholder="Breve descrição da categoria">
+                    </div>
+                    <div class="form-group">
+                        <label>Ícone (FontAwesome)</label>
+                        <input type="text" name="icon" class="form-control" value="fas fa-comments"
+                            placeholder="Ex: fas fa-comments">
+                    </div>
+                    <div class="form-group">
+                        <label>Cor (Hex)</label>
+                        <input type="color" name="color" class="form-control" value="#5865F2" style="height: 50px">
+                    </div>
+                    <div class="form-group">
+                        <label>Ordem de Exibição</label>
+                        <input type="number" name="display_order" class="form-control" value="0">
+                    </div>
+                    <button type="submit" class="btn-admin">
+                        <i class="fas fa-plus"></i>
+                        Criar Categoria
+                    </button>
+                </form>
+            </div>
+
+            <div class="admin-card">
+                <h2><i class="fas fa-list"></i> Categorias Existentes</h2>
+                <div class="table-container">
+                    <table class="admin-table" id="categoriesTable">
+                        <thead>
+                            <tr>
+                                <th>Ícone</th>
+                                <th>Nome</th>
+                                <th>Slug</th>
+                                <th>Tópicos</th>
+                                <th>Ordem</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="categoriesBody">
+                            <tr>
+                                <td colspan="6" class="empty-state">
+                                    <i class="fas fa-spinner fa-spin"></i>
+                                    <p>Carregando categorias...</p>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tópicos Tab -->
+        <div id="topics-tab" class="tab-content">
+            <div class="admin-card">
+                <h2><i class="fas fa-tasks"></i> Gerenciar Tópicos</h2>
+                <div class="search-bar">
+                    <input type="text" id="topicSearch" class="form-control" placeholder="Buscar tópicos...">
+                    <select id="categoryFilter" class="form-control" style="max-width: 200px;">
+                        <option value="">Todas as Categorias</option>
+                    </select>
+                    <select id="statusFilter" class="form-control" style="max-width: 150px;">
+                        <option value="">Todos</option>
+                        <option value="pinned">Fixados</option>
+                        <option value="locked">Bloqueados</option>
+                    </select>
+                </div>
+                <div class="table-container">
+                    <table class="admin-table" id="topicsTable">
+                        <thead>
+                            <tr>
+                                <th>Tópico</th>
+                                <th>Categoria</th>
+                                <th>Autor</th>
+                                <th>Respostas</th>
+                                <th>Status</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="topicsBody">
+                            <tr>
+                                <td colspan="6" class="empty-state">
+                                    <i class="fas fa-spinner fa-spin"></i>
+                                    <p>Carregando tópicos...</p>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Usuários Tab -->
+        <div id="users-tab" class="tab-content">
+            <div class="admin-card">
+                <h2><i class="fas fa-users"></i> Usuários Ativos</h2>
+                <div class="table-container">
+                    <table class="admin-table" id="usersTable">
+                        <thead>
+                            <tr>
+                                <th>Usuário</th>
+                                <th>Tópicos Criados</th>
+                                <th>Respostas</th>
+                                <th>Último Acesso</th>
+                                <th>Função</th>
+                            </tr>
+                        </thead>
+                        <tbody id="usersBody">
+                            <tr>
+                                <td colspan="5" class="empty-state">
+                                    <i class="fas fa-spinner fa-spin"></i>
+                                    <p>Carregando usuários...</p>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </main>
 
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="logo">
+                    <img src="https://i.postimg.cc/rFNdr7FV/logo.png" alt="Age of Empires IV Brasil" class="logo-img">
+                    <h2>Age of Empires IV Brasil</h2>
+                </div>
+                <div class="copyright">
+                    © 2025 - Age of Empires IV Brasil. Dados de aoe4world.com.
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/discord-login.js"></script>
+    <script src="js/forum-api.js"></script>
     <script src="js/forum-admin.js"></script>
 </body>
 

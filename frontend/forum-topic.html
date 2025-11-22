@@ -577,40 +577,76 @@
         // Admin Actions
         async function togglePin(id, isPinned) {
             if (!confirm('Tem certeza?')) return;
-            await fetch(`${API_BASE_URL}/forum/topics/${id}/pin`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json', 'x-user': JSON.stringify(currentUser) },
-                body: JSON.stringify({ isPinned })
-            });
-            window.location.reload();
+            try {
+                const res = await fetch(`${API_BASE_URL}/forum/topics/${id}/pin`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', 'x-user': encodeURIComponent(JSON.stringify(currentUser)) },
+                    body: JSON.stringify({ isPinned })
+                });
+                if (!res.ok) {
+                    const err = await res.json().catch(() => ({}));
+                    throw new Error(err.error || 'Erro ao fixar/desafixar');
+                }
+                window.location.reload();
+            } catch (error) {
+                console.error(error);
+                alert('Erro: ' + error.message);
+            }
         }
 
         async function toggleLock(id, isLocked) {
             if (!confirm('Tem certeza?')) return;
-            await fetch(`${API_BASE_URL}/forum/topics/${id}/lock`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json', 'x-user': JSON.stringify(currentUser) },
-                body: JSON.stringify({ isLocked })
-            });
-            window.location.reload();
+            try {
+                const res = await fetch(`${API_BASE_URL}/forum/topics/${id}/lock`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', 'x-user': encodeURIComponent(JSON.stringify(currentUser)) },
+                    body: JSON.stringify({ isLocked })
+                });
+                if (!res.ok) {
+                    const err = await res.json().catch(() => ({}));
+                    throw new Error(err.error || 'Erro ao trancar/destrancar');
+                }
+                window.location.reload();
+            } catch (error) {
+                console.error(error);
+                alert('Erro: ' + error.message);
+            }
         }
 
         async function deleteTopic(id) {
             if (!confirm('Tem certeza que deseja deletar este tópico e todas as respostas?')) return;
-            await fetch(`${API_BASE_URL}/forum/topics/${id}`, {
-                method: 'DELETE',
-                headers: { 'x-user': JSON.stringify(currentUser) }
-            });
-            window.location.href = 'forum.html';
+            try {
+                const res = await fetch(`${API_BASE_URL}/forum/topics/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'x-user': encodeURIComponent(JSON.stringify(currentUser)) }
+                });
+                if (!res.ok) {
+                    const err = await res.json().catch(() => ({}));
+                    throw new Error(err.error || 'Erro ao deletar tópico');
+                }
+                window.location.href = 'forum.html';
+            } catch (error) {
+                console.error(error);
+                alert('Erro: ' + error.message);
+            }
         }
 
         async function deleteReply(id) {
             if (!confirm('Tem certeza que deseja deletar esta resposta?')) return;
-            await fetch(`${API_BASE_URL}/forum/replies/${id}`, {
-                method: 'DELETE',
-                headers: { 'x-user': JSON.stringify(currentUser) }
-            });
-            window.location.reload();
+            try {
+                const res = await fetch(`${API_BASE_URL}/forum/replies/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'x-user': encodeURIComponent(JSON.stringify(currentUser)) }
+                });
+                if (!res.ok) {
+                    const err = await res.json().catch(() => ({}));
+                    throw new Error(err.error || 'Erro ao deletar resposta');
+                }
+                window.location.reload();
+            } catch (error) {
+                console.error(error);
+                alert('Erro: ' + error.message);
+            }
         }
 
         // Initialize

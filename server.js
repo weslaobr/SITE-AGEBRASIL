@@ -616,6 +616,28 @@ app.get('/api/forum/stats', async (req, res) => {
     }
 });
 
+// GET user stats
+app.get('/api/forum/user-stats/:userId', async (req, res) => {
+    try {
+        const { userId } = req.params;
+
+        const [topics, replies] = await Promise.all([
+            pool.query('SELECT COUNT(*) FROM forum_topics WHERE author_discord_id = $1', [userId]),
+            pool.query('SELECT COUNT(*) FROM forum_replies WHERE author_discord_id = $1', [userId])
+        ]);
+
+        const stats = {
+            topicsCount: parseInt(topics.rows[0].count),
+            repliesCount: parseInt(replies.rows[0].count)
+        };
+
+        res.json(stats);
+    } catch (err) {
+        console.error('Error loading user stats:', err);
+        res.json({ topicsCount: 0, repliesCount: 0 });
+    }
+});
+
 // =============================================
 // ROTAS DO FINAL FÓRUM
 // =============================================

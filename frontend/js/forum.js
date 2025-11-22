@@ -61,30 +61,63 @@ function updateUserWidget(user) {
             ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png`
             : 'https://cdn.discordapp.com/embed/avatars/0.png';
 
-        widget.innerHTML = `
-            <div class="user-profile-widget">
-                <div class="user-avatar-large">
-                    <img src="${avatarUrl}" alt="${user.username}">
-                </div>
-                <h3>${user.global_name || user.username}</h3>
-                <p style="color: #a0aec0; font-size: 0.9rem;">${user.id === '407624932101455873' ? '<span style="color: #ecc94b; font-weight: bold;"><i class="fas fa-crown"></i> Admin</span>' : 'Membro da Comunidade'}</p>
-                
-                <div class="user-stats-grid">
-                    <div class="user-stat-item">
-                        <span class="user-stat-label">Tópicos</span>
-                        <span class="user-stat-value">0</span>
-                    </div>
-                    <div class="user-stat-item">
-                        <span class="user-stat-label">Respostas</span>
-                        <span class="user-stat-value">0</span>
-                    </div>
-                </div>
+        // Fetch user stats
+        fetch(`${API_BASE_URL}/forum/user-stats/${user.id}`)
+            .then(res => res.json())
+            .then(stats => {
+                widget.innerHTML = `
+                    <div class="user-profile-widget">
+                        <div class="user-avatar-large">
+                            <img src="${avatarUrl}" alt="${user.username}">
+                        </div>
+                        <h3>${user.global_name || user.username}</h3>
+                        <p style="color: #a0aec0; font-size: 0.9rem;">${user.id === '407624932101455873' ? '<span style="color: #ecc94b; font-weight: bold;"><i class="fas fa-crown"></i> Admin</span>' : 'Membro da Comunidade'}</p>
+                        
+                        <div class="user-stats-grid">
+                            <div class="user-stat-item">
+                                <span class="user-stat-label">Tópicos</span>
+                                <span class="user-stat-value">${stats.topicsCount || 0}</span>
+                            </div>
+                            <div class="user-stat-item">
+                                <span class="user-stat-label">Respostas</span>
+                                <span class="user-stat-value">${stats.repliesCount || 0}</span>
+                            </div>
+                        </div>
 
-                <button onclick="logout()" class="discord-btn" style="background: #ef4444; margin-top: 1rem; font-size: 0.9rem; padding: 0.5rem 1rem;">
-                    <i class="fas fa-sign-out-alt"></i> Sair
-                </button>
-            </div>
-        `;
+                        <button onclick="logout()" class="discord-btn" style="background: #ef4444; margin-top: 1rem; font-size: 0.9rem; padding: 0.5rem 1rem;">
+                            <i class="fas fa-sign-out-alt"></i> Sair
+                        </button>
+                    </div>
+                `;
+            })
+            .catch(err => {
+                console.error('Error loading user stats:', err);
+                // Fallback to 0 if error
+                widget.innerHTML = `
+                    <div class="user-profile-widget">
+                        <div class="user-avatar-large">
+                            <img src="${avatarUrl}" alt="${user.username}">
+                        </div>
+                        <h3>${user.global_name || user.username}</h3>
+                        <p style="color: #a0aec0; font-size: 0.9rem;">${user.id === '407624932101455873' ? '<span style="color: #ecc94b; font-weight: bold;"><i class="fas fa-crown"></i> Admin</span>' : 'Membro da Comunidade'}</p>
+                        
+                        <div class="user-stats-grid">
+                            <div class="user-stat-item">
+                                <span class="user-stat-label">Tópicos</span>
+                                <span class="user-stat-value">0</span>
+                            </div>
+                            <div class="user-stat-item">
+                                <span class="user-stat-label">Respostas</span>
+                                <span class="user-stat-value">0</span>
+                            </div>
+                        </div>
+
+                        <button onclick="logout()" class="discord-btn" style="background: #ef4444; margin-top: 1rem; font-size: 0.9rem; padding: 0.5rem 1rem;">
+                            <i class="fas fa-sign-out-alt"></i> Sair
+                        </button>
+                    </div>
+                `;
+            });
     } else {
         // Reset to login form if needed (usually static HTML handles this, but good to ensure)
         // O HTML estático já tem o form de login, então se user for null e o widget já estiver renderizado como perfil, recarregar a página ou restaurar HTML original seria ideal.

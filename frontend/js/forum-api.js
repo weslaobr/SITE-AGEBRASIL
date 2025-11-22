@@ -114,6 +114,55 @@ class ForumAPI {
         } catch { }
         return { totalTopics: 0, totalReplies: 0, totalMembers: 0, onlineNow: 1 };
     }
+
+    // ✅ MÉTODOS DE ADMINISTRAÇÃO
+    async deleteTopic(topicId) {
+        const res = await fetch(`${this.baseURL}/api/forum/topics/${topicId}`, {
+            method: 'DELETE',
+            headers: this.getAuthHeaders()
+        });
+        if (!res.ok) throw new Error("Erro ao deletar tópico");
+        return await res.json();
+    }
+
+    async deleteReply(replyId) {
+        const res = await fetch(`${this.baseURL}/api/forum/replies/${replyId}`, {
+            method: 'DELETE',
+            headers: this.getAuthHeaders()
+        });
+        if (!res.ok) throw new Error("Erro ao deletar resposta");
+        return await res.json();
+    }
+
+    async togglePinTopic(topicId) {
+        // Primeiro buscamos o estado atual
+        const topic = await this.getTopic(topicId);
+        const newStatus = !topic.isPinned;
+
+        const res = await fetch(`${this.baseURL}/api/forum/topics/${topicId}/pin`, {
+            method: 'PUT',
+            headers: this.getAuthHeaders(),
+            body: JSON.stringify({ isPinned: newStatus })
+        });
+
+        if (!res.ok) throw new Error("Erro ao alterar fixação");
+        return { ...topic, isPinned: newStatus };
+    }
+
+    async toggleLockTopic(topicId) {
+        // Primeiro buscamos o estado atual
+        const topic = await this.getTopic(topicId);
+        const newStatus = !topic.isLocked;
+
+        const res = await fetch(`${this.baseURL}/api/forum/topics/${topicId}/lock`, {
+            method: 'PUT',
+            headers: this.getAuthHeaders(),
+            body: JSON.stringify({ isLocked: newStatus })
+        });
+
+        if (!res.ok) throw new Error("Erro ao alterar bloqueio");
+        return { ...topic, isLocked: newStatus };
+    }
 }
 
 window.forumAPI = new ForumAPI();

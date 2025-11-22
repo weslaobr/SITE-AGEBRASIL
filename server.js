@@ -236,7 +236,8 @@ app.get('/api/forum/topics', async (req, res) => {
             SELECT 
                 t.id, t.title, t.created_at, t.views, t.is_pinned, t.is_locked,
                 t.author_name, t.author_avatar,
-                c.name AS category_name, c.slug AS category_slug, c.color AS category_color
+                c.name AS category_name, c.slug AS category_slug, c.color AS category_color,
+                (SELECT COUNT(*) FROM forum_replies r WHERE r.topic_id = t.id) AS replies_count
             FROM forum_topics t
             JOIN forum_categories c ON t.category_id = c.id
             WHERE 1=1
@@ -251,7 +252,24 @@ app.get('/api/forum/topics', async (req, res) => {
         query += ` ORDER BY t.is_pinned DESC, t.created_at DESC LIMIT 50`;
 
         const result = await client.query(query, values);
-        res.json(result.rows);
+
+        // Map snake_case to camelCase
+        const mappedRows = result.rows.map(row => ({
+            id: row.id,
+            title: row.title,
+            createdAt: row.created_at,
+            views: row.views,
+            isPinned: row.is_pinned,
+            isLocked: row.is_locked,
+            author: row.author_name,
+            authorAvatar: row.author_avatar,
+            categoryName: row.category_name,
+            categorySlug: row.category_slug,
+            categoryColor: row.category_color,
+            repliesCount: parseInt(row.replies_count)
+        }));
+
+        res.json(mappedRows);
     } catch (err) {
         console.error(err);
         res.status(500).json([]);
@@ -439,6 +457,86 @@ app.delete('/api/forum/topics/:id', async (req, res) => {
         await client.query('ROLLBACK');
         console.error(err);
         res.status(500).json({ error: 'Error deleting topic' });
+    } finally {
+        client.release();
+    }
+});
+
+app.post('/api/forum/replies', async (req, res) => {
+    const userHeader = req.headers['x-user'];
+    if (!userHeader) return res.status(401).json({ error: 'Faça login' });
+
+    let user;
+    try { user = JSON.parse(userHeader); } catch { return res.status(400); }
+
+    const { topicId, content } = req.body;
+
+    if (!topicId || !content) {
+        return res.status(400).json({ error: 'Topic ID and content are required' });
+    }
+
+    const client = await pool.connect();
+    try {
+        await client.query('BEGIN');
+
+        // Check if topic is locked
+        const topicCheck = await client.query('SELECT is_locked FROM forum_topics WHERE id = $1', [topicId]);
+        if (topicCheck.rows.length === 0) {
+            await client.query('ROLLBACK');
+            return res.status(404).json({ error: 'Topic not found' });
+        }
+        if (topicCheck.rows[0].is_locked) {
+            await client.query('ROLLBACK');
+            return res.status(403).json({ error: 'Topic is locked' });
+        }
+
+        const result = await client.query(`
+            INSERT INTO forum_replies 
+            (topic_id, content, author_discord_id, author_name, author_avatar)
+            VALUES ($1, $2, $3, $4, $5)
+            RETURNING *
+        `, [
+            topicId, content, user.id,
+            user.global_name || user.username,
+            user.avatar ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.webp` : null
+        ]);
+
+        // Update last_reply_at in topic
+        await client.query('UPDATE forum_topics SET last_reply_at = NOW() WHERE id = $1', [topicId]);
+
+        await client.query('COMMIT');
+        res.json(result.rows[0]);
+    } catch (err) {
+        await client.query('ROLLBACK');
+        console.error(err);
+        res.status(500).json({ error: 'Erro ao criar resposta' });
+    } finally {
+        client.release();
+    }
+});
+
+app.delete('/api/forum/replies/:id', async (req, res) => {
+    const { id } = req.params;
+
+    // Auth Check
+    const userHeader = req.headers['x-user'];
+    if (!userHeader) return res.status(401).json({ error: 'Unauthorized' });
+    try {
+        const user = JSON.parse(userHeader);
+        if (user.username !== 'BRO.WESLAO' && user.id !== 'YOUR_ADMIN_ID') {
+            return res.status(403).json({ error: 'Forbidden' });
+        }
+    } catch (e) {
+        return res.status(400).json({ error: 'Invalid user header' });
+    }
+
+    const client = await pool.connect();
+    try {
+        await client.query('DELETE FROM forum_replies WHERE id = $1', [id]);
+        res.json({ success: true });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Error deleting reply' });
     } finally {
         client.release();
     }

@@ -105,13 +105,10 @@ class ForumCategoryUI {
             let uniqueMembers = new Set();
 
             for (const topic of topics) {
-                const replies = await this.api.getReplies(topic.id);
-                totalReplies += replies.length;
+                // Agora usamos repliesCount que vem do backend
+                totalReplies += (topic.repliesCount || 0);
 
                 if (topic.authorId) uniqueMembers.add(topic.authorId);
-                replies.forEach(reply => {
-                    if (reply.authorId) uniqueMembers.add(reply.authorId);
-                });
             }
 
             const realTopicCount = topics.length;
@@ -192,9 +189,8 @@ class ForumCategoryUI {
                 return;
             }
 
-            const topicsHTML = await Promise.all(topics.map(async (topic) => {
-                const replies = await this.api.getReplies(topic.id);
-                const replyCount = replies.length;
+            const topicsHTML = topics.map(topic => {
+                const replyCount = topic.repliesCount || 0;
 
                 return `
                     <div class="topic-item ${topic.isPinned ? 'pinned' : ''}" 
@@ -229,7 +225,7 @@ class ForumCategoryUI {
                         </div>
                     </div>
                 `;
-            }));
+            });
 
             topicsList.innerHTML = topicsHTML.join('');
 

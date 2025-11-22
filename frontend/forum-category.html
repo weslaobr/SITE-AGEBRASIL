@@ -590,66 +590,53 @@
             <span id="categoryNameBreadcrumb">Carregando...</span>
         </div>
 
-        <!-- Mensagem para usuários não autenticados -->
-        <div id="noAuthMessage" data-no-auth class="no-auth-message" style="display: none;">
-            <i class="fab fa-discord"></i>
-            <h3>Faça login para visualizar categorias</h3>
-            <p>Conecte-se com sua conta Discord para acessar o conteúdo do fórum</p>
-            <button class="login-btn" onclick="window.location.href='forum-auth.html'">
-                <i class="fab fa-discord"></i>
-                Entrar com Discord
-            </button>
-        </div>
-
-        <!-- Conteúdo da categoria (visível apenas para usuários autenticados) -->
-        <div id="categoryContent" data-auth-only style="display: none;">
-            <div class="category-container">
-                <!-- Cabeçalho da Categoria -->
-                <div class="category-header">
-                    <div class="category-icon-large" id="categoryIconLarge">
-                        <i class="fas fa-folder"></i>
-                    </div>
-                    <h1 class="category-title" id="categoryTitle">Carregando...</h1>
-                    <p class="category-description" id="categoryDescription">Carregando descrição...</p>
-
-                    <div class="category-stats">
-                        <div class="category-stat">
-                            <span class="number" id="topicCount">0</span>
-                            <span class="label">Tópicos</span>
-                        </div>
-                        <div class="category-stat">
-                            <span class="number" id="replyCount">0</span>
-                            <span class="label">Respostas</span>
-                        </div>
-                        <div class="category-stat">
-                            <span class="number" id="categoryMembers">0</span>
-                            <span class="label">Membros</span>
-                        </div>
-                    </div>
+        <div class="category-container">
+            <!-- Cabeçalho da Categoria -->
+            <div class="category-header">
+                <div class="category-icon-large" id="categoryIconLarge">
+                    <i class="fas fa-folder"></i>
                 </div>
+                <h1 class="category-title" id="categoryTitle">Carregando...</h1>
+                <p class="category-description" id="categoryDescription">Carregando descrição...</p>
 
-                <!-- Seção de Tópicos -->
-                <div class="topics-section">
-                    <div class="topics-header">
-                        <h2>Tópicos</h2>
-                        <div style="display: flex; gap: 1rem;">
-                            <button class="new-topic-btn" onclick="openNewTopicModal()">
-                                <i class="fas fa-plus"></i>
-                                Novo Tópico
-                            </button>
-                        </div>
+                <div class="category-stats">
+                    <div class="category-stat">
+                        <span class="number" id="topicCount">0</span>
+                        <span class="label">Tópicos</span>
                     </div>
-
-                    <div class="topics-list" id="topicsList">
-                        <!-- Tópicos serão carregados via JavaScript -->
-                        <div class="no-topics">
-                            <i class="fas fa-comments"></i>
-                            <h3>Nenhum tópico encontrado</h3>
-                            <p>Seja o primeiro a criar um tópico nesta categoria!</p>
-                        </div>
+                    <div class="category-stat">
+                        <span class="number" id="replyCount">0</span>
+                        <span class="label">Respostas</span>
+                    </div>
+                    <div class="category-stat">
+                        <span class="number" id="categoryMembers">0</span>
+                        <span class="label">Membros</span>
                     </div>
                 </div>
             </div>
+
+            <!-- Seção de Tópicos -->
+            <div class="topics-section">
+                <div class="topics-header">
+                    <h2>Tópicos</h2>
+                    <div style="display: flex; gap: 1rem;">
+                        <button class="new-topic-btn" onclick="openNewTopicModal()">
+                            <i class="fas fa-plus"></i>
+                            Novo Tópico
+                        </button>
+                    </div>
+                </div>
+
+                <div class="topics-list" id="topicsList">
+                    <!-- Tópicos serão carregados via JavaScript -->
+                    <div class="no-topics">
+                        <i class="fas fa-comments"></i>
+                        <h3>Nenhum tópico encontrado</h3>
+                        <p>Seja o primeiro a criar um tópico nesta categoria!</p>
+                    </div>
+                </div>
+            </div>
+        </div>
         </div>
     </main>
 
@@ -705,101 +692,119 @@
             </div>
         </div>
     </footer>
+    modal.style.display = 'block';
+    setTimeout(() => {
+    const titleInput = document.getElementById('topicTitle');
+    if (titleInput) titleInput.focus();
+    }, 100);
+    }
+    }
 
-    <script src="js/discord-login.js"></script>
-    <script src="js/forum-api.js"></script>
-    <script src="js/forum-category.js"></script>
-
-    <script>
-        // Funções do Modal
-        function openNewTopicModal() {
-            const modal = document.getElementById('newTopicModal');
-            if (modal) {
-                modal.style.display = 'block';
-                setTimeout(() => {
-                    const titleInput = document.getElementById('topicTitle');
-                    if (titleInput) titleInput.focus();
-                }, 100);
-            }
-        }
-
-        function closeNewTopicModal() {
-            const modal = document.getElementById('newTopicModal');
-            const form = document.getElementById('newTopicForm');
-            if (modal) modal.style.display = 'none';
-            if (form) form.reset();
-        }
+    function closeNewTopicModal() {
+    const modal = document.getElementById('newTopicModal');
+    const form = document.getElementById('newTopicForm');
+    if (modal) modal.style.display = 'none';
+    if (form) form.reset();
+    }
 
 
-        // Fechar modal ao clicar fora
-        window.addEventListener('click', function (event) {
-            const modal = document.getElementById('newTopicModal');
-            if (event.target === modal) {
-                closeNewTopicModal();
-            }
-        });
+    // Fechar modal ao clicar fora
+    window.addEventListener('click', function (event) {
+    const modal = document.getElementById('newTopicModal');
+    if (event.target === modal) {
+    closeNewTopicModal();
+    }
+    });
 
-        // Gerenciamento de Usuário e Header
-        const userInfo = document.getElementById('userInfo');
-        const loginBtn = document.getElementById('loginBtn');
-        const logoutBtn = document.getElementById('logoutBtn');
-        const noAuthMessage = document.getElementById('noAuthMessage');
-        const content = document.getElementById('categoryContent');
+    // Gerenciamento de Usuário e Header
+    document.addEventListener('DOMContentLoaded', () => {
+    const userInfo = document.getElementById('userInfo');
+    const loginBtn = document.getElementById('loginBtn');
+    const loginBtnBig = document.getElementById('loginBtnBig');
+    const logoutBtn = document.getElementById('logoutBtn');
+    const noAuthMessage = document.getElementById('noAuthMessage');
+    const content = document.getElementById('categoryContent');
 
-        function renderHeader() {
-            let user = null;
-            let isAdmin = false;
+    function renderHeader() {
+    let user = null;
+    let isAdmin = false;
 
-            try {
-                const userData = localStorage.getItem('discord_user');
-                user = userData ? JSON.parse(userData) : null;
-            } catch (e) {
-                user = null;
-            }
+    try {
+    const userData = localStorage.getItem('discord_user');
+    user = userData ? JSON.parse(userData) : null;
+    } catch (e) {
+    user = null;
+    }
 
-            if (user && user.username === 'BRO.WESLAO') {
-                isAdmin = true;
-            }
+    if (user && user.username === 'BRO.WESLAO') {
+    isAdmin = true;
+    }
 
-            if (user) {
-                // Logado
-                if (userInfo) {
-                    userInfo.style.display = 'flex';
-                    const avatar = user.avatar
-                        ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.webp?size=64`
-                        : `https://cdn.discordapp.com/embed/avatars/${user.discriminator % 5}.png`;
+    if (user) {
+    // Logado
+    if (userInfo) {
+    userInfo.style.display = 'flex';
+    const avatar = user.avatar
+    ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.webp?size=64`
+    : `https://cdn.discordapp.com/embed/avatars/${user.discriminator % 5}.png`;
 
-                    userInfo.innerHTML = `
-                            <img src="${avatar}" alt="${user.username}">
-                            <span>${user.global_name || user.username}</span>
-                            ${isAdmin ? '<span class="admin-badge">ADMIN</span>' : ''}
-                        `;
-                }
-                if (loginBtn) loginBtn.style.display = 'none';
-                if (logoutBtn) logoutBtn.style.display = 'flex';
-                if (noAuthMessage) noAuthMessage.style.display = 'none';
-                if (content) content.style.display = 'block';
-            } else {
-                // Não Logado
-                if (userInfo) userInfo.style.display = 'none';
-                if (loginBtn) loginBtn.style.display = 'flex';
-                if (logoutBtn) logoutBtn.style.display = 'none';
-                if (noAuthMessage) noAuthMessage.style.display = 'block';
-                if (content) content.style.display = 'none';
-            }
-        }
+    userInfo.innerHTML = `
+    <img src="${avatar}" alt="${user.username}">
+    <span>${user.global_name || user.username}</span>
+    ${isAdmin ? '<span class="admin-badge">ADMIN</span>' : ''}
+    `;
 
-        if (logoutBtn) {
-            logoutBtn.addEventListener('click', (e) => {
-                e.preventDefault();
-                localStorage.removeItem('discord_user');
-                localStorage.removeItem('discord_access_token');
-                location.reload();
-            });
-        }
+    // Add Admin Button
+    if (isAdmin) {
+    const adminBtn = document.createElement('a');
+    adminBtn.href = 'forum-admin.html';
+    adminBtn.className = 'login-btn-header';
+    adminBtn.innerHTML = '<i class="fas fa-cogs"></i> Admin';
+    adminBtn.style.marginLeft = '10px';
+    if (!userInfo.parentNode.querySelector('a[href="forum-admin.html"]')) {
+    userInfo.parentNode.insertBefore(adminBtn, logoutBtn);
+    }
+    }
+    }
+    if (loginBtn) loginBtn.style.display = 'none';
+    if (logoutBtn) logoutBtn.style.display = 'flex';
+    if (noAuthMessage) noAuthMessage.style.display = 'none';
+    if (content) content.style.display = 'block';
+    } else {
+    // Não Logado
+    if (userInfo) userInfo.style.display = 'none';
+    if (loginBtn) loginBtn.style.display = 'flex';
+    if (logoutBtn) logoutBtn.style.display = 'none';
+    if (noAuthMessage) noAuthMessage.style.display = 'block';
+    if (content) content.style.display = 'none';
+    }
+    }
 
-        renderHeader();
+    if (logoutBtn) {
+    logoutBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+    localStorage.removeItem('discord_user');
+    localStorage.removeItem('discord_access_token');
+    location.reload();
+    });
+    }
 
+    if (loginBtn) {
+    loginBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+    window.discordAuth.login();
+    });
+    }
+
+    if (loginBtnBig) {
+    loginBtnBig.addEventListener('click', (e) => {
+    e.preventDefault();
+    window.discordAuth.login();
+    });
+    }
+
+    renderHeader();
+    });
     </script>
 </body>
 

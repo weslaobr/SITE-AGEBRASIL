@@ -531,93 +531,80 @@
             <span id="topicTitleBreadcrumb">Tópico</span>
         </div>
 
-        <!-- Mensagem para usuários não autenticados -->
-        <div id="noAuthMessage" data-no-auth class="no-auth-message" style="display: none;">
-            <i class="fab fa-discord"></i>
-            <h3>Faça login para visualizar tópicos</h3>
-            <p>Conecte-se com sua conta Discord para ler e participar das discussões</p>
-            <button class="login-btn" onclick="window.location.href='forum-auth.html'">
-                <i class="fab fa-discord"></i>
-                Entrar com Discord
-            </button>
-        </div>
-
-        <!-- Conteúdo do tópico (visível apenas para usuários autenticados) -->
-        <div id="topicContent" data-auth-only style="display: none;">
-            <div class="topic-container">
-                <!-- Cabeçalho do Tópico -->
-                <div class="topic-header">
-                    <div class="topic-meta">
-                        <div class="topic-category" id="topicCategory">Estratégias</div>
-                        <div class="topic-date" id="topicDate">há 2 dias</div>
-                    </div>
-                    <h1 class="topic-title" id="topicTitle">Carregando tópico...</h1>
-
-                    <div class="topic-author">
-                        <div class="author-avatar" id="authorAvatar">
-                            <!-- Avatar será carregado via JavaScript -->
-                        </div>
-                        <div class="author-info">
-                            <div class="author-name" id="authorName">Autor</div>
-                            <div class="author-role" id="authorRole">Membro</div>
-                        </div>
-                    </div>
+        <div class="topic-container">
+            <!-- Cabeçalho do Tópico -->
+            <div class="topic-header">
+                <div class="topic-meta">
+                    <div class="topic-category" id="topicCategory">Estratégias</div>
+                    <div class="topic-date" id="topicDate">há 2 dias</div>
                 </div>
+                <h1 class="topic-title" id="topicTitle">Carregando tópico...</h1>
 
-                <!-- Conteúdo do Tópico -->
-                <div class="topic-content" id="topicContentText">
-                    <p>Carregando conteúdo do tópico...</p>
-                </div>
-
-                <!-- Ações do Tópico -->
-                <div class="topic-actions">
-                    <button class="btn btn-secondary" onclick="window.history.back()">
-                        <i class="fas fa-arrow-left"></i>
-                        Voltar ao Fórum
-                    </button>
-                    <button class="btn btn-primary" onclick="scrollToReply()">
-                        <i class="fas fa-reply"></i>
-                        Responder
-                    </button>
-                </div>
-
-                <!-- Seção de Respostas -->
-                <div class="replies-section">
-                    <div class="replies-header">
-                        <h2>Respostas</h2>
-                        <div class="replies-count" id="repliesCount">0 respostas</div>
+                <div class="topic-author">
+                    <div class="author-avatar" id="authorAvatar">
+                        <!-- Avatar será carregado via JavaScript -->
                     </div>
-
-                    <!-- Formulário de Resposta -->
-                    <div class="reply-form">
-                        <div class="form-group">
-                            <label for="replyContent">Sua Resposta</label>
-                            <textarea id="replyContent" placeholder="Digite sua resposta aqui..." required
-                                minlength="5"></textarea>
-                        </div>
-                        <div class="form-actions">
-                            <button type="button" class="btn btn-secondary" onclick="clearReplyForm()">
-                                <i class="fas fa-times"></i>
-                                Cancelar
-                            </button>
-                            <button type="button" class="btn btn-primary" onclick="submitReply()">
-                                <i class="fas fa-paper-plane"></i>
-                                Enviar Resposta
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Lista de Respostas -->
-                    <div class="replies-list" id="repliesList">
-                        <!-- Respostas serão carregadas via JavaScript -->
-                        <div class="no-replies" style="text-align: center; padding: 3rem; color: #a0aec0;">
-                            <i class="fas fa-comments" style="font-size: 3rem; margin-bottom: 1rem;"></i>
-                            <h3>Nenhuma resposta ainda</h3>
-                            <p>Seja o primeiro a responder este tópico!</p>
-                        </div>
+                    <div class="author-info">
+                        <div class="author-name" id="authorName">Autor</div>
+                        <div class="author-role" id="authorRole">Membro</div>
                     </div>
                 </div>
             </div>
+
+            <!-- Conteúdo do Tópico -->
+            <div class="topic-content" id="topicContentText">
+                <p>Carregando conteúdo do tópico...</p>
+            </div>
+
+            <!-- Ações do Tópico -->
+            <div class="topic-actions">
+                <button class="btn btn-secondary" onclick="window.history.back()">
+                    <i class="fas fa-arrow-left"></i>
+                    Voltar ao Fórum
+                </button>
+                <button class="btn btn-primary" onclick="scrollToReply()">
+                    <i class="fas fa-reply"></i>
+                    Responder
+                </button>
+            </div>
+
+            <!-- Seção de Respostas -->
+            <div class="replies-section">
+                <div class="replies-header">
+                    <h2>Respostas</h2>
+                    <div class="replies-count" id="repliesCount">0 respostas</div>
+                </div>
+
+                <!-- Formulário de Resposta -->
+                <div class="reply-form">
+                    <div class="form-group">
+                        <label for="replyContent">Sua Resposta</label>
+                        <textarea id="replyContent" placeholder="Digite sua resposta aqui..." required
+                            minlength="5"></textarea>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary" onclick="clearReplyForm()">
+                            <i class="fas fa-times"></i>
+                            Cancelar
+                        </button>
+                        <button type="button" class="btn btn-primary" onclick="submitReply()">
+                            <i class="fas fa-paper-plane"></i>
+                            Enviar Resposta
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Lista de Respostas -->
+                <div class="replies-list" id="repliesList">
+                    <!-- Respostas serão carregadas via JavaScript -->
+                    <div class="no-replies" style="text-align: center; padding: 3rem; color: #a0aec0;">
+                        <i class="fas fa-comments" style="font-size: 3rem; margin-bottom: 1rem;"></i>
+                        <h3>Nenhuma resposta ainda</h3>
+                        <p>Seja o primeiro a responder este tópico!</p>
+                    </div>
+                </div>
+            </div>
+        </div>
         </div>
     </main>
 
@@ -681,6 +668,7 @@
         document.addEventListener('DOMContentLoaded', () => {
             const userInfo = document.getElementById('userInfo');
             const loginBtn = document.getElementById('loginBtn');
+            const loginBtnBig = document.getElementById('loginBtnBig');
             const logoutBtn = document.getElementById('logoutBtn');
             const noAuthMessage = document.getElementById('noAuthMessage');
             const content = document.getElementById('topicContent');
@@ -746,6 +734,20 @@
                     localStorage.removeItem('discord_user');
                     localStorage.removeItem('discord_access_token');
                     location.reload();
+                });
+            }
+
+            if (loginBtn) {
+                loginBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    window.discordAuth.login();
+                });
+            }
+
+            if (loginBtnBig) {
+                loginBtnBig.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    window.discordAuth.login();
                 });
             }
 

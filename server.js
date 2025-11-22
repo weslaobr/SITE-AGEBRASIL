@@ -124,6 +124,14 @@ pool.on('error', (err, client) => {
 
 app.post('/api/auth/discord', async (req, res) => {
     const { code } = req.body;
+
+    // DEBUG LOG
+    console.log('🔹 Auth Request received:', {
+        code: code ? 'Present' : 'Missing',
+        origin: req.headers.origin,
+        constructed_redirect_uri: req.headers.origin + '/forum-auth.html'
+    });
+
     if (!code) return res.status(400).json({ error: 'Code is required' });
 
     try {

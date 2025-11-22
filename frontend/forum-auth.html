@@ -78,7 +78,8 @@
                 });
 
                 if (!response.ok) {
-                    throw new Error('Falha ao trocar token');
+                    const errData = await response.json().catch(() => ({}));
+                    throw new Error(errData.error || `Falha ao trocar token (${response.status})`);
                 }
 
                 const data = await response.json();
@@ -92,8 +93,8 @@
 
             } catch (err) {
                 console.error(err);
-                document.getElementById('status').textContent = 'Erro ao conectar com servidor. Tente novamente.';
-                setTimeout(() => window.location.href = 'forum.html', 3000);
+                document.getElementById('status').innerHTML = `<span style="color: #fc8181;">Erro: ${err.message}</span><br><span style="font-size: 0.8rem; color: #a0aec0;">Verifique o console (F12) para mais detalhes.</span>`;
+                // setTimeout(() => window.location.href = 'forum.html', 5000);
             }
         }
 

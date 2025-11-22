@@ -235,7 +235,7 @@ app.get('/api/forum/topics', async (req, res) => {
         let query = `
             SELECT 
                 t.id, t.title, t.created_at, t.views, t.is_pinned, t.is_locked,
-                t.author_name, t.author_avatar,
+                t.author_name, t.author_avatar, t.author_discord_id,
                 c.name AS category_name, c.slug AS category_slug, c.color AS category_color,
                 (SELECT COUNT(*) FROM forum_replies r WHERE r.topic_id = t.id) AS replies_count
             FROM forum_topics t
@@ -263,6 +263,7 @@ app.get('/api/forum/topics', async (req, res) => {
             isLocked: row.is_locked,
             author: row.author_name,
             authorAvatar: row.author_avatar,
+            authorId: row.author_discord_id,
             categoryName: row.category_name,
             categorySlug: row.category_slug,
             categoryColor: row.category_color,

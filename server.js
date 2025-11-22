@@ -4257,6 +4257,7 @@ app.put('/api/tournaments/:id', async (req, res) => {
 });
 
 // Delete tournament
+// Delete tournament
 app.delete('/api/tournaments/:id', async (req, res) => {
     const { id } = req.params;
 
@@ -4285,6 +4286,39 @@ app.delete('/api/tournaments/:id', async (req, res) => {
     }
 });
 
+// Helper to parse date string
+function parseTournamentDates(dateStr) {
+    try {
+        const currentYear = new Date().getFullYear();
+        let start, end;
+
+        if (dateStr.includes('-')) {
+            const parts = dateStr.split('-').map(s => s.trim());
+            const hasYear1 = /\d{4}/.test(parts[0]);
+            const hasYear2 = /\d{4}/.test(parts[1]);
+
+            let d1 = parts[0];
+            let d2 = parts[1];
+
+            if (!hasYear2) d2 += `, ${currentYear}`;
+            if (!hasYear1 && !d1.includes(',')) d1 += `, ${hasYear2 ? d2.match(/\d{4}/)[0] : currentYear}`;
+
+            start = new Date(d1);
+            end = new Date(d2);
+        } else {
+            start = new Date(dateStr);
+            end = new Date(dateStr);
+        }
+
+        if (isNaN(start.getTime())) start = null;
+        if (isNaN(end.getTime())) end = null;
+
+        return { start, end };
+    } catch (e) {
+        return { start: null, end: null };
+    }
+}
+
 // Sync with AoE4World
 app.post('/api/tournaments/sync', async (req, res) => {
     // Auth Check
@@ -4301,44 +4335,76 @@ app.post('/api/tournaments/sync', async (req, res) => {
     }
 
     try {
-        // Fetch HTML from AoE4World
         const response = await fetch('https://aoe4world.com/esports/tournaments');
         const html = await response.text();
 
-        // Basic regex scraping
         const tournaments = [];
-        const regex = /<a href="(https:\/\/aoe4world\.com\/esports\/tournaments\/[^"]+)".*?<h3[^>]*>([^<]+)<\/h3>.*?<p[^>]*>([^<]+)<\/p>/gs;
+        const ongoingSection = html.split('Ongoing tournaments')[1]?.split('Upcoming tournaments')[0] || '';
+        const upcomingSection = html.split('Upcoming tournaments')[1]?.split('Past tournaments')[0] || '';
+        const pastSection = html.split('Past tournaments')[1]?.split('<section')[0] || '';
+
+        const cardRegex = /<a[^>]+href="(\/esports\/tournaments\/[^"]+)"[^>]*>[\s\S]*?<img[^>]+src="([^"]+)"[\s\S]*?<h3[^>]*>([^<]+)<\/h3>[\s\S]*?<p[^>]*class="mb-2"[^>]*>([^<]+)<\/p>/g;
+        const rowRegex = /<tr[\s\S]*?(?:src="([^"]+)")?[\s\S]*?<a[^>]+href="(\/esports\/tournaments\/[^"]+)"[^>]*>([^<]+)<\/a>[\s\S]*?<div[^>]*class="text-gray-100"[^>]*>([^<]+)<\/div>/g;
 
         let match;
-        while ((match = regex.exec(html)) !== null) {
-            const link = match[1];
-            const name = match[2].trim();
-            const dateStr = match[3].trim();
-
-            // Default status
-            let status = 'upcoming';
-
-            tournaments.push({ name, link, date: dateStr, status });
+        while ((match = cardRegex.exec(ongoingSection)) !== null) {
+            tournaments.push({
+                status: 'ongoing',
+                name: match[3].trim(),
+                dateStr: match[4].trim(),
+                link: 'https://aoe4world.com' + match[1],
+                image_url: match[2]
+            });
         }
 
-        // Save to DB
+        while ((match = rowRegex.exec(upcomingSection)) !== null) {
+            tournaments.push({
+                status: 'upcoming',
+                name: match[3].trim(),
+                dateStr: match[4].trim(),
+                link: 'https://aoe4world.com' + match[2],
+                image_url: match[1] || null
+            });
+        }
+
+        while ((match = rowRegex.exec(pastSection)) !== null) {
+            tournaments.push({
+                status: 'completed',
+                name: match[3].trim(),
+                dateStr: match[4].trim(),
+                link: 'https://aoe4world.com' + match[2],
+                image_url: match[1] || null
+            });
+        }
+
         const client = await pool.connect();
         try {
             await client.query('BEGIN');
             let addedCount = 0;
+
             for (const t of tournaments) {
+                const { start, end } = parseTournamentDates(t.dateStr);
+
                 // Check if exists
-                const check = await client.query('SELECT id FROM tournaments WHERE name = $1', [t.name]);
+                const check = await client.query('SELECT id FROM tournaments WHERE link = $1', [t.link]);
                 if (check.rows.length === 0) {
                     await client.query(
-                        `INSERT INTO tournaments (name, link, description, status) VALUES ($1, $2, $3, $4)`,
-                        [t.name, t.link, t.date, t.status]
+                        `INSERT INTO tournaments (name, link, image_url, start_date, end_date, status, description)
+                         VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+                        [t.name, t.link, t.image_url, start, end, t.status, t.dateStr]
                     );
                     addedCount++;
+                } else {
+                    // Update status and dates
+                    await client.query(
+                        `UPDATE tournaments SET status = $1, start_date = $2, end_date = $3, image_url = COALESCE($4, image_url) WHERE link = $5`,
+                        [t.status, start, end, t.image_url, t.link]
+                    );
                 }
             }
+
             await client.query('COMMIT');
-            res.json({ success: true, added: addedCount, total_found: tournaments.length });
+            res.json({ success: true, added: addedCount, total: tournaments.length });
         } catch (err) {
             await client.query('ROLLBACK');
             throw err;

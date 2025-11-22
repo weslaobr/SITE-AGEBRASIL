@@ -1,0 +1,14 @@
+/* Basic Forum Styles */
+body {
+    background-color: #1a202c;
+    color: #e2e8f0;
+    font-family: 'Inter', sans-serif;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1rem;
+}
+
+/* Add any specific forum styles here */

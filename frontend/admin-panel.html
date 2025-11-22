@@ -133,6 +133,31 @@
             max-width: 500px;
             border: 1px solid var(--accent-color);
         }
+
+        .admin-tabs {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .tab-btn {
+            background: none;
+            border: none;
+            color: #a0aec0;
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+            font-size: 1.1rem;
+            border-bottom: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .tab-btn:hover {
+            color: var(--text-color);
+        }
+
+        .tab-btn.active {
+            color: var(--accent-color);
+            border-bottom-color: var(--accent-color);
+        }
     </style>
 </head>
 
@@ -151,356 +176,164 @@
                         <li><a href="leaderboard.html">Tabela de classificação</a></li>
                         <li><a href="torneios.html">Torneios</a></li>
                         <li><a href="about.html">Sobre</a></li>
-                        <!DOCTYPE html>
-                        <html lang="pt-BR">
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </header>
 
-                        <head>
-                            <meta charset="UTF-8">
-                            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                            <title>Painel Admin - Age of Empires IV Brasil</title>
-                            <link rel="icon" type="image/png" href="https://i.postimg.cc/xTpcXw5V/favicon.png">
-                            <link rel="stylesheet" href="css/style.css">
-                            <link rel="stylesheet" href="css/forum.css">
-                            <link rel="stylesheet"
-                                href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-                            <style>
-                                .admin-container {
-                                    background: rgba(0, 0, 0, 0.5);
-                                    border: 1px solid var(--border-color);
-                                    border-radius: 8px;
-                                    padding: 2rem;
-                                    margin-top: 2rem;
-                                }
+    <main class="container">
+        <div class="admin-container">
+            <div class="admin-header">
+                <h2><i class="fas fa-cogs"></i> Painel Administrativo</h2>
+                <div class="admin-tabs">
+                    <button class="tab-btn active" onclick="switchTab('categories', event)">Categorias</button>
+                    <button class="tab-btn" onclick="switchTab('tournaments', event)">Torneios</button>
+                </div>
+            </div>
 
-                                .admin-header {
-                                    display: flex;
-                                    justify-content: space-between;
-                                    align-items: center;
-                                    margin-bottom: 2rem;
-                                    border-bottom: 1px solid var(--border-color);
-                                    padding-bottom: 1rem;
-                                }
+            <!-- CATEGORIES TAB -->
+            <div id="tab-categories" class="admin-tab-content">
+                <div style="display: flex; justify-content: flex-end; margin-bottom: 1rem;">
+                    <button onclick="openModal()" class="btn-primary"><i class="fas fa-plus"></i> Nova
+                        Categoria</button>
+                </div>
+                <div id="category-list" class="category-list">
+                    <div class="loading"><i class="fas fa-spinner fa-spin"></i> Carregando categorias...</div>
+                </div>
+            </div>
 
-                                .category-list {
-                                    display: flex;
-                                    flex-direction: column;
-                                    gap: 1rem;
-                                }
+            <!-- TOURNAMENTS TAB -->
+            <div id="tab-tournaments" class="admin-tab-content" style="display: none;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 1rem;">
+                    <button onclick="syncTournaments(event)" class="btn-edit"
+                        style="background: #f1c40f; color: black;"><i class="fas fa-sync"></i> Sincronizar com
+                        AoE4World</button>
+                    <button onclick="openTournamentModal()" class="btn-primary"><i class="fas fa-plus"></i> Novo
+                        Torneio</button>
+                </div>
+                <div id="tournament-list" class="category-list">
+                    <div class="loading"><i class="fas fa-spinner fa-spin"></i> Carregando torneios...</div>
+                </div>
+            </div>
+        </div>
+    </main>
 
-                                .category-item {
-                                    display: flex;
-                                    justify-content: space-between;
-                                    align-items: center;
-                                    background: rgba(255, 255, 255, 0.05);
-                                    padding: 1rem;
-                                    border-radius: 4px;
-                                    border: 1px solid transparent;
-                                }
+    <!-- Modal Categories -->
+    <div id="categoryModal" class="modal">
+        <div class="modal-content">
+            <h3 id="modalTitle" style="margin-bottom: 1.5rem;">Nova Categoria</h3>
+            <form id="categoryForm">
+                <input type="hidden" id="catId">
+                <div class="form-group">
+                    <label>Nome</label>
+                    <input type="text" id="catName" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label>Slug (URL)</label>
+                    <input type="text" id="catSlug" class="form-control" required placeholder="ex: geral, estrategias">
+                </div>
+                <div class="form-group">
+                    <label>Descrição</label>
+                    <input type="text" id="catDesc" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label>Ícone (FontAwesome class)</label>
+                    <input type="text" id="catIcon" class="form-control" required placeholder="fas fa-comments">
+                </div>
+                <div style="display: flex; justify-content: flex-end; gap: 1rem; margin-top: 1.5rem;">
+                    <button type="button" onclick="closeModal()" class="btn-danger"
+                        style="background: #4a5568;">Cancelar</button>
+                    <button type="submit" class="btn-primary">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
 
-                                .category-item:hover {
-                                    border-color: var(--accent-color);
-                                }
+    <!-- Modal Tournaments -->
+    <div id="tournamentModal" class="modal">
+        <div class="modal-content">
+            <h3 id="tournModalTitle" style="margin-bottom: 1.5rem;">Novo Torneio</h3>
+            <form id="tournamentForm">
+                <input type="hidden" id="tournId">
+                <div class="form-group">
+                    <label>Nome</label>
+                    <input type="text" id="tournName" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label>Link (AoE4World/Liquipedia)</label>
+                    <input type="text" id="tournLink" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label>Imagem URL</label>
+                    <input type="text" id="tournImage" class="form-control" placeholder="https://...">
+                </div>
+                <div class="form-group" style="display: flex; gap: 1rem;">
+                    <div style="flex: 1;">
+                        <label>Data Início</label>
+                        <input type="text" id="tournStart" class="form-control" placeholder="YYYY-MM-DD">
+                    </div>
+                    <div style="flex: 1;">
+                        <label>Data Fim</label>
+                        <input type="text" id="tournEnd" class="form-control" placeholder="YYYY-MM-DD">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Premiação</label>
+                    <input type="text" id="tournPrize" class="form-control" placeholder="$1000">
+                </div>
+                <div class="form-group">
+                    <label>Status</label>
+                    <select id="tournStatus" class="form-control">
+                        <option value="upcoming">Em Breve</option>
+                        <option value="ongoing">Em Andamento</option>
+                        <option value="completed">Encerrado</option>
+                    </select>
+                </div>
+                <div style="display: flex; justify-content: flex-end; gap: 1rem; margin-top: 1.5rem;">
+                    <button type="button" onclick="closeTournamentModal()" class="btn-danger"
+                        style="background: #4a5568;">Cancelar</button>
+                    <button type="submit" class="btn-primary">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
 
-                                .category-info {
-                                    display: flex;
-                                    align-items: center;
-                                    gap: 1rem;
-                                }
+    <script src="js/forum.js"></script>
+    <script>
+        // Check Admin
+        function checkAdmin() {
+            const currentUser = JSON.parse(localStorage.getItem('forum_user'));
+            if (!currentUser || currentUser.id !== '407624932101455873') {
+                alert('Acesso negado.');
+                window.location.href = 'forum.html';
+            }
+        }
+        checkAdmin();
 
-                                .category-icon {
-                                    font-size: 1.5rem;
-                                    color: var(--accent-color);
-                                    width: 40px;
-                                    text-align: center;
-                                }
+        // TABS
+        function switchTab(tab, event) {
+            document.querySelectorAll('.admin-tab-content').forEach(el => el.style.display = 'none');
+            document.getElementById(`tab-${tab}`).style.display = 'block';
 
-                                .category-actions {
-                                    display: flex;
-                                    gap: 0.5rem;
-                                }
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            if (event && event.target) {
+                event.target.classList.add('active');
+            }
 
-                                .form-group {
-                                    margin-bottom: 1rem;
-                                }
+            if (tab === 'tournaments') loadTournaments();
+        }
 
-                                .form-group label {
-                                    display: block;
-                                    margin-bottom: 0.5rem;
-                                    color: #a0aec0;
-                                }
+        // ================= CATEGORIES LOGIC =================
+        let currentCategories = [];
 
-                                .form-control {
-                                    width: 100%;
-                                    padding: 0.8rem;
-                                    background: rgba(0, 0, 0, 0.2);
-                                    border: 1px solid var(--border-color);
-                                    border-radius: 4px;
-                                    color: var(--text-color);
-                                }
+        async function loadCategories() {
+            const container = document.getElementById('category-list');
+            try {
+                const res = await fetch(`${API_BASE_URL}/forum/categories?t=${Date.now()}`);
+                currentCategories = await res.json();
 
-                                .btn-primary {
-                                    background: var(--accent-color);
-                                    color: #000;
-                                    border: none;
-                                    padding: 0.8rem 1.5rem;
-                                    border-radius: 4px;
-                                    font-weight: bold;
-                                    cursor: pointer;
-                                }
-
-                                .btn-danger {
-                                    background: #e53e3e;
-                                    color: white;
-                                    border: none;
-                                    padding: 0.5rem 1rem;
-                                    border-radius: 4px;
-                                    cursor: pointer;
-                                }
-
-                                .btn-edit {
-                                    background: #3182ce;
-                                    color: white;
-                                    border: none;
-                                    padding: 0.5rem 1rem;
-                                    border-radius: 4px;
-                                    cursor: pointer;
-                                }
-
-                                .modal {
-                                    display: none;
-                                    position: fixed;
-                                    top: 0;
-                                    left: 0;
-                                    width: 100%;
-                                    height: 100%;
-                                    background: rgba(0, 0, 0, 0.8);
-                                    justify-content: center;
-                                    align-items: center;
-                                    z-index: 9999;
-                                }
-
-                                .modal-content {
-                                    background: #1a202c;
-                                    padding: 2rem;
-                                    border-radius: 8px;
-                                    width: 90%;
-                                    max-width: 500px;
-                                    border: 1px solid var(--accent-color);
-                                }
-
-                                .admin-tabs {
-                                    display: flex;
-                                    gap: 1rem;
-                                }
-
-                                .tab-btn {
-                                    background: none;
-                                    border: none;
-                                    color: #a0aec0;
-                                    padding: 0.5rem 1rem;
-                                    cursor: pointer;
-                                    font-size: 1.1rem;
-                                    border-bottom: 2px solid transparent;
-                                    transition: all 0.3s ease;
-                                }
-
-                                .tab-btn:hover {
-                                    color: var(--text-color);
-                                }
-
-                                .tab-btn.active {
-                                    color: var(--accent-color);
-                                    border-bottom-color: var(--accent-color);
-                                }
-                            </style>
-                        </head>
-
-                        <body>
-                            <header>
-                                <div class="container">
-                                    <div class="header-content">
-                                        <div class="logo">
-                                            <img src="https://i.postimg.cc/rFNdr7FV/logo.png"
-                                                alt="Age of Empires IV Brasil" class="logo-img">
-                                            <h1>Age of Empires IV Brasil</h1>
-                                        </div>
-                                        <nav>
-                                            <ul>
-                                                <li><a href="index.html">Início</a></li>
-                                                <li><a href="forum.html">Fórum</a></li>
-                                                <li><a href="leaderboard.html">Tabela de classificação</a></li>
-                                                <li><a href="torneios.html">Torneios</a></li>
-                                                <li><a href="about.html">Sobre</a></li>
-                                            </ul>
-                                        </nav>
-                                    </div>
-                                </div>
-                            </header>
-
-                            <main class="container">
-                                <div class="admin-container">
-                                    <div class="admin-header">
-                                        <h2><i class="fas fa-cogs"></i> Painel Administrativo</h2>
-                                        <div class="admin-tabs">
-                                            <button class="tab-btn active"
-                                                onclick="switchTab('categories', event)">Categorias</button>
-                                            <button class="tab-btn"
-                                                onclick="switchTab('tournaments', event)">Torneios</button>
-                                        </div>
-                                    </div>
-
-                                    <!-- CATEGORIES TAB -->
-                                    <div id="tab-categories" class="admin-tab-content">
-                                        <div style="display: flex; justify-content: flex-end; margin-bottom: 1rem;">
-                                            <button onclick="openModal()" class="btn-primary"><i
-                                                    class="fas fa-plus"></i> Nova Categoria</button>
-                                        </div>
-                                        <div id="category-list" class="category-list">
-                                            <div class="loading"><i class="fas fa-spinner fa-spin"></i> Carregando
-                                                categorias...</div>
-                                        </div>
-                                    </div>
-
-                                    <!-- TOURNAMENTS TAB -->
-                                    <div id="tab-tournaments" class="admin-tab-content" style="display: none;">
-                                        <div
-                                            style="display: flex; justify-content: space-between; margin-bottom: 1rem;">
-                                            <button onclick="syncTournaments(event)" class="btn-edit"
-                                                style="background: #f1c40f; color: black;"><i class="fas fa-sync"></i>
-                                                Sincronizar com AoE4World</button>
-                                            <button onclick="openTournamentModal()" class="btn-primary"><i
-                                                    class="fas fa-plus"></i> Novo Torneio</button>
-                                        </div>
-                                        <div id="tournament-list" class="category-list">
-                                            <div class="loading"><i class="fas fa-spinner fa-spin"></i> Carregando
-                                                torneios...</div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </main>
-
-                            <!-- Modal Categories -->
-                            <div id="categoryModal" class="modal">
-                                <div class="modal-content">
-                                    <h3 id="modalTitle" style="margin-bottom: 1.5rem;">Nova Categoria</h3>
-                                    <form id="categoryForm">
-                                        <input type="hidden" id="catId">
-                                        <div class="form-group">
-                                            <label>Nome</label>
-                                            <input type="text" id="catName" class="form-control" required>
-                                        </div>
-                                        <div class="form-group">
-                                            <label>Slug (URL)</label>
-                                            <input type="text" id="catSlug" class="form-control" required
-                                                placeholder="ex: geral, estrategias">
-                                        </div>
-                                        <div class="form-group">
-                                            <label>Descrição</label>
-                                            <input type="text" id="catDesc" class="form-control" required>
-                                        </div>
-                                        <div class="form-group">
-                                            <label>Ícone (FontAwesome class)</label>
-                                            <input type="text" id="catIcon" class="form-control" required
-                                                placeholder="fas fa-comments">
-                                        </div>
-                                        <div
-                                            style="display: flex; justify-content: flex-end; gap: 1rem; margin-top: 1.5rem;">
-                                            <button type="button" onclick="closeModal()" class="btn-danger"
-                                                style="background: #4a5568;">Cancelar</button>
-                                            <button type="submit" class="btn-primary">Salvar</button>
-                                        </div>
-                                    </form>
-                                </div>
-                            </div>
-
-                            <!-- Modal Tournaments -->
-                            <div id="tournamentModal" class="modal">
-                                <div class="modal-content">
-                                    <h3 id="tournModalTitle" style="margin-bottom: 1.5rem;">Novo Torneio</h3>
-                                    <form id="tournamentForm">
-                                        <input type="hidden" id="tournId">
-                                        <div class="form-group">
-                                            <label>Nome</label>
-                                            <input type="text" id="tournName" class="form-control" required>
-                                        </div>
-                                        <div class="form-group">
-                                            <label>Link (AoE4World/Liquipedia)</label>
-                                            <input type="text" id="tournLink" class="form-control" required>
-                                        </div>
-                                        <div class="form-group">
-                                            <label>Imagem URL</label>
-                                            <input type="text" id="tournImage" class="form-control"
-                                                placeholder="https://...">
-                                        </div>
-                                        <div class="form-group" style="display: flex; gap: 1rem;">
-                                            <div style="flex: 1;">
-                                                <label>Data Início</label>
-                                                <input type="text" id="tournStart" class="form-control"
-                                                    placeholder="YYYY-MM-DD">
-                                            </div>
-                                            <div style="flex: 1;">
-                                                <label>Data Fim</label>
-                                                <input type="text" id="tournEnd" class="form-control"
-                                                    placeholder="YYYY-MM-DD">
-                                            </div>
-                                        </div>
-                                        <div class="form-group">
-                                            <label>Premiação</label>
-                                            <input type="text" id="tournPrize" class="form-control" placeholder="$1000">
-                                        </div>
-                                        <div class="form-group">
-                                            <label>Status</label>
-                                            <select id="tournStatus" class="form-control">
-                                                <option value="upcoming">Em Breve</option>
-                                                <option value="ongoing">Em Andamento</option>
-                                                <option value="completed">Encerrado</option>
-                                            </select>
-                                        </div>
-                                        <div
-                                            style="display: flex; justify-content: flex-end; gap: 1rem; margin-top: 1.5rem;">
-                                            <button type="button" onclick="closeTournamentModal()" class="btn-danger"
-                                                style="background: #4a5568;">Cancelar</button>
-                                            <button type="submit" class="btn-primary">Salvar</button>
-                                        </div>
-                                    </form>
-                                </div>
-                            </div>
-
-                            <script src="js/forum.js"></script>
-                            <script>
-                                // Check Admin
-                                function checkAdmin() {
-                                    const currentUser = JSON.parse(localStorage.getItem('forum_user'));
-                                    if (!currentUser || currentUser.id !== '407624932101455873') {
-                                        alert('Acesso negado.');
-                                        window.location.href = 'forum.html';
-                                    }
-                                }
-                                checkAdmin();
-
-                                // TABS
-                                function switchTab(tab, event) {
-                                    document.querySelectorAll('.admin-tab-content').forEach(el => el.style.display = 'none');
-                                    document.getElementById(`tab-${tab}`).style.display = 'block';
-
-                                    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-                                    if (event && event.target) {
-                                        event.target.classList.add('active');
-                                    }
-
-                                    if (tab === 'tournaments') loadTournaments();
-                                }
-
-                                // ================= CATEGORIES LOGIC =================
-                                let currentCategories = [];
-
-                                async function loadCategories() {
-                                    const container = document.getElementById('category-list');
-                                    try {
-                                        const res = await fetch(`${API_BASE_URL}/forum/categories?t=${Date.now()}`);
-                                        currentCategories = await res.json();
-
-                                        container.innerHTML = currentCategories.map((cat, index) => `
+                container.innerHTML = currentCategories.map((cat, index) => `
                     <div class="category-item">
                         <div class="category-info">
                             <div class="category-icon"><i class="${cat.icon}"></i></div>
@@ -519,25 +352,25 @@
                         </div>
                     </div>
                 `).join('');
-                                    } catch (err) {
-                                        console.error('Erro ao carregar categorias:', err);
-                                        container.innerHTML = '<div class="error-msg">Erro ao carregar categorias.</div>';
-                                    }
-                                }
+            } catch (err) {
+                console.error('Erro ao carregar categorias:', err);
+                container.innerHTML = '<div class="error-msg">Erro ao carregar categorias.</div>';
+            }
+        }
 
-                                async function moveCategory(index, direction) {
-                                    console.log(`Moving category ${index} direction ${direction}`);
-                                    const newIndex = index + direction;
-                                    if (newIndex < 0 || newIndex >= currentCategories.length) return;
+        async function moveCategory(index, direction) {
+            console.log(`Moving category ${index} direction ${direction}`);
+            const newIndex = index + direction;
+            if (newIndex < 0 || newIndex >= currentCategories.length) return;
 
-                                    // Swap
-                                    const temp = currentCategories[index];
-                                    currentCategories[index] = currentCategories[newIndex];
-                                    currentCategories[newIndex] = temp;
+            // Swap
+            const temp = currentCategories[index];
+            currentCategories[index] = currentCategories[newIndex];
+            currentCategories[newIndex] = temp;
 
-                                    // Optimistic update
-                                    const container = document.getElementById('category-list');
-                                    container.innerHTML = currentCategories.map((cat, idx) => `
+            // Optimistic update
+            const container = document.getElementById('category-list');
+            container.innerHTML = currentCategories.map((cat, idx) => `
                     <div class="category-item">
                         <div class="category-info">
                             <div class="category-icon"><i class="${cat.icon}"></i></div>
@@ -557,120 +390,120 @@
                     </div>
                 `).join('');
 
-                                    // Send new order to backend
-                                    const order = currentCategories.map(c => c.id);
-                                    console.log('Sending new order:', order);
+            // Send new order to backend
+            const order = currentCategories.map(c => c.id);
+            console.log('Sending new order:', order);
 
-                                    try {
-                                        const currentUser = JSON.parse(localStorage.getItem('forum_user'));
-                                        const res = await fetch(`${API_BASE_URL}/forum/categories/reorder`, {
-                                            method: 'PUT',
-                                            headers: {
-                                                'Content-Type': 'application/json',
-                                                'x-user': encodeURIComponent(JSON.stringify(currentUser))
-                                            },
-                                            body: JSON.stringify({ order })
-                                        });
+            try {
+                const currentUser = JSON.parse(localStorage.getItem('forum_user'));
+                const res = await fetch(`${API_BASE_URL}/forum/categories/reorder`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-user': encodeURIComponent(JSON.stringify(currentUser))
+                    },
+                    body: JSON.stringify({ order })
+                });
 
-                                        if (!res.ok) {
-                                            throw new Error('Falha ao salvar ordem');
-                                        }
+                if (!res.ok) {
+                    throw new Error('Falha ao salvar ordem');
+                }
 
-                                        // Reload to confirm
-                                        loadCategories();
-                                    } catch (err) {
-                                        console.error(err);
-                                        alert('Erro ao salvar ordem.');
-                                        loadCategories(); // Revert on error
-                                    }
-                                }
+                // Reload to confirm
+                loadCategories();
+            } catch (err) {
+                console.error(err);
+                alert('Erro ao salvar ordem.');
+                loadCategories(); // Revert on error
+            }
+        }
 
-                                function openModal(isEdit = false) {
-                                    document.getElementById('categoryModal').style.display = 'flex';
-                                    document.getElementById('modalTitle').textContent = isEdit ? 'Editar Categoria' : 'Nova Categoria';
-                                    if (!isEdit) {
-                                        document.getElementById('categoryForm').reset();
-                                        document.getElementById('catId').value = '';
-                                    }
-                                }
+        function openModal(isEdit = false) {
+            document.getElementById('categoryModal').style.display = 'flex';
+            document.getElementById('modalTitle').textContent = isEdit ? 'Editar Categoria' : 'Nova Categoria';
+            if (!isEdit) {
+                document.getElementById('categoryForm').reset();
+                document.getElementById('catId').value = '';
+            }
+        }
 
-                                function closeModal() {
-                                    document.getElementById('categoryModal').style.display = 'none';
-                                }
+        function closeModal() {
+            document.getElementById('categoryModal').style.display = 'none';
+        }
 
-                                function editCategory(id, name, slug, desc, icon) {
-                                    document.getElementById('catId').value = id;
-                                    document.getElementById('catName').value = name;
-                                    document.getElementById('catSlug').value = slug;
-                                    document.getElementById('catDesc').value = desc;
-                                    document.getElementById('catIcon').value = icon;
-                                    openModal(true);
-                                }
+        function editCategory(id, name, slug, desc, icon) {
+            document.getElementById('catId').value = id;
+            document.getElementById('catName').value = name;
+            document.getElementById('catSlug').value = slug;
+            document.getElementById('catDesc').value = desc;
+            document.getElementById('catIcon').value = icon;
+            openModal(true);
+        }
 
-                                async function deleteCategory(id) {
-                                    if (!confirm('Tem certeza? Isso pode quebrar tópicos existentes nesta categoria.')) return;
+        async function deleteCategory(id) {
+            if (!confirm('Tem certeza? Isso pode quebrar tópicos existentes nesta categoria.')) return;
 
-                                    try {
-                                        const currentUser = JSON.parse(localStorage.getItem('forum_user'));
-                                        const res = await fetch(`${API_BASE_URL}/forum/categories/${id}`, {
-                                            method: 'DELETE',
-                                            headers: { 'x-user': encodeURIComponent(JSON.stringify(currentUser)) }
-                                        });
+            try {
+                const currentUser = JSON.parse(localStorage.getItem('forum_user'));
+                const res = await fetch(`${API_BASE_URL}/forum/categories/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'x-user': encodeURIComponent(JSON.stringify(currentUser)) }
+                });
 
-                                        if (res.ok) {
-                                            loadCategories();
-                                        } else {
-                                            alert('Erro ao deletar.');
-                                        }
-                                    } catch (err) {
-                                        console.error(err);
-                                        alert('Erro ao conectar.');
-                                    }
-                                }
+                if (res.ok) {
+                    loadCategories();
+                } else {
+                    alert('Erro ao deletar.');
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Erro ao conectar.');
+            }
+        }
 
-                                document.getElementById('categoryForm').onsubmit = async (e) => {
-                                    e.preventDefault();
-                                    const id = document.getElementById('catId').value;
-                                    const name = document.getElementById('catName').value;
-                                    const slug = document.getElementById('catSlug').value;
-                                    const description = document.getElementById('catDesc').value;
-                                    const icon = document.getElementById('catIcon').value;
-                                    const currentUser = JSON.parse(localStorage.getItem('forum_user'));
+        document.getElementById('categoryForm').onsubmit = async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('catId').value;
+            const name = document.getElementById('catName').value;
+            const slug = document.getElementById('catSlug').value;
+            const description = document.getElementById('catDesc').value;
+            const icon = document.getElementById('catIcon').value;
+            const currentUser = JSON.parse(localStorage.getItem('forum_user'));
 
-                                    const method = id ? 'PUT' : 'POST';
-                                    const url = id ? `${API_BASE_URL}/forum/categories/${id}` : `${API_BASE_URL}/forum/categories`;
+            const method = id ? 'PUT' : 'POST';
+            const url = id ? `${API_BASE_URL}/forum/categories/${id}` : `${API_BASE_URL}/forum/categories`;
 
-                                    try {
-                                        const res = await fetch(url, {
-                                            method: method,
-                                            headers: {
-                                                'Content-Type': 'application/json',
-                                                'x-user': encodeURIComponent(JSON.stringify(currentUser))
-                                            },
-                                            body: JSON.stringify({ name, slug, description, icon })
-                                        });
+            try {
+                const res = await fetch(url, {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-user': encodeURIComponent(JSON.stringify(currentUser))
+                    },
+                    body: JSON.stringify({ name, slug, description, icon })
+                });
 
-                                        if (res.ok) {
-                                            closeModal();
-                                            loadCategories();
-                                        } else {
-                                            alert('Erro ao salvar.');
-                                        }
-                                    } catch (err) {
-                                        console.error(err);
-                                        alert('Erro ao conectar.');
-                                    }
-                                };
+                if (res.ok) {
+                    closeModal();
+                    loadCategories();
+                } else {
+                    alert('Erro ao salvar.');
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Erro ao conectar.');
+            }
+        };
 
-                                // ================= TOURNAMENTS LOGIC =================
-                                async function loadTournaments() {
-                                    const container = document.getElementById('tournament-list');
-                                    container.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i> Carregando...</div>';
-                                    try {
-                                        const res = await fetch(`${API_BASE_URL}/tournaments`);
-                                        const tournaments = await res.json();
+        // ================= TOURNAMENTS LOGIC =================
+        async function loadTournaments() {
+            const container = document.getElementById('tournament-list');
+            container.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i> Carregando...</div>';
+            try {
+                const res = await fetch(`${API_BASE_URL}/tournaments`);
+                const tournaments = await res.json();
 
-                                        container.innerHTML = tournaments.map(t => `
+                container.innerHTML = tournaments.map(t => `
                     <div class="category-item">
                         <div class="category-info">
                             <div class="category-icon"><i class="fas fa-trophy"></i></div>
@@ -685,102 +518,102 @@
                         </div>
                     </div>
                 `).join('');
-                                    } catch (err) {
-                                        console.error(err);
-                                        container.innerHTML = '<div class="error-msg">Erro ao carregar torneios.</div>';
-                                    }
-                                }
+            } catch (err) {
+                console.error(err);
+                container.innerHTML = '<div class="error-msg">Erro ao carregar torneios.</div>';
+            }
+        }
 
-                                async function syncTournaments(event) {
-                                    if (!confirm('Isso irá buscar torneios do AoE4World. Continuar?')) return;
-                                    const btn = event.target;
-                                    const originalText = btn.innerHTML;
-                                    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sincronizando...';
-                                    btn.disabled = true;
+        async function syncTournaments(event) {
+            if (!confirm('Isso irá buscar torneios do AoE4World. Continuar?')) return;
+            const btn = event.target;
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sincronizando...';
+            btn.disabled = true;
 
-                                    try {
-                                        const currentUser = JSON.parse(localStorage.getItem('forum_user'));
-                                        const res = await fetch(`${API_BASE_URL}/tournaments/sync`, {
-                                            method: 'POST',
-                                            headers: { 'x-user': encodeURIComponent(JSON.stringify(currentUser)) }
-                                        });
-                                        const data = await res.json();
-                                        alert(`Sincronização concluída! ${data.added} novos torneios adicionados.`);
-                                        loadTournaments();
-                                    } catch (err) {
-                                        console.error(err);
-                                        alert('Erro na sincronização.');
-                                    } finally {
-                                        btn.innerHTML = originalText;
-                                        btn.disabled = false;
-                                    }
-                                }
+            try {
+                const currentUser = JSON.parse(localStorage.getItem('forum_user'));
+                const res = await fetch(`${API_BASE_URL}/tournaments/sync`, {
+                    method: 'POST',
+                    headers: { 'x-user': encodeURIComponent(JSON.stringify(currentUser)) }
+                });
+                const data = await res.json();
+                alert(`Sincronização concluída! ${data.added} novos torneios adicionados.`);
+                loadTournaments();
+            } catch (err) {
+                console.error(err);
+                alert('Erro na sincronização.');
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        }
 
-                                function openTournamentModal(isEdit = false) {
-                                    document.getElementById('tournamentModal').style.display = 'flex';
-                                    document.getElementById('tournModalTitle').textContent = isEdit ? 'Editar Torneio' : 'Novo Torneio';
-                                    if (!isEdit) {
-                                        document.getElementById('tournamentForm').reset();
-                                        document.getElementById('tournId').value = '';
-                                    }
-                                }
+        function openTournamentModal(isEdit = false) {
+            document.getElementById('tournamentModal').style.display = 'flex';
+            document.getElementById('tournModalTitle').textContent = isEdit ? 'Editar Torneio' : 'Novo Torneio';
+            if (!isEdit) {
+                document.getElementById('tournamentForm').reset();
+                document.getElementById('tournId').value = '';
+            }
+        }
 
-                                function closeTournamentModal() {
-                                    document.getElementById('tournamentModal').style.display = 'none';
-                                }
+        function closeTournamentModal() {
+            document.getElementById('tournamentModal').style.display = 'none';
+        }
 
-                                function editTournament(id, name, link, image, start, end, prize, status) {
-                                    document.getElementById('tournId').value = id;
-                                    document.getElementById('tournName').value = name;
-                                    document.getElementById('tournLink').value = link;
-                                    document.getElementById('tournImage').value = image === 'null' ? '' : image;
-                                    document.getElementById('tournStart').value = start === 'null' ? '' : start;
-                                    document.getElementById('tournEnd').value = end === 'null' ? '' : end;
-                                    document.getElementById('tournPrize').value = prize === 'null' ? '' : prize;
-                                    document.getElementById('tournStatus').value = status;
-                                    openTournamentModal(true);
-                                }
+        function editTournament(id, name, link, image, start, end, prize, status) {
+            document.getElementById('tournId').value = id;
+            document.getElementById('tournName').value = name;
+            document.getElementById('tournLink').value = link;
+            document.getElementById('tournImage').value = image === 'null' ? '' : image;
+            document.getElementById('tournStart').value = start === 'null' ? '' : start;
+            document.getElementById('tournEnd').value = end === 'null' ? '' : end;
+            document.getElementById('tournPrize').value = prize === 'null' ? '' : prize;
+            document.getElementById('tournStatus').value = status;
+            openTournamentModal(true);
+        }
 
-                                async function deleteTournament(id) {
-                                    if (!confirm('Tem certeza que deseja excluir este torneio?')) return;
-                                    try {
-                                        const currentUser = JSON.parse(localStorage.getItem('forum_user'));
-                                        await fetch(`${API_BASE_URL}/tournaments/${id}`, {
-                                            method: 'DELETE',
-                                            headers: { 'x-user': encodeURIComponent(JSON.stringify(currentUser)) }
-                                        });
-                                        loadTournaments();
-                                    } catch (err) { console.error(err); }
-                                }
+        async function deleteTournament(id) {
+            if (!confirm('Tem certeza que deseja excluir este torneio?')) return;
+            try {
+                const currentUser = JSON.parse(localStorage.getItem('forum_user'));
+                await fetch(`${API_BASE_URL}/tournaments/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'x-user': encodeURIComponent(JSON.stringify(currentUser)) }
+                });
+                loadTournaments();
+            } catch (err) { console.error(err); }
+        }
 
-                                document.getElementById('tournamentForm').onsubmit = async (e) => {
-                                    e.preventDefault();
-                                    const id = document.getElementById('tournId').value;
-                                    const name = document.getElementById('tournName').value;
-                                    const link = document.getElementById('tournLink').value;
-                                    const image_url = document.getElementById('tournImage').value;
-                                    const start_date = document.getElementById('tournStart').value;
-                                    const end_date = document.getElementById('tournEnd').value;
-                                    const prize_pool = document.getElementById('tournPrize').value;
-                                    const status = document.getElementById('tournStatus').value;
-                                    const currentUser = JSON.parse(localStorage.getItem('forum_user'));
+        document.getElementById('tournamentForm').onsubmit = async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('tournId').value;
+            const name = document.getElementById('tournName').value;
+            const link = document.getElementById('tournLink').value;
+            const image_url = document.getElementById('tournImage').value;
+            const start_date = document.getElementById('tournStart').value;
+            const end_date = document.getElementById('tournEnd').value;
+            const prize_pool = document.getElementById('tournPrize').value;
+            const status = document.getElementById('tournStatus').value;
+            const currentUser = JSON.parse(localStorage.getItem('forum_user'));
 
-                                    const method = id ? 'PUT' : 'POST';
-                                    const url = id ? `${API_BASE_URL}/tournaments/${id}` : `${API_BASE_URL}/tournaments`;
+            const method = id ? 'PUT' : 'POST';
+            const url = id ? `${API_BASE_URL}/tournaments/${id}` : `${API_BASE_URL}/tournaments`;
 
-                                    try {
-                                        await fetch(url, {
-                                            method: method,
-                                            headers: { 'Content-Type': 'application/json', 'x-user': encodeURIComponent(JSON.stringify(currentUser)) },
-                                            body: JSON.stringify({ name, link, image_url, start_date, end_date, prize_pool, status })
-                                        });
-                                        closeTournamentModal();
-                                        loadTournaments();
-                                    } catch (err) { console.error(err); }
-                                };
+            try {
+                await fetch(url, {
+                    method: method,
+                    headers: { 'Content-Type': 'application/json', 'x-user': encodeURIComponent(JSON.stringify(currentUser)) },
+                    body: JSON.stringify({ name, link, image_url, start_date, end_date, prize_pool, status })
+                });
+                closeTournamentModal();
+                loadTournaments();
+            } catch (err) { console.error(err); }
+        };
 
-                                loadCategories();
-                            </script>
-                        </body>
+        loadCategories();
+    </script>
+</body>
 
-                        </html>
+</html>

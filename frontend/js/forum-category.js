@@ -21,10 +21,10 @@ class ForumCategoryUI {
         this.setupEventListeners();
         await this.waitForAuthAndCategories();
 
-        if (this.api.currentUser) {
-            await this.loadCategory();
-        }
+        // Carregar categoria independente de autenticação
+        await this.loadCategory();
     }
+
 
     getCategorySlugFromURL() {
         const urlParams = new URLSearchParams(window.location.search);

@@ -118,6 +118,46 @@ pool.on('error', (err, client) => {
     console.error('💥 Erro inesperado no pool PostgreSQL:', err);
 });
 
+// --- MIGRATIONS ---
+async function runMigrations() {
+    const client = await pool.connect();
+    try {
+        console.log('🔄 Checking database migrations...');
+
+        // Check if 'position' column exists in forum_categories
+        const res = await client.query(`
+            SELECT column_name 
+            FROM information_schema.columns 
+            WHERE table_name='forum_categories' AND column_name='position';
+        `);
+
+        if (res.rows.length === 0) {
+            console.log('⚠️ Column "position" missing in forum_categories. Adding it...');
+            await client.query('ALTER TABLE forum_categories ADD COLUMN position INTEGER DEFAULT 0;');
+
+            // Initialize positions based on ID order
+            await client.query(`
+                WITH ordered AS (
+                    SELECT id, ROW_NUMBER() OVER (ORDER BY id) - 1 as rn
+                    FROM forum_categories
+                )
+                UPDATE forum_categories
+                SET position = ordered.rn
+                FROM ordered
+                WHERE forum_categories.id = ordered.id;
+            `);
+            console.log('✅ Column "position" added and initialized.');
+        } else {
+            console.log('✅ Database schema is up to date.');
+        }
+    } catch (err) {
+        console.error('❌ Migration failed:', err);
+    } finally {
+        client.release();
+    }
+}
+runMigrations();
+
 // =============================================
 // AUTHENTICATION ENDPOINTS
 // =============================================
@@ -206,7 +246,7 @@ app.get('/api/forum/categories', async (req, res) => {
                 ) as reply_count
             FROM forum_categories fc
             WHERE fc.is_active = true 
-            ORDER BY fc.display_order ASC
+            ORDER BY fc.position ASC, fc.id ASC
         `);
         res.json(result.rows);
     } catch (err) {
@@ -796,6 +836,42 @@ app.put('/api/forum/categories/:id', async (req, res) => {
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: 'Error updating category' });
+    } finally {
+        client.release();
+    }
+});
+
+// Reorder Categories
+app.put('/api/forum/categories/reorder', async (req, res) => {
+    const { order } = req.body; // Array of IDs in new order
+
+    // Auth Check
+    const userHeader = req.headers['x-user'];
+    if (!userHeader) return res.status(401).json({ error: 'Unauthorized' });
+    try {
+        const user = JSON.parse(decodeURIComponent(userHeader));
+        const admins = ['407624932101455873'];
+        if (!admins.includes(String(user.id))) {
+            return res.status(403).json({ error: 'Forbidden' });
+        }
+    } catch (e) {
+        return res.status(400).json({ error: 'Invalid user header' });
+    }
+
+    if (!Array.isArray(order)) return res.status(400).json({ error: 'Invalid order format' });
+
+    const client = await pool.connect();
+    try {
+        await client.query('BEGIN');
+        for (let i = 0; i < order.length; i++) {
+            await client.query('UPDATE forum_categories SET position = $1 WHERE id = $2', [i, order[i]]);
+        }
+        await client.query('COMMIT');
+        res.json({ success: true });
+    } catch (err) {
+        await client.query('ROLLBACK');
+        console.error(err);
+        res.status(500).json({ error: 'Error reordering categories' });
     } finally {
         client.release();
     }

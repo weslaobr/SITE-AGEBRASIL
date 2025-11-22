@@ -122,7 +122,8 @@
             background: rgba(0, 0, 0, 0.8);
             justify-content: center;
             align-items: center;
-            z-index: 1000;
+            z-index: 9999;
+            /* Fix for header appearing inside */
         }
 
         .modal-content {
@@ -198,227 +199,30 @@
                     <button type="submit" class="btn-primary">Salvar</button>
                 </div>
             </form>
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>Painel Admin - Age of Empires IV Brasil</title>
-            <link rel="icon" type="image/png" href="https://i.postimg.cc/xTpcXw5V/favicon.png">
-            <link rel="stylesheet" href="css/style.css">
-            <link rel="stylesheet" href="css/forum.css">
-            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-            <style>
-                .admin-container {
-                    background: rgba(0, 0, 0, 0.5);
-                    border: 1px solid var(--border-color);
-                    border-radius: 8px;
-                    padding: 2rem;
-                    margin-top: 2rem;
-                }
+        </div>
+    </div>
 
-                .admin-header {
-                    display: flex;
-                    justify-content: space-between;
-                    align-items: center;
-                    margin-bottom: 2rem;
-                    border-bottom: 1px solid var(--border-color);
-                    padding-bottom: 1rem;
-                }
+    <script src="js/forum.js"></script>
+    <script>
+        // Check Admin
+        function checkAdmin() {
+            const currentUser = JSON.parse(localStorage.getItem('forum_user'));
+            if (!currentUser || currentUser.id !== '407624932101455873') {
+                alert('Acesso negado.');
+                window.location.href = 'forum.html';
+            }
+        }
+        checkAdmin();
 
-                .category-list {
-                    display: flex;
-                    flex-direction: column;
-                    gap: 1rem;
-                }
+        let currentCategories = [];
 
-                .category-item {
-                    display: flex;
-                    justify-content: space-between;
-                    align-items: center;
-                    background: rgba(255, 255, 255, 0.05);
-                    padding: 1rem;
-                    border-radius: 4px;
-                    border: 1px solid transparent;
-                }
+        async function loadCategories() {
+            const container = document.getElementById('category-list');
+            try {
+                const res = await fetch(`${API_BASE_URL}/forum/categories`);
+                currentCategories = await res.json();
 
-                .category-item:hover {
-                    border-color: var(--accent-color);
-                }
-
-                .category-info {
-                    display: flex;
-                    align-items: center;
-                    gap: 1rem;
-                }
-
-                .category-icon {
-                    font-size: 1.5rem;
-                    color: var(--accent-color);
-                    width: 40px;
-                    text-align: center;
-                }
-
-                .category-actions {
-                    display: flex;
-                    gap: 0.5rem;
-                }
-
-                .form-group {
-                    margin-bottom: 1rem;
-                }
-
-                .form-group label {
-                    display: block;
-                    margin-bottom: 0.5rem;
-                    color: #a0aec0;
-                }
-
-                .form-control {
-                    width: 100%;
-                    padding: 0.8rem;
-                    background: rgba(0, 0, 0, 0.2);
-                    border: 1px solid var(--border-color);
-                    border-radius: 4px;
-                    color: var(--text-color);
-                }
-
-                .btn-primary {
-                    background: var(--accent-color);
-                    color: #000;
-                    border: none;
-                    padding: 0.8rem 1.5rem;
-                    border-radius: 4px;
-                    font-weight: bold;
-                    cursor: pointer;
-                }
-
-                .btn-danger {
-                    background: #e53e3e;
-                    color: white;
-                    border: none;
-                    padding: 0.5rem 1rem;
-                    border-radius: 4px;
-                    cursor: pointer;
-                }
-
-                .btn-edit {
-                    background: #3182ce;
-                    color: white;
-                    border: none;
-                    padding: 0.5rem 1rem;
-                    border-radius: 4px;
-                    cursor: pointer;
-                }
-
-                .modal {
-                    display: none;
-                    position: fixed;
-                    top: 0;
-                    left: 0;
-                    width: 100%;
-                    height: 100%;
-                    background: rgba(0, 0, 0, 0.8);
-                    justify-content: center;
-                    align-items: center;
-                    z-index: 1000;
-                }
-
-                .modal-content {
-                    background: #1a202c;
-                    padding: 2rem;
-                    border-radius: 8px;
-                    width: 90%;
-                    max-width: 500px;
-                    border: 1px solid var(--accent-color);
-                }
-            </style>
-            </head>
-
-            <body>
-                <header>
-                    <div class="container">
-                        <div class="header-content">
-                            <div class="logo">
-                                <img src="https://i.postimg.cc/rFNdr7FV/logo.png" alt="Age of Empires IV Brasil"
-                                    class="logo-img">
-                                <h1>Age of Empires IV Brasil</h1>
-                            </div>
-                            <nav>
-                                <ul>
-                                    <li><a href="index.html">Início</a></li>
-                                    <li><a href="forum.html">Fórum</a></li>
-                                    <li><a href="leaderboard.html">Tabela de classificação</a></li>
-                                    <li><a href="torneios.html">Torneios</a></li>
-                                    <li><a href="about.html">Sobre</a></li>
-                                </ul>
-                            </nav>
-                        </div>
-                    </div>
-                </header>
-
-                <main class="container">
-                    <div class="admin-container">
-                        <div class="admin-header">
-                            <h2><i class="fas fa-cogs"></i> Painel Administrativo</h2>
-                            <button onclick="openModal()" class="btn-primary"><i class="fas fa-plus"></i> Nova
-                                Categoria</button>
-                        </div>
-
-                        <div id="category-list" class="category-list">
-                            <div class="loading"><i class="fas fa-spinner fa-spin"></i> Carregando categorias...</div>
-                        </div>
-                    </div>
-                </main>
-
-                <!-- Modal -->
-                <div id="categoryModal" class="modal">
-                    <div class="modal-content">
-                        <h3 id="modalTitle" style="margin-bottom: 1.5rem;">Nova Categoria</h3>
-                        <form id="categoryForm">
-                            <input type="hidden" id="catId">
-                            <div class="form-group">
-                                <label>Nome</label>
-                                <input type="text" id="catName" class="form-control" required>
-                            </div>
-                            <div class="form-group">
-                                <label>Slug (URL)</label>
-                                <input type="text" id="catSlug" class="form-control" required
-                                    placeholder="ex: geral, estrategias">
-                            </div>
-                            <div class="form-group">
-                                <label>Descrição</label>
-                                <input type="text" id="catDesc" class="form-control" required>
-                            </div>
-                            <div class="form-group">
-                                <label>Ícone (FontAwesome class)</label>
-                                <input type="text" id="catIcon" class="form-control" required
-                                    placeholder="fas fa-comments">
-                            </div>
-                            <div style="display: flex; justify-content: flex-end; gap: 1rem; margin-top: 1.5rem;">
-                                <button type="button" onclick="closeModal()" class="btn-danger"
-                                    style="background: #4a5568;">Cancelar</button>
-                                <button type="submit" class="btn-primary">Salvar</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-
-                <script src="js/forum.js"></script>
-                <script>
-                    // Check Admin
-                    function checkAdmin() {
-                        const currentUser = JSON.parse(localStorage.getItem('forum_user'));
-                        if (!currentUser || currentUser.id !== '407624932101455873') {
-                            alert('Acesso negado.');
-                            window.location.href = 'forum.html';
-                        }
-                    }
-                    checkAdmin();
-
-                    async function loadCategories() {
-                        const container = document.getElementById('category-list');
-                        try {
-                            const res = await fetch(`${API_BASE_URL}/forum/categories`);
-                            const categories = await res.json();
-
-                            container.innerHTML = categories.map(cat => `
+                container.innerHTML = currentCategories.map((cat, index) => `
                     <div class="category-item">
                         <div class="category-info">
                             <div class="category-icon"><i class="${cat.icon}"></i></div>
@@ -430,95 +234,150 @@
                             </div>
                         </div>
                         <div class="category-actions">
+                            <button onclick="moveCategory(${index}, -1)" class="btn-edit" title="Mover para cima" ${index === 0 ? 'disabled style="opacity:0.5"' : ''}><i class="fas fa-arrow-up"></i></button>
+                            <button onclick="moveCategory(${index}, 1)" class="btn-edit" title="Mover para baixo" ${index === currentCategories.length - 1 ? 'disabled style="opacity:0.5"' : ''}><i class="fas fa-arrow-down"></i></button>
                             <button onclick="editCategory('${cat.id}', '${cat.name}', '${cat.slug}', '${cat.description}', '${cat.icon}')" class="btn-edit"><i class="fas fa-edit"></i></button>
                             <button onclick="deleteCategory('${cat.id}')" class="btn-danger"><i class="fas fa-trash"></i></button>
                         </div>
                     </div>
                 `).join('');
-                        } catch (err) {
-                            container.innerHTML = '<div class="error-msg">Erro ao carregar categorias.</div>';
-                        }
-                    }
+            } catch (err) {
+                container.innerHTML = '<div class="error-msg">Erro ao carregar categorias.</div>';
+            }
+        }
 
-                    function openModal(isEdit = false) {
-                        document.getElementById('categoryModal').style.display = 'flex';
-                        document.getElementById('modalTitle').textContent = isEdit ? 'Editar Categoria' : 'Nova Categoria';
-                        if (!isEdit) {
-                            document.getElementById('categoryForm').reset();
-                            document.getElementById('catId').value = '';
-                        }
-                    }
+        async function moveCategory(index, direction) {
+            const newIndex = index + direction;
+            if (newIndex < 0 || newIndex >= currentCategories.length) return;
 
-                    function closeModal() {
-                        document.getElementById('categoryModal').style.display = 'none';
-                    }
+            // Swap
+            const temp = currentCategories[index];
+            currentCategories[index] = currentCategories[newIndex];
+            currentCategories[newIndex] = temp;
 
-                    function editCategory(id, name, slug, desc, icon) {
-                        document.getElementById('catId').value = id;
-                        document.getElementById('catName').value = name;
-                        document.getElementById('catSlug').value = slug;
-                        document.getElementById('catDesc').value = desc;
-                        document.getElementById('catIcon').value = icon;
-                        openModal(true);
-                    }
+            // Optimistic update
+            const container = document.getElementById('category-list');
+            // Re-render immediately
+            container.innerHTML = currentCategories.map((cat, idx) => `
+                    <div class="category-item">
+                        <div class="category-info">
+                            <div class="category-icon"><i class="${cat.icon}"></i></div>
+                            <div>
+                                <h3 style="margin: 0; color: var(--accent-color);">${cat.name}</h3>
+                                <small style="color: #a0aec0;">${cat.description}</small>
+                                <br>
+                                <small style="color: #718096;">/${cat.slug}</small>
+                            </div>
+                        </div>
+                        <div class="category-actions">
+                            <button onclick="moveCategory(${idx}, -1)" class="btn-edit" title="Mover para cima" ${idx === 0 ? 'disabled style="opacity:0.5"' : ''}><i class="fas fa-arrow-up"></i></button>
+                            <button onclick="moveCategory(${idx}, 1)" class="btn-edit" title="Mover para baixo" ${idx === currentCategories.length - 1 ? 'disabled style="opacity:0.5"' : ''}><i class="fas fa-arrow-down"></i></button>
+                            <button onclick="editCategory('${cat.id}', '${cat.name}', '${cat.slug}', '${cat.description}', '${cat.icon}')" class="btn-edit"><i class="fas fa-edit"></i></button>
+                            <button onclick="deleteCategory('${cat.id}')" class="btn-danger"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </div>
+                `).join('');
 
-                    async function deleteCategory(id) {
-                        if (!confirm('Tem certeza? Isso pode quebrar tópicos existentes nesta categoria.')) return;
+            // Send new order to backend
+            const order = currentCategories.map(c => c.id);
+            try {
+                const currentUser = JSON.parse(localStorage.getItem('forum_user'));
+                await fetch(`${API_BASE_URL}/forum/categories/reorder`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-user': encodeURIComponent(JSON.stringify(currentUser))
+                    },
+                    body: JSON.stringify({ order })
+                });
+                // Reload to confirm
+                loadCategories();
+            } catch (err) {
+                console.error(err);
+                alert('Erro ao salvar ordem.');
+                loadCategories(); // Revert on error
+            }
+        }
 
-                        try {
-                            const currentUser = JSON.parse(localStorage.getItem('forum_user'));
-                            const res = await fetch(`${API_BASE_URL}/forum/categories/${id}`, {
-                                method: 'DELETE',
-                                headers: { 'x-user': encodeURIComponent(JSON.stringify(currentUser)) }
-                            });
+        function openModal(isEdit = false) {
+            document.getElementById('categoryModal').style.display = 'flex';
+            document.getElementById('modalTitle').textContent = isEdit ? 'Editar Categoria' : 'Nova Categoria';
+            if (!isEdit) {
+                document.getElementById('categoryForm').reset();
+                document.getElementById('catId').value = '';
+            }
+        }
 
-                            if (res.ok) {
-                                loadCategories();
-                            } else {
-                                alert('Erro ao deletar.');
-                            }
-                        } catch (err) {
-                            console.error(err);
-                            alert('Erro ao conectar.');
-                        }
-                    }
+        function closeModal() {
+            document.getElementById('categoryModal').style.display = 'none';
+        }
 
-                    document.getElementById('categoryForm').onsubmit = async (e) => {
-                        e.preventDefault();
-                        const id = document.getElementById('catId').value;
-                        const name = document.getElementById('catName').value;
-                        const slug = document.getElementById('catSlug').value;
-                        const description = document.getElementById('catDesc').value;
-                        const icon = document.getElementById('catIcon').value;
-                        const currentUser = JSON.parse(localStorage.getItem('forum_user'));
+        function editCategory(id, name, slug, desc, icon) {
+            document.getElementById('catId').value = id;
+            document.getElementById('catName').value = name;
+            document.getElementById('catSlug').value = slug;
+            document.getElementById('catDesc').value = desc;
+            document.getElementById('catIcon').value = icon;
+            openModal(true);
+        }
 
-                        const method = id ? 'PUT' : 'POST';
-                        const url = id ? `${API_BASE_URL}/forum/categories/${id}` : `${API_BASE_URL}/forum/categories`;
+        async function deleteCategory(id) {
+            if (!confirm('Tem certeza? Isso pode quebrar tópicos existentes nesta categoria.')) return;
 
-                        try {
-                            const res = await fetch(url, {
-                                method: method,
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                    'x-user': encodeURIComponent(JSON.stringify(currentUser))
-                                },
-                                body: JSON.stringify({ name, slug, description, icon })
-                            });
+            try {
+                const currentUser = JSON.parse(localStorage.getItem('forum_user'));
+                const res = await fetch(`${API_BASE_URL}/forum/categories/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'x-user': encodeURIComponent(JSON.stringify(currentUser)) }
+                });
 
-                            if (res.ok) {
-                                closeModal();
-                                loadCategories();
-                            } else {
-                                alert('Erro ao salvar.');
-                            }
-                        } catch (err) {
-                            console.error(err);
-                            alert('Erro ao conectar.');
-                        }
-                    };
-
+                if (res.ok) {
                     loadCategories();
-                </script>
-            </body>
+                } else {
+                    alert('Erro ao deletar.');
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Erro ao conectar.');
+            }
+        }
+
+        document.getElementById('categoryForm').onsubmit = async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('catId').value;
+            const name = document.getElementById('catName').value;
+            const slug = document.getElementById('catSlug').value;
+            const description = document.getElementById('catDesc').value;
+            const icon = document.getElementById('catIcon').value;
+            const currentUser = JSON.parse(localStorage.getItem('forum_user'));
+
+            const method = id ? 'PUT' : 'POST';
+            const url = id ? `${API_BASE_URL}/forum/categories/${id}` : `${API_BASE_URL}/forum/categories`;
+
+            try {
+                const res = await fetch(url, {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-user': encodeURIComponent(JSON.stringify(currentUser))
+                    },
+                    body: JSON.stringify({ name, slug, description, icon })
+                });
+
+                if (res.ok) {
+                    closeModal();
+                    loadCategories();
+                } else {
+                    alert('Erro ao salvar.');
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Erro ao conectar.');
+            }
+        };
+
+        loadCategories();
+    </script>
+</body>
 
 </html>

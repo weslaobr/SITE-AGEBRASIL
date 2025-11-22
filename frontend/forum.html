@@ -557,6 +557,7 @@
                     const stats = await fetch(`${base}/api/forum/stats`, { headers }).then(r => r.json());
                     if (stats) {
                         if (document.getElementById('statTopics')) document.getElementById('statTopics').textContent = stats.totalTopics || topics.length;
+                        if (document.getElementById('statReplies')) document.getElementById('statReplies').textContent = stats.totalReplies || 0;
                         if (document.getElementById('statMembers')) document.getElementById('statMembers').textContent = stats.totalMembers || 0;
                         if (document.getElementById('statOnline')) document.getElementById('statOnline').textContent = stats.onlineNow || 0;
                     }

@@ -411,234 +411,82 @@
 
                 if (topics.length === 0) {
                     container.innerHTML = '<div class="no-activity" style="padding: 3rem;">Nenhum tópico encontrado nesta categoria. Seja o primeiro a postar!</div>';
-                    return;
+                } else {
+                    container.innerHTML = topics.map(topic => `
+                        <div class="topic-row">
+                            <div class="topic-status-icon ${topic.isPinned ? 'pinned' : ''} ${topic.isLocked ? 'locked' : ''}">
+                                <i class="fas ${topic.isPinned ? 'fa-thumbtack' : (topic.isLocked ? 'fa-lock' : 'fa-comment')}"></i>
+                            </div>
+                            <div class="topic-main">
+                                <div class="topic-title">
+                                    <a href="forum-topic.html?id=${topic.id}">${topic.title}</a>
+                                </div>
+                                <div class="topic-meta">
+                                    Iniciado por <span style="color: var(--accent-color);">${topic.author}</span> • ${formatDate(topic.createdAt)}
+                                </div>
+                            </div>
+                            <div class="topic-stats">
+                                <div class="topic-stat">
+                                    <span>${topic.repliesCount || 0}</span> Respostas
+                                </div>
+                                <div class="topic-stat">
+                                    <span>${topic.views || 0}</span> Visitas
+                                </div>
+                            </div>
+                        </div>
+                    `).join('');
                 }
 
-                container.innerHTML = topics.map(topic => `
-                    <div class="topic-row">
-                        <div class="topic-status-icon ${topic.isPinned ? 'pinned' : ''} ${topic.isLocked ? 'locked' : ''}">
-                            <i class="fas ${topic.isPinned ? 'fa-thumbtack' : (topic.isLocked ? 'fa-lock' : 'fa-comment')}"></i>
-                        </div>
-                        <div class="topic-main">
-                            <div class="topic-title">
-                                <a href="forum-topic.html?id=${topic.id}">${topic.title}</a>
-                            </div>
-                            <div class="topic-meta">
-                                Iniciado por <span style="color: var(--accent-color);">${topic.author}</span> • ${formatDate(topic.createdAt)}
-                            </div>
-                        </div>
-                        <div class="topic-stats">
-                            <div class="topic-stat">
-        }
+                // Setup Form Submit
+                const form = document.getElementById('new-topic-form');
+                if (form) {
+                    form.onsubmit = async (e) => {
+                        e.preventDefault();
+                        const title = document.getElementById('topic-title-input').value;
+                        const content = document.getElementById('topic-content').value;
 
-        .editor-btn:hover {
-            background: rgba(255, 255, 255, 0.1);
-            color: white;
-        }
+                        try {
+                            const res = await fetch(`${API_BASE_URL}/forum/topics`, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'x-user': encodeURIComponent(JSON.stringify(currentUser))
+                                },
+                                body: JSON.stringify({
+                                    categoryId: currentCategory.id,
+                                    title,
+                                    content
+                                })
+                            });
 
-        #topic-content {
-            border-top-left-radius: 0;
-            border-top-right-radius: 0;
-        }
-    </style>
-</head>
-
-<body>
-    <header>
-        <div class="container">
-            <div class="header-content">
-                <div class="logo">
-                    <img src="https://i.postimg.cc/rFNdr7FV/logo.png" alt="Age of Empires IV Brasil" class="logo-img">
-                    <h1>Age of Empires IV Brasil</h1>
-                </div>
-                <nav>
-                    <ul>
-                        <li><a href="index.html">Início</a></li>
-                        <li><a href="forum.html" class="active">Fórum</a></li>
-                        <li><a href="leaderboard.html">Tabela de classificação</a></li>
-                        <li><a href="torneios.html">Torneios</a></li>
-                        <li><a href="about.html">Sobre</a></li>
-                    </ul>
-                </nav>
-            </div>
-        </div>
-    </header>
-
-    <div class="forum-header-small">
-        <div class="container">
-            <div class="breadcrumb">
-                <a href="forum.html">Fórum</a> <i class="fas fa-chevron-right"></i> <span
-                    id="category-name-breadcrumb">Carregando...</span>
-            </div>
-            <div class="category-header-content">
-                <div>
-                    <h2 id="category-title">Carregando...</h2>
-                    <p id="category-desc" style="color: #a0aec0; margin: 0;">...</p>
-                </div>
-                <button id="new-topic-btn" class="create-topic-btn" onclick="openNewTopicModal()">
-                    <i class="fas fa-plus"></i> Novo Tópico
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <main class="container" style="margin-bottom: 3rem;">
-        <div class="topics-list" id="topics-container">
-            <div class="loading">
-                <i class="fas fa-spinner fa-spin"></i> Carregando tópicos...
-            </div>
-        </div>
-    </main>
-
-    <!-- New Topic Modal -->
-    <div id="new-topic-modal" class="modal">
-        <div class="modal-content">
-            <span class="close-modal" onclick="closeNewTopicModal()">&times;</span>
-            <h3 style="margin-bottom: 1.5rem;">Criar Novo Tópico</h3>
-            <form id="new-topic-form">
-                <div class="form-group">
-                    <label for="topic-title-input">Título</label>
-                    <input type="text" id="topic-title-input" class="form-control"
-                        placeholder="Digite um título descritivo..." required maxlength="200">
-                </div>
-                <div class="form-group">
-                    <label for="topic-content">Conteúdo</label>
-                    <div class="editor-toolbar">
-                        <button type="button" class="editor-btn" onclick="insertFormat('**', '**')" title="Negrito"><i
-                                class="fas fa-bold"></i></button>
-                        <button type="button" class="editor-btn" onclick="insertFormat('*', '*')" title="Itálico"><i
-                                class="fas fa-italic"></i></button>
-                        <button type="button" class="editor-btn" onclick="insertFormat('__', '__')"
-                            title="Sublinhado"><i class="fas fa-underline"></i></button>
-                        <button type="button" class="editor-btn" onclick="insertFormat('`', '`')" title="Código"><i
-                                class="fas fa-code"></i></button>
-                        <button type="button" class="editor-btn" onclick="insertFormat('![Imagem](', ')')"
-                            title="Imagem"><i class="fas fa-image"></i></button>
-                        <button type="button" class="editor-btn" onclick="insertFormat('[Link](', ')')" title="Link"><i
-                                class="fas fa-link"></i></button>
-                    </div>
-                    <textarea id="topic-content" class="form-control" placeholder="Escreva seu tópico aqui..."
-                        required></textarea>
-                </div>
-                <div style="text-align: right;">
-                    <button type="button" class="discord-btn" style="background: #4a5568; margin-right: 0.5rem;"
-                        onclick="closeNewTopicModal()">Cancelar</button>
-                    <button type="submit" class="create-topic-btn" style="border: none;">Publicar Tópico</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <footer>
-        <div class="container">
-            <div class="footer-content">
-                <div class="logo">
-                    <img src="https://i.postimg.cc/rFNdr7FV/logo.png" alt="Age of Empires IV Brasil" class="logo-img">
-                    <h2>Age of Empires IV Brasil</h2>
-                </div>
-                <div class="footer-links">
-                    <a href="index.html">Início</a>
-                    <a href="forum.html">Fórum</a>
-                    <a href="leaderboard.html">Tabela de classificação</a>
-                    <a href="torneios.html">Torneios</a>
-                    <a href="about.html">Sobre</a>
-                </div>
-                <div class="copyright">
-                    &copy; 2025 - Age of Empires IV Brasil. Dados de aoe4world.com. Este site não possui qualquer
-                    vínculo com a Microsoft ou a Relic Entertainment.
-```html
-                </div >
-            </div >
-        </div >
-    </footer >
-
-                    <script src="js/forum.js"></script>
-    <script>
-        // Modal Logic
-            function openNewTopicModal() {
-            if (!currentUser) {
-                alert('Você precisa fazer login com o Discord para criar um tópico.');
-            return;
-            }
-            document.getElementById('new-topic-modal').classList.add('active');
-        }
-
-            function closeNewTopicModal() {
-                document.getElementById('new-topic-modal').classList.remove('active');
-        }
-
-            function insertFormat(start, end) {
-            const textarea = document.getElementById('topic-content');
-            const startPos = textarea.selectionStart;
-            const endPos = textarea.selectionEnd;
-            const text = textarea.value;
-            const selectedText = text.substring(startPos, endPos);
-
-            const newText = text.substring(0, startPos) + start + selectedText + end + text.substring(endPos);
-            textarea.value = newText;
-            textarea.focus();
-            textarea.selectionStart = startPos + start.length;
-            textarea.selectionEnd = endPos + start.length;
-        }
-
-            // Category Logic
-            async function loadCategoryTopics(slug) {
-            const container = document.getElementById('topics-container');
-
-            try {
-                // 1. Get Categories to find current one
-                const catResponse = await fetch(`${API_BASE_URL}/forum/categories`);
-            const categories = await catResponse.json();
-                const currentCategory = categories.find(c => c.slug === slug);
-
-            if (!currentCategory) {
-                container.innerHTML = '<div class="error-msg">Categoria não encontrada.</div>';
-            return;
-                }
-
-            // Update Header
-            document.getElementById('category-name-breadcrumb').textContent = currentCategory.name;
-            document.getElementById('category-title').textContent = currentCategory.name;
-            document.getElementById('category-desc').textContent = currentCategory.description;
-
-            // 2. Get Topics
-            const response = await fetch(`${API_BASE_URL}/forum/topics?category=${slug}`);
-            const topics = await response.json();
-
-
-            try {
-                        const res = await fetch(`${API_BASE_URL}/forum/topics`, {
-                method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            'x-user': encodeURIComponent(JSON.stringify(currentUser))
-                            },
-            body: JSON.stringify({
-                categoryId: currentCategory.id,
-            title,
-            content
-                            })
-                        });
-
-            if (res.ok) {
-                            const newTopic = await res.json();
-            window.location.href = `forum-topic.html?id=${newTopic.id}`;
-                        } else {
-                            alert('Erro ao criar tópico.');
+                            if (res.ok) {
+                                const newTopic = await res.json();
+                                window.location.href = `forum-topic.html?id=${newTopic.id}`;
+                            } else {
+                                alert('Erro ao criar tópico.');
+                            }
+                        } catch (err) {
+                            console.error(err);
+                            alert('Erro ao conectar ao servidor.');
                         }
-                    } catch (err) {
-                        console.error(err);
-                        alert('Erro ao conectar ao servidor.');
-                    }
-                };
+                    };
+                }
 
             } catch (error) {
                 console.error('Erro ao carregar tópicos:', error);
                 container.innerHTML = '<div class="error-msg">Erro ao carregar tópicos.</div>';
             }
         }
+
+        // Initialize
+        const urlParams = new URLSearchParams(window.location.search);
+        const slug = urlParams.get('slug');
+        if (slug) {
+            loadCategoryTopics(slug);
+        } else {
+            document.getElementById('topics-container').innerHTML = '<div class="error-msg">Categoria não especificada.</div>';
+        }
     </script>
 </body>
 
 </html>
-```

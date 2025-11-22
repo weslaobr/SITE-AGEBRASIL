@@ -67,7 +67,7 @@ function updateUserWidget(user) {
                     <img src="${avatarUrl}" alt="${user.username}">
                 </div>
                 <h3>${user.global_name || user.username}</h3>
-                <p style="color: #a0aec0; font-size: 0.9rem;">Membro da Comunidade</p>
+                <p style="color: #a0aec0; font-size: 0.9rem;">${user.id === '407624932101455873' ? '<span style="color: #ecc94b; font-weight: bold;"><i class="fas fa-crown"></i> Admin</span>' : 'Membro da Comunidade'}</p>
                 
                 <div class="user-stats-grid">
                     <div class="user-stat-item">

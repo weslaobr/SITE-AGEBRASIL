@@ -191,9 +191,22 @@ app.get('/api/forum/categories', async (req, res) => {
     const client = await pool.connect();
     try {
         const result = await client.query(`
-            SELECT * FROM forum_categories 
-            WHERE is_active = true 
-            ORDER BY display_order ASC
+            SELECT 
+                fc.*,
+                COALESCE(
+                    (SELECT COUNT(*) FROM forum_topics WHERE category_id = fc.id),
+                    0
+                ) as topic_count,
+                COALESCE(
+                    (SELECT COUNT(*) 
+                     FROM forum_replies fr 
+                     JOIN forum_topics ft ON fr.topic_id = ft.id 
+                     WHERE ft.category_id = fc.id),
+                    0
+                ) as reply_count
+            FROM forum_categories fc
+            WHERE fc.is_active = true 
+            ORDER BY fc.display_order ASC
         `);
         res.json(result.rows);
     } catch (err) {

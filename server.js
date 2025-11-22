@@ -147,9 +147,35 @@ async function runMigrations() {
                 WHERE forum_categories.id = ordered.id;
             `);
             console.log('✅ Column "position" added and initialized.');
-        } else {
-            console.log('✅ Database schema is up to date.');
         }
+
+        // Check if 'tournaments' table exists
+        const resTournaments = await client.query(`
+            SELECT table_name 
+            FROM information_schema.tables 
+            WHERE table_name = 'tournaments';
+        `);
+
+        if (resTournaments.rows.length === 0) {
+            console.log('⚠️ Table "tournaments" missing. Creating it...');
+            await client.query(`
+                CREATE TABLE tournaments (
+                    id SERIAL PRIMARY KEY,
+                    name VARCHAR(255) NOT NULL,
+                    image_url VARCHAR(500),
+                    start_date TIMESTAMP,
+                    end_date TIMESTAMP,
+                    prize_pool VARCHAR(100),
+                    status VARCHAR(50) DEFAULT 'upcoming', -- upcoming, ongoing, completed
+                    link VARCHAR(500),
+                    description TEXT,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+            `);
+            console.log('✅ Table "tournaments" created.');
+        }
+
+        console.log('✅ Database schema is up to date.');
     } catch (err) {
         console.error('❌ Migration failed:', err);
     } finally {
@@ -235,19 +261,19 @@ app.get('/api/forum/categories', async (req, res) => {
                 fc.*,
                 COALESCE(
                     (SELECT COUNT(*) FROM forum_topics WHERE category_id = fc.id),
-                    0
-                ) as topic_count,
+                0
+            ) as topic_count,
                 COALESCE(
                     (SELECT COUNT(*) 
                      FROM forum_replies fr 
                      JOIN forum_topics ft ON fr.topic_id = ft.id 
                      WHERE ft.category_id = fc.id),
-                    0
+                0
                 ) as reply_count
             FROM forum_categories fc
             WHERE fc.is_active = true 
             ORDER BY fc.position ASC, fc.id ASC
-        `);
+                `);
         res.json(result.rows);
     } catch (err) {
         console.error(err);
@@ -277,9 +303,9 @@ app.post('/api/forum/categories', async (req, res) => {
     const client = await pool.connect();
     try {
         await client.query(`
-            INSERT INTO forum_categories (name, slug, description, icon, color, display_order, is_active)
-            VALUES ($1, $2, $3, $4, $5, $6, true)
-        `, [name, slug, description, icon, color, display_order || 0]);
+            INSERT INTO forum_categories(name, slug, description, icon, color, display_order, is_active)
+            VALUES($1, $2, $3, $4, $5, $6, true)
+                `, [name, slug, description, icon, color, display_order || 0]);
         res.json({ success: true });
     } catch (err) {
         console.error(err);
@@ -294,15 +320,15 @@ app.get('/api/forum/topics', async (req, res) => {
     const client = await pool.connect();
     try {
         let query = `
-            SELECT 
-                t.id, t.title, t.created_at, t.views, t.is_pinned, t.is_locked,
+            SELECT
+            t.id, t.title, t.created_at, t.views, t.is_pinned, t.is_locked,
                 t.author_name, t.author_avatar, t.author_discord_id,
                 c.name AS category_name, c.slug AS category_slug, c.color AS category_color,
-                (SELECT COUNT(*) FROM forum_replies r WHERE r.topic_id = t.id) AS replies_count
+                    (SELECT COUNT(*) FROM forum_replies r WHERE r.topic_id = t.id) AS replies_count
             FROM forum_topics t
             JOIN forum_categories c ON t.category_id = c.id
-            WHERE 1=1
-        `;
+            WHERE 1 = 1
+                `;
         const values = [];
 
         if (category) {
@@ -349,7 +375,7 @@ app.get('/api/forum/topics/:id', async (req, res) => {
             FROM forum_topics t
             JOIN forum_categories c ON t.category_id = c.id
             WHERE t.id = $1
-        `, [id]);
+                `, [id]);
 
         if (topic.rows.length === 0) return res.status(404).json({ error: 'Não encontrado' });
 
@@ -357,7 +383,7 @@ app.get('/api/forum/topics/:id', async (req, res) => {
             SELECT * FROM forum_replies
             WHERE topic_id = $1
             ORDER BY created_at ASC
-        `, [id]);
+                `, [id]);
 
         await client.query('UPDATE forum_topics SET views = views + 1 WHERE id = $1', [id]);
 
@@ -415,11 +441,11 @@ app.post('/api/forum/topics', async (req, res) => {
     try {
         await client.query('BEGIN');
         const result = await client.query(`
-            INSERT INTO forum_topics 
-            (category_id, title, content, author_discord_id, author_name, author_avatar)
-            VALUES ($1, $2, $3, $4, $5, $6)
+            INSERT INTO forum_topics
+                (category_id, title, content, author_discord_id, author_name, author_avatar)
+            VALUES($1, $2, $3, $4, $5, $6)
             RETURNING *
-        `, [
+                `, [
             categoryId, title, content, user.id,
             user.global_name || user.username,
             user.avatar ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.webp` : null
@@ -4140,5 +4166,190 @@ async function getSeasonsFromAoe4World() {
         ];
     }
 }
+
+// ==========================================
+// TOURNAMENTS API
+// ==========================================
+
+// Get all tournaments
+app.get('/api/tournaments', async (req, res) => {
+    const client = await pool.connect();
+    try {
+        const result = await client.query('SELECT * FROM tournaments ORDER BY start_date DESC');
+        res.json(result.rows);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json([]);
+    } finally {
+        client.release();
+    }
+});
+
+// Create tournament
+app.post('/api/tournaments', async (req, res) => {
+    const { name, image_url, start_date, end_date, prize_pool, status, link, description } = req.body;
+
+    // Auth Check
+    const userHeader = req.headers['x-user'];
+    if (!userHeader) return res.status(401).json({ error: 'Unauthorized' });
+    try {
+        const user = JSON.parse(decodeURIComponent(userHeader));
+        const admins = ['407624932101455873'];
+        if (!admins.includes(String(user.id))) {
+            return res.status(403).json({ error: 'Forbidden' });
+        }
+    } catch (e) {
+        return res.status(400).json({ error: 'Invalid user header' });
+    }
+
+    const client = await pool.connect();
+    try {
+        const result = await client.query(
+            `INSERT INTO tournaments (name, image_url, start_date, end_date, prize_pool, status, link, description) 
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *`,
+            [name, image_url, start_date, end_date, prize_pool, status, link, description]
+        );
+        res.json(result.rows[0]);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Error creating tournament' });
+    } finally {
+        client.release();
+    }
+});
+
+// Update tournament
+app.put('/api/tournaments/:id', async (req, res) => {
+    const { id } = req.params;
+    const { name, image_url, start_date, end_date, prize_pool, status, link, description } = req.body;
+
+    // Auth Check
+    const userHeader = req.headers['x-user'];
+    if (!userHeader) return res.status(401).json({ error: 'Unauthorized' });
+    try {
+        const user = JSON.parse(decodeURIComponent(userHeader));
+        const admins = ['407624932101455873'];
+        if (!admins.includes(String(user.id))) {
+            return res.status(403).json({ error: 'Forbidden' });
+        }
+    } catch (e) {
+        return res.status(400).json({ error: 'Invalid user header' });
+    }
+
+    const client = await pool.connect();
+    try {
+        const result = await client.query(
+            `UPDATE tournaments 
+             SET name = $1, image_url = $2, start_date = $3, end_date = $4, prize_pool = $5, status = $6, link = $7, description = $8 
+             WHERE id = $9 RETURNING *`,
+            [name, image_url, start_date, end_date, prize_pool, status, link, description, id]
+        );
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'Tournament not found' });
+        }
+        res.json(result.rows[0]);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Error updating tournament' });
+    } finally {
+        client.release();
+    }
+});
+
+// Delete tournament
+app.delete('/api/tournaments/:id', async (req, res) => {
+    const { id } = req.params;
+
+    // Auth Check
+    const userHeader = req.headers['x-user'];
+    if (!userHeader) return res.status(401).json({ error: 'Unauthorized' });
+    try {
+        const user = JSON.parse(decodeURIComponent(userHeader));
+        const admins = ['407624932101455873'];
+        if (!admins.includes(String(user.id))) {
+            return res.status(403).json({ error: 'Forbidden' });
+        }
+    } catch (e) {
+        return res.status(400).json({ error: 'Invalid user header' });
+    }
+
+    const client = await pool.connect();
+    try {
+        await client.query('DELETE FROM tournaments WHERE id = $1', [id]);
+        res.json({ success: true });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Error deleting tournament' });
+    } finally {
+        client.release();
+    }
+});
+
+// Sync with AoE4World
+app.post('/api/tournaments/sync', async (req, res) => {
+    // Auth Check
+    const userHeader = req.headers['x-user'];
+    if (!userHeader) return res.status(401).json({ error: 'Unauthorized' });
+    try {
+        const user = JSON.parse(decodeURIComponent(userHeader));
+        const admins = ['407624932101455873'];
+        if (!admins.includes(String(user.id))) {
+            return res.status(403).json({ error: 'Forbidden' });
+        }
+    } catch (e) {
+        return res.status(400).json({ error: 'Invalid user header' });
+    }
+
+    try {
+        // Fetch HTML from AoE4World
+        const response = await fetch('https://aoe4world.com/esports/tournaments');
+        const html = await response.text();
+
+        // Basic regex scraping
+        const tournaments = [];
+        const regex = /<a href="(https:\/\/aoe4world\.com\/esports\/tournaments\/[^"]+)".*?<h3[^>]*>([^<]+)<\/h3>.*?<p[^>]*>([^<]+)<\/p>/gs;
+
+        let match;
+        while ((match = regex.exec(html)) !== null) {
+            const link = match[1];
+            const name = match[2].trim();
+            const dateStr = match[3].trim();
+
+            // Default status
+            let status = 'upcoming';
+
+            tournaments.push({ name, link, date: dateStr, status });
+        }
+
+        // Save to DB
+        const client = await pool.connect();
+        try {
+            await client.query('BEGIN');
+            let addedCount = 0;
+            for (const t of tournaments) {
+                // Check if exists
+                const check = await client.query('SELECT id FROM tournaments WHERE name = $1', [t.name]);
+                if (check.rows.length === 0) {
+                    await client.query(
+                        `INSERT INTO tournaments (name, link, description, status) VALUES ($1, $2, $3, $4)`,
+                        [t.name, t.link, t.date, t.status]
+                    );
+                    addedCount++;
+                }
+            }
+            await client.query('COMMIT');
+            res.json({ success: true, added: addedCount, total_found: tournaments.length });
+        } catch (err) {
+            await client.query('ROLLBACK');
+            throw err;
+        } finally {
+            client.release();
+        }
+
+    } catch (err) {
+        console.error('Sync error:', err);
+        res.status(500).json({ error: 'Failed to sync tournaments' });
+    }
+});
 
 module.exports = app;

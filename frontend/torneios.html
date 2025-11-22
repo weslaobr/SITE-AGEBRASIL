@@ -11,298 +11,173 @@
   <link rel="icon" type="image/png" href="https://i.postimg.cc/3JT4W3hz/favicon.png">
 
   <style>
-    /* Estilos específicos para a página Torneios em manutenção */
-    .maintenance-hero {
-      background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    .tournaments-hero {
+      background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url('https://wallpaperaccess.com/full/6367864.jpg');
+      background-size: cover;
+      background-position: center;
       padding: 5rem 0;
       text-align: center;
       color: white;
-      position: relative;
-      overflow: hidden;
     }
 
-    .maintenance-hero::before {
-      content: "";
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" preserveAspectRatio="none"><path d="M0,0 L100,0 L100,100 Z" fill="rgba(255,255,255,0.05)"/></svg>');
-      background-size: cover;
-    }
-
-    .maintenance-content {
-      position: relative;
-      z-index: 1;
-    }
-
-    .maintenance-icon {
-      font-size: 5rem;
-      color: var(--accent-color);
-      margin-bottom: 2rem;
-      animation: float 3s ease-in-out infinite;
-    }
-
-    @keyframes float {
-
-      0%,
-      100% {
-        transform: translateY(0);
-      }
-
-      50% {
-        transform: translateY(-10px);
-      }
-    }
-
-    .maintenance-hero h1 {
+    .tournaments-hero h1 {
       font-size: 3rem;
       margin-bottom: 1rem;
+      color: var(--accent-color);
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
     }
 
-    .maintenance-hero p {
+    .tournaments-hero p {
       font-size: 1.2rem;
-      max-width: 600px;
-      margin: 0 auto 2rem;
-      opacity: 0.9;
+      max-width: 800px;
+      margin: 0 auto;
+      color: #e2e8f0;
     }
 
-    .maintenance-stats {
+    .tabs-container {
       display: flex;
       justify-content: center;
-      gap: 3rem;
-      margin-top: 3rem;
+      gap: 1rem;
+      margin: 2rem 0;
       flex-wrap: wrap;
     }
 
-    .maintenance-stat {
-      text-align: center;
-      padding: 1rem;
+    .tab-btn {
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid var(--border-color);
+      color: #a0aec0;
+      padding: 0.8rem 2rem;
+      border-radius: 30px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      font-size: 1rem;
     }
 
-    .maintenance-stat .number {
-      font-size: 2.5rem;
-      font-weight: 700;
-      color: var(--accent-color);
-      display: block;
+    .tab-btn:hover,
+    .tab-btn.active {
+      background: var(--accent-color);
+      color: white;
+      border-color: var(--accent-color);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(231, 76, 60, 0.3);
     }
 
-    .maintenance-stat .label {
-      color: #cbd5e0;
-      font-size: 0.9rem;
+    .tournaments-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 2rem;
+      margin-bottom: 4rem;
     }
 
-    .maintenance-info {
+    .tournament-card {
       background: var(--card-bg);
       border-radius: 12px;
-      padding: 3rem;
-      margin: 3rem auto;
-      max-width: 800px;
-      text-align: center;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-      border: 1px solid var(--border-color);
-    }
-
-    .maintenance-info h2 {
-      color: var(--accent-color);
-      margin-bottom: 1.5rem;
-      font-size: 2rem;
-    }
-
-    .maintenance-info p {
-      color: #a0aec0;
-      line-height: 1.7;
-      margin-bottom: 2rem;
-    }
-
-    .progress-container {
-      background: rgba(255, 255, 255, 0.1);
-      border-radius: 10px;
-      padding: 2rem;
-      margin: 2rem 0;
-    }
-
-    .progress-bar {
-      height: 10px;
-      background: rgba(255, 255, 255, 0.1);
-      border-radius: 5px;
       overflow: hidden;
-      margin-bottom: 1rem;
-    }
-
-    .progress-fill {
-      height: 100%;
-      background: linear-gradient(90deg, var(--accent-color), #ffee00);
-      border-radius: 5px;
-      width: 75%;
-      animation: progress-pulse 2s ease-in-out infinite;
-    }
-
-    @keyframes progress-pulse {
-
-      0%,
-      100% {
-        opacity: 1;
-      }
-
-      50% {
-        opacity: 0.7;
-      }
-    }
-
-    .progress-text {
-      display: flex;
-      justify-content: space-between;
-      color: #a0aec0;
-      font-size: 0.9rem;
-    }
-
-    .features-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap: 2rem;
-      margin-top: 3rem;
-    }
-
-    .feature-card {
-      background: rgba(255, 255, 255, 0.05);
-      padding: 2rem;
-      border-radius: 8px;
-      text-align: center;
-      transition: transform 0.3s ease;
       border: 1px solid var(--border-color);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      display: flex;
+      flex-direction: column;
     }
 
-    .feature-card:hover {
+    .tournament-card:hover {
       transform: translateY(-5px);
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
       border-color: var(--accent-color);
     }
 
-    .feature-card i {
-      font-size: 2.5rem;
-      color: var(--accent-color);
-      margin-bottom: 1.5rem;
+    .tournament-image {
+      height: 180px;
+      background-size: cover;
+      background-position: center;
+      position: relative;
     }
 
-    .feature-card h3 {
-      color: var(--text-color);
-      margin-bottom: 1rem;
-    }
-
-    .feature-card p {
-      color: #a0aec0;
-      font-size: 0.9rem;
-      line-height: 1.6;
-    }
-
-    .countdown {
-      background: var(--card-bg);
-      border-radius: 12px;
-      padding: 2rem;
-      margin: 3rem auto;
-      max-width: 600px;
-      text-align: center;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-      border: 1px solid var(--border-color);
-    }
-
-    .countdown h2 {
-      color: var(--accent-color);
-      margin-bottom: 2rem;
-    }
-
-    .countdown-timer {
-      display: flex;
-      justify-content: center;
-      gap: 1.5rem;
-      flex-wrap: wrap;
-    }
-
-    .countdown-item {
-      text-align: center;
-      min-width: 80px;
-    }
-
-    .countdown-number {
-      display: block;
-      font-size: 2.5rem;
-      font-weight: 700;
-      color: var(--accent-color);
-      background: rgba(255, 255, 255, 0.05);
-      border-radius: 8px;
-      padding: 1rem;
-      margin-bottom: 0.5rem;
-    }
-
-    .countdown-label {
-      color: #a0aec0;
+    .tournament-status {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      padding: 0.3rem 0.8rem;
+      border-radius: 20px;
       font-size: 0.8rem;
+      font-weight: bold;
       text-transform: uppercase;
     }
 
-    .notification {
-      background: var(--card-bg);
-      border-radius: 12px;
-      padding: 2rem;
-      margin: 2rem auto;
-      max-width: 600px;
-      text-align: center;
-      border-left: 4px solid var(--accent-color);
-    }
-
-    .notification h3 {
-      color: var(--text-color);
-      margin-bottom: 1rem;
-    }
-
-    .notification p {
-      color: #a0aec0;
-      margin-bottom: 1.5rem;
-    }
-
-    .notification-btn {
-      display: inline-block;
-      background: var(--accent-color);
+    .status-ongoing {
+      background: #2ecc71;
       color: white;
-      padding: 0.8rem 1.5rem;
-      border-radius: 30px;
+    }
+
+    .status-upcoming {
+      background: #f1c40f;
+      color: black;
+    }
+
+    .status-completed {
+      background: #95a5a6;
+      color: white;
+    }
+
+    .tournament-content {
+      padding: 1.5rem;
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .tournament-title {
+      font-size: 1.2rem;
+      color: var(--text-color);
+      margin-bottom: 0.5rem;
+      font-weight: 700;
+    }
+
+    .tournament-info {
+      color: #a0aec0;
+      font-size: 0.9rem;
+      margin-bottom: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem;
+    }
+
+    .tournament-info i {
+      width: 20px;
+      color: var(--accent-color);
+    }
+
+    .tournament-prize {
+      font-size: 1.1rem;
+      color: #f1c40f;
+      font-weight: bold;
+      margin-top: auto;
+      padding-top: 1rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .tournament-link {
+      display: block;
+      text-align: center;
+      background: rgba(255, 255, 255, 0.1);
+      color: white;
+      padding: 0.8rem;
+      margin: 1.5rem 1.5rem 1.5rem;
+      border-radius: 8px;
       text-decoration: none;
       font-weight: 600;
-      transition: all 0.3s ease;
+      transition: background 0.3s ease;
     }
 
-    .notification-btn:hover {
-      background: #d63031;
-      transform: translateY(-3px);
-      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    .tournament-link:hover {
+      background: var(--accent-color);
     }
 
-    @media (max-width: 768px) {
-      .maintenance-hero h1 {
-        font-size: 2.2rem;
-      }
-
-      .maintenance-icon {
-        font-size: 4rem;
-      }
-
-      .maintenance-stats {
-        gap: 1.5rem;
-      }
-
-      .maintenance-stat .number {
-        font-size: 2rem;
-      }
-
-      .countdown-number {
-        font-size: 2rem;
-        padding: 0.8rem;
-      }
-
-      .features-grid {
-        grid-template-columns: 1fr;
-      }
+    .loading {
+      text-align: center;
+      padding: 3rem;
+      color: #a0aec0;
+      font-size: 1.2rem;
     }
   </style>
 </head>
@@ -328,100 +203,22 @@
     </div>
   </header>
 
-  <section class="maintenance-hero">
-    <div class="container maintenance-content">
-      <div class="maintenance-icon">
-        <i class="fas fa-tools"></i>
-      </div>
-      <h1>Página de Torneios em Manutenção</h1>
-      <p>Estamos trabalhando para trazer uma experiência incrível de torneios para a comunidade brasileira de Age of
-        Empires IV</p>
-
-      <div class="maintenance-stats">
-        <div class="maintenance-stat">
-          <span class="number">12</span>
-          <span class="label">Torneios Realizados</span>
-        </div>
-        <div class="maintenance-stat">
-          <span class="number">350+</span>
-          <span class="label">Jogadores Participantes</span>
-        </div>
-        <div class="maintenance-stat">
-          <span class="number">R$ 5.000+</span>
-          <span class="label">Em Prêmios Distribuídos</span>
-        </div>
-      </div>
+  <section class="tournaments-hero">
+    <div class="container">
+      <h1>Torneios de Age of Empires IV</h1>
+      <p>Acompanhe os principais campeonatos do cenário competitivo, nacionais e internacionais.</p>
     </div>
   </section>
 
   <main class="container">
-    <div class="maintenance-info">
-      <h2>Novidades Chegando Em Breve!</h2>
-      <p>Estamos desenvolvendo um sistema completo de torneios com inscrições automáticas, chaves interativas,
-        transmissão integrada e muito mais para melhor atender nossa comunidade.</p>
-
-      <div class="progress-container">
-        <div class="progress-bar">
-          <div class="progress-fill"></div>
-        </div>
-        <div class="progress-text">
-          <span>Desenvolvimento</span>
-          <span>75% Concluído</span>
-        </div>
-      </div>
+    <div class="tabs-container">
+      <button class="tab-btn active" onclick="filterTournaments('ongoing')">Em Andamento</button>
+      <button class="tab-btn" onclick="filterTournaments('upcoming')">Em Breve</button>
+      <button class="tab-btn" onclick="filterTournaments('completed')">Encerrados</button>
     </div>
 
-    <div class="countdown">
-      <h2>Previsão de Lançamento</h2>
-      <div class="countdown-timer" id="countdown">
-        <div class="countdown-item">
-          <span class="countdown-number" id="days">00</span>
-          <span class="countdown-label">Dias</span>
-        </div>
-        <div class="countdown-item">
-          <span class="countdown-number" id="hours">00</span>
-          <span class="countdown-label">Horas</span>
-        </div>
-        <div class="countdown-item">
-          <span class="countdown-number" id="minutes">00</span>
-          <span class="countdown-label">Minutos</span>
-        </div>
-        <div class="countdown-item">
-          <span class="countdown-number" id="seconds">00</span>
-          <span class="countdown-label">Segundos</span>
-        </div>
-      </div>
-    </div>
-
-    <div class="features-grid">
-      <div class="feature-card">
-        <i class="fas fa-trophy"></i>
-        <h3>Sistema de Torneios</h3>
-        <p>Organização completa de torneios com chaves eliminatórias, grupos e fases classificatórias.</p>
-      </div>
-      <div class="feature-card">
-        <i class="fas fa-user-plus"></i>
-        <h3>Inscrições Automáticas</h3>
-        <p>Processo simplificado de inscrição com verificação automática de elegibilidade.</p>
-      </div>
-      <div class="feature-card">
-        <i class="fas fa-broadcast-tower"></i>
-        <h3>Transmissão Integrada</h3>
-        <p>Suporte nativo para transmissões ao vivo integradas diretamente na plataforma.</p>
-      </div>
-      <div class="feature-card">
-        <i class="fas fa-chart-line"></i>
-        <h3>Estatísticas Detalhadas</h3>
-        <p>Análises avançadas de desempenho dos jogadores durante os torneios.</p>
-      </div>
-    </div>
-
-    <div class="notification">
-      <h3>Quer ser notificado quando lançarmos?</h3>
-      <p>Deixe seu e-mail e seremos os primeiros a avisar quando o sistema de torneios estiver disponível!</p>
-      <a href="#" class="notification-btn">
-        <i class="fas fa-bell"></i> Receber Notificação
-      </a>
+    <div id="tournaments-grid" class="tournaments-grid">
+      <div class="loading"><i class="fas fa-spinner fa-spin"></i> Carregando torneios...</div>
     </div>
   </main>
 
@@ -447,34 +244,86 @@
     </div>
   </footer>
 
+  <script src="js/forum.js"></script> <!-- Reusing API_BASE_URL logic -->
   <script>
-    // Contador regressivo para 15 dias a partir de hoje
-    function updateCountdown() {
-      const launchDate = new Date();
-      launchDate.setDate(launchDate.getDate() + 15); // 15 dias a partir de hoje
+    let allTournaments = [];
 
-      const now = new Date().getTime();
-      const distance = launchDate - now;
-
-      const days = Math.floor(distance / (1000 * 60 * 60 * 24));
-      const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-      const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-      const seconds = Math.floor((distance % (1000 * 60)) / 1000);
-
-      document.getElementById("days").textContent = days.toString().padStart(2, '0');
-      document.getElementById("hours").textContent = hours.toString().padStart(2, '0');
-      document.getElementById("minutes").textContent = minutes.toString().padStart(2, '0');
-      document.getElementById("seconds").textContent = seconds.toString().padStart(2, '0');
-
-      if (distance < 0) {
-        clearInterval(countdownTimer);
-        document.getElementById("countdown").innerHTML = "<h3>Lançado!</h3>";
+    async function loadTournaments() {
+      try {
+        const response = await fetch(`${API_BASE_URL}/tournaments`);
+        allTournaments = await response.json();
+        filterTournaments('ongoing'); // Default view
+      } catch (error) {
+        console.error('Error loading tournaments:', error);
+        document.getElementById('tournaments-grid').innerHTML = '<div class="loading">Erro ao carregar torneios.</div>';
       }
     }
 
-    // Atualizar a cada segundo
-    const countdownTimer = setInterval(updateCountdown, 1000);
-    updateCountdown(); // Chamar imediatamente para evitar delay inicial
+    function filterTournaments(status) {
+      // Update tabs
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('active');
+        if (btn.textContent.toLowerCase().includes(status === 'ongoing' ? 'andamento' : status === 'upcoming' ? 'breve' : 'encerrados')) {
+          btn.classList.add('active');
+        }
+      });
+
+      const filtered = allTournaments.filter(t => {
+        // Normalize status check
+        const tStatus = t.status.toLowerCase();
+        if (status === 'ongoing') return tStatus === 'ongoing' || tStatus === 'live';
+        if (status === 'upcoming') return tStatus === 'upcoming' || tStatus === 'future';
+        if (status === 'completed') return tStatus === 'completed' || tStatus === 'finished' || tStatus === 'ended';
+        return false;
+      });
+
+      const grid = document.getElementById('tournaments-grid');
+
+      if (filtered.length === 0) {
+        grid.innerHTML = '<div class="loading">Nenhum torneio encontrado nesta categoria.</div>';
+        return;
+      }
+
+      grid.innerHTML = filtered.map(t => `
+        <div class="tournament-card">
+          <div class="tournament-image" style="background-image: url('${t.image_url || 'https://aoe4world.com/assets/images/aoe4-banner.jpg'}')">
+            <span class="tournament-status status-${status}">${getStatusLabel(status)}</span>
+          </div>
+          <div class="tournament-content">
+            <h3 class="tournament-title">${t.name}</h3>
+            <div class="tournament-info">
+              <span><i class="far fa-calendar-alt"></i> ${formatDate(t.start_date)}</span>
+              ${t.end_date ? `<span><i class="fas fa-flag-checkered"></i> ${formatDate(t.end_date)}</span>` : ''}
+            </div>
+            ${t.prize_pool ? `<div class="tournament-prize"><i class="fas fa-trophy"></i> ${t.prize_pool}</div>` : ''}
+          </div>
+          <a href="${t.link}" target="_blank" class="tournament-link">Ver Detalhes <i class="fas fa-external-link-alt"></i></a>
+        </div>
+      `).join('');
+    }
+
+    function getStatusLabel(status) {
+      if (status === 'ongoing') return 'Em Andamento';
+      if (status === 'upcoming') return 'Em Breve';
+      if (status === 'completed') return 'Encerrado';
+      return status;
+    }
+
+    function formatDate(dateString) {
+      if (!dateString) return '';
+      // Handle loose date strings from scraping or ISO dates
+      if (dateString.includes('-') && !dateString.includes('T')) {
+        return dateString; // Already formatted string like "Nov 14 - Dec 15"
+      }
+      try {
+        const date = new Date(dateString);
+        return date.toLocaleDateString('pt-BR');
+      } catch (e) {
+        return dateString;
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', loadTournaments);
   </script>
 </body>
 

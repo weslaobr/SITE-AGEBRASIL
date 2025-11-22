@@ -25,6 +25,8 @@ class ForumTopicUI {
 
         if (this.api.currentUser) {
             this.loadTopic();
+        } else {
+            this.showLoginRequired();
         }
     }
 
@@ -628,6 +630,22 @@ class ForumTopicUI {
                     <button class="login-btn" onclick="window.location.href = 'forum.html'">
                         <i class="fas fa-arrow-left"></i>
                         Voltar ao Fórum
+                    </button>
+                </div>
+            `;
+        }
+    }
+
+    showLoginRequired() {
+        const topicContent = document.getElementById('topicContent');
+        if (topicContent) {
+            topicContent.innerHTML = `
+                <div class="no-auth-message" style="text-align: center; padding: 3rem; background: var(--card-bg); border-radius: 12px; border: 1px solid var(--border-color);">
+                    <i class="fas fa-lock" style="font-size: 3rem; color: var(--accent-color); margin-bottom: 1rem;"></i>
+                    <h3 style="margin-bottom: 1rem;">Login Necessário</h3>
+                    <p style="color: #a0aec0; margin-bottom: 1.5rem;">Você precisa estar logado com o Discord para visualizar este tópico.</p>
+                    <button onclick="window.discordAuth.login()" class="btn btn-primary" style="background: var(--accent-color); color: white; border: none; padding: 0.8rem 1.5rem; border-radius: 5px; cursor: pointer; font-weight: 600; display: inline-flex; align-items: center; gap: 0.5rem;">
+                        <i class="fab fa-discord"></i> Entrar com Discord
                     </button>
                 </div>
             `;

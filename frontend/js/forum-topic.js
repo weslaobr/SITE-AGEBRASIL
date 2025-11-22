@@ -354,44 +354,40 @@ class ForumTopicUI {
 
             const repliesHTML = replies.map(reply => `
                 <div class="reply-item" id="reply-${reply.id}">
-                    <div class="reply-header">
-                        <div class="reply-author">
-                            <div class="reply-avatar">
-                                ${reply.authorAvatar ?
-                    `<img src="https://cdn.discordapp.com/avatars/${reply.authorId}/${reply.authorAvatar}.webp?size=40" 
-                                          alt="${reply.author}"
-                                          onerror="this.src='https://cdn.discordapp.com/embed/avatars/${reply.authorId % 5}.png'">` :
+                    <div class="reply-avatar">
+                        ${reply.authorAvatar ?
+                    `<img src="https://cdn.discordapp.com/avatars/${reply.authorId}/${reply.authorAvatar}.webp?size=45" 
+                                  onerror="this.src='https://cdn.discordapp.com/embed/avatars/${reply.authorId % 5}.png'">` :
                     `<span>${reply.author.charAt(0)}</span>`
                 }
-                            </div>
-                            <div class="reply-author-info">
-                                <div class="reply-author-name">
-                                    ${reply.author}
-                                    ${this.api.admins.includes(reply.authorId) ? '<span class="admin-badge">ADMIN</span>' : ''}
-                                </div>
-                                <div class="reply-date">${this.formatDate(reply.createdAt)}</div>
+                    </div>
+                    <div class="reply-content-wrapper">
+                        <div class="reply-header">
+                            <span class="reply-author">
+                                ${reply.author}
+                                ${this.api.admins.includes(reply.authorId) ? '<span class="admin-badge">ADMIN</span>' : ''}
+                            </span>
+                            <span class="reply-date">${this.formatDate(reply.createdAt)}</span>
+                            
+                            <div class="reply-actions">
+                                <button onclick="forumTopicUI.likeReply(${reply.id})" title="Curtir">
+                                    <i class="far fa-heart"></i>
+                                </button>
+                                <button onclick="forumTopicUI.quoteReply(${reply.id})" title="Citar">
+                                    <i class="fas fa-quote-right"></i>
+                                </button>
+                                ${this.api.isAdmin || (this.api.currentUser && this.api.currentUser.id === reply.authorId) ? `
+                                    <div class="reply-mod-actions">
+                                        <button class="mod-action" onclick="forumTopicUI.deleteReply(${reply.id})" title="Deletar">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                ` : ''}
                             </div>
                         </div>
-                        ${this.api.isAdmin ? `
-                            <div class="reply-mod-actions">
-                                <button class="mod-action" onclick="forumTopicUI.deleteReply(${reply.id})" title="Deletar Resposta">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </div>
-                        ` : ''}
-                    </div>
-                    <div class="reply-content">
-                        ${this.formatContent(reply.content)}
-                    </div>
-                    <div class="reply-actions">
-                        <button class="reply-action" onclick="forumTopicUI.likeReply(${reply.id})">
-                            <i class="fas fa-thumbs-up"></i>
-                            Curtir
-                        </button>
-                        <button class="reply-action" onclick="forumTopicUI.quoteReply(${reply.id})">
-                            <i class="fas fa-quote-left"></i>
-                            Citar
-                        </button>
+                        <div class="reply-body">
+                            ${this.formatContent(reply.content)}
+                        </div>
                     </div>
                 </div>
             `).join('');
@@ -400,21 +396,13 @@ class ForumTopicUI {
 
         } catch (error) {
             console.error('Erro ao carregar respostas:', error);
-            const repliesList = document.getElementById('repliesList');
-            repliesList.innerHTML = `
-                <div class="no-replies" style="text-align: center; padding: 3rem; color: #e53e3e;">
-                    <i class="fas fa-exclamation-triangle" style="font-size: 3rem; margin-bottom: 1rem;"></i>
-                    <h3>Erro ao carregar respostas</h3>
-                    <p>Tente recarregar a página</p>
-                </div>
-            `;
+            this.showNotification('Erro ao carregar respostas', 'error');
         }
     }
 
     async createReply() {
         if (!this.api.currentUser) {
             this.showNotification('Faça login para responder.', 'error');
-            this.redirectToLogin();
             return;
         }
 
@@ -455,67 +443,6 @@ class ForumTopicUI {
 
         } catch (error) {
             console.error('Erro ao criar resposta:', error);
-            this.showNotification(error.message, 'error');
-        }
-    }
-
-    async deleteTopic(topicId) {
-        if (!confirm('Tem certeza que deseja deletar este tópico? Esta ação não pode ser desfeita.')) {
-            return;
-        }
-
-        try {
-            await this.api.deleteTopic(topicId);
-            this.showNotification('Tópico deletado com sucesso!', 'success');
-
-            // Redirecionar para o fórum após 2 segundos
-            setTimeout(() => {
-                window.location.href = 'forum.html';
-            }, 2000);
-
-        } catch (error) {
-            console.error('Erro ao deletar tópico:', error);
-            this.showNotification(error.message, 'error');
-        }
-    }
-
-    async deleteReply(replyId) {
-        if (!confirm('Tem certeza que deseja deletar esta resposta?')) {
-            return;
-        }
-
-        try {
-            await this.api.deleteReply(replyId);
-            this.showNotification('Resposta deletada com sucesso!', 'success');
-            await this.loadReplies();
-
-        } catch (error) {
-            console.error('Erro ao deletar resposta:', error);
-            this.showNotification(error.message, 'error');
-        }
-    }
-
-    async togglePinTopic(topicId) {
-        try {
-            const topic = await this.api.togglePinTopic(topicId);
-            this.showNotification(`Tópico ${topic.isPinned ? 'fixado' : 'desfixado'} com sucesso!`, 'success');
-            await this.loadTopic();
-
-        } catch (error) {
-            console.error('Erro ao fixar/desfixar tópico:', error);
-            this.showNotification(error.message, 'error');
-        }
-    }
-
-    async toggleLockTopic(topicId) {
-        try {
-            const topic = await this.api.toggleLockTopic(topicId);
-            this.showNotification(`Tópico ${topic.isLocked ? 'bloqueado' : 'desbloqueado'} com sucesso!`, 'success');
-            await this.loadTopic();
-            await this.loadReplies();
-
-        } catch (error) {
-            console.error('Erro ao bloquear/desbloquear tópico:', error);
             this.showNotification(error.message, 'error');
         }
     }
@@ -649,6 +576,65 @@ class ForumTopicUI {
                     </button>
                 </div>
             `;
+        }
+    }
+
+    // ✅ MÉTODOS DE ADMINISTRAÇÃO
+    async togglePinTopic(topicId) {
+        if (!confirm('Tem certeza que deseja alterar o status de fixação deste tópico?')) return;
+
+        try {
+            const result = await this.api.togglePin(topicId);
+            if (result) {
+                alert('Status de fixação atualizado com sucesso!');
+                location.reload();
+            }
+        } catch (error) {
+            console.error('Erro ao fixar tópico:', error);
+            alert('Erro ao fixar tópico: ' + error.message);
+        }
+    }
+
+    async toggleLockTopic(topicId) {
+        if (!confirm('Tem certeza que deseja alterar o status de bloqueio deste tópico?')) return;
+
+        try {
+            const result = await this.api.toggleLock(topicId);
+            if (result) {
+                alert('Status de bloqueio atualizado com sucesso!');
+                location.reload();
+            }
+        } catch (error) {
+            console.error('Erro ao bloquear tópico:', error);
+            alert('Erro ao bloquear tópico: ' + error.message);
+        }
+    }
+
+    async deleteTopic(topicId) {
+        if (!confirm('Tem certeza que deseja DELETAR este tópico? Esta ação não pode ser desfeita.')) return;
+
+        try {
+            const result = await this.api.deleteTopic(topicId);
+            if (result) {
+                alert('Tópico deletado com sucesso!');
+                window.location.href = 'forum-category.html?category=' + this.currentTopic.categorySlug;
+            }
+        } catch (error) {
+            console.error('Erro ao deletar tópico:', error);
+            alert('Erro ao deletar tópico: ' + error.message);
+        }
+    }
+
+    async deleteReply(replyId) {
+        if (!confirm('Tem certeza que deseja deletar esta resposta?')) return;
+
+        try {
+            await this.api.deleteReply(replyId);
+            alert('Resposta deletada com sucesso!');
+            this.loadReplies(); // Recarrega as respostas
+        } catch (error) {
+            console.error('Erro ao deletar resposta:', error);
+            alert('Erro ao deletar resposta: ' + error.message);
         }
     }
 }

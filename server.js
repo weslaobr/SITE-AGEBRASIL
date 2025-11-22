@@ -569,19 +569,24 @@ app.post('/api/topicos/:id/responder', (req, res) => {
 });
 
 // GET stats (opcional, mas deixa bonito)
+// GET stats (opcional, mas deixa bonito)
 app.get('/api/forum/stats', async (req, res) => {
     try {
         const [topics, replies] = await Promise.all([
             pool.query('SELECT COUNT(*) FROM forum_topics'),
             pool.query('SELECT COUNT(*) FROM forum_replies')
         ]);
-        res.json({
+
+        const stats = {
             totalTopics: parseInt(topics.rows[0].count),
             totalReplies: parseInt(replies.rows[0].count),
-            totalMembers: 50,
-            onlineNow: 5
-        });
-    } catch {
+            totalMembers: 50, // Mock for now
+            onlineNow: 5      // Mock for now
+        };
+        console.log('Stats loaded:', stats);
+        res.json(stats);
+    } catch (err) {
+        console.error('Error loading stats:', err);
         res.json({ totalTopics: 0, totalReplies: 0, totalMembers: 0, onlineNow: 1 });
     }
 });

@@ -1,4 +1,4 @@
-// forum-api.js - VERSÃO 100% COMPATÍVEL COM SEU BANCO REAL (2025)
+// forum-api.js - VERSÃO 100% COMPATÍVEL COM SEU BANCO REAL
 class ForumAPI {
     constructor() {
         // Lógica robusta para definir a URL da API

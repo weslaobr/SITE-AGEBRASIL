@@ -1,4 +1,4 @@
-// forum-category.js - VERSÃO COMPLETAMENTE CORRIGIDA
+// forum-category.js - VERSÃO COMPLETAMENTE 
 class ForumCategoryUI {
     constructor() {
         this.api = window.forumAPI;

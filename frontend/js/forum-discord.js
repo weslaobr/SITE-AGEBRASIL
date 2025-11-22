@@ -1,4 +1,4 @@
-// forum-discord.js - VERSÃO COMPLETA
+// forum-discord.js - VERSÃO 
 class DiscordSync {
     constructor() {
         this.webhookUrl = '';

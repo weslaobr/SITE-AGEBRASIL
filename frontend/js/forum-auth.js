@@ -1,4 +1,4 @@
-// forum-auth.js - VERSÃO COMPLETA E FUNCIONAL
+// forum-auth.js - VERSÃO COMPLETA E FUNCION
 class ForumAuth {
     constructor() {
         console.log('🔐 Inicializando ForumAuth...');

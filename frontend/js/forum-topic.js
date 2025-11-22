@@ -1,4 +1,4 @@
-// forum-topic.js - VERSÃO POSTGRESQL CORRIGIDA
+// forum-topic.js - VERSÃO POSTGRESQL 
 class ForumTopicUI {
     constructor() {
         this.api = window.forumAPI;

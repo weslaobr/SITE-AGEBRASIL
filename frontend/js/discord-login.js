@@ -1,4 +1,4 @@
-// discord-login.js - VERSÃO CORRIGIDA E SEGURA
+// discord-login.js - VERSÃO CORRIGIDA 
 class DiscordAuth {
     constructor() {
         // 🔧 CONFIGURAÇÃO

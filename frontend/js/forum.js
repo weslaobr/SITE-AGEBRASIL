@@ -32,7 +32,7 @@ async function carregarDados() {
     }
 }
 
-function listarCategorias() { /* mesma função de antes - não mudei */
+function listarCategorias() { /* mesma função de antes */
     const container = document.getElementById('categorias-container');
     if (!container) return;
     container.innerHTML = todasCategorias.map(cat => `

@@ -461,10 +461,12 @@ app.delete('/api/forum/topics/:id', async (req, res) => {
     // Auth Check
     const userHeader = req.headers['x-user'];
     if (!userHeader) return res.status(401).json({ error: 'Unauthorized' });
-
-    let user;
     try {
-        user = JSON.parse(decodeURIComponent(userHeader));
+        const user = JSON.parse(decodeURIComponent(userHeader));
+        const admins = ['407624932101455873']; // BRO.WESLAO
+        if (!admins.includes(String(user.id))) {
+            return res.status(403).json({ error: 'Forbidden' });
+        }
     } catch (e) {
         return res.status(400).json({ error: 'Invalid user header' });
     }
@@ -472,25 +474,6 @@ app.delete('/api/forum/topics/:id', async (req, res) => {
     const client = await pool.connect();
     try {
         await client.query('BEGIN');
-
-        // Check if topic exists and get author
-        const topicCheck = await client.query('SELECT author_discord_id FROM forum_topics WHERE id = $1', [id]);
-        if (topicCheck.rows.length === 0) {
-            await client.query('ROLLBACK');
-            return res.status(404).json({ error: 'Topic not found' });
-        }
-
-        const topicAuthorId = topicCheck.rows[0].author_discord_id;
-        const admins = ['407624932101455873']; // BRO.WESLAO
-        const isAdmin = admins.includes(String(user.id));
-        const isAuthor = String(user.id) === String(topicAuthorId);
-
-        // Allow deletion if user is admin OR topic author
-        if (!isAdmin && !isAuthor) {
-            await client.query('ROLLBACK');
-            return res.status(403).json({ error: 'Você só pode deletar seus próprios tópicos' });
-        }
-
         await client.query('DELETE FROM forum_replies WHERE topic_id = $1', [id]);
         await client.query('DELETE FROM forum_topics WHERE id = $1', [id]);
         await client.query('COMMIT');

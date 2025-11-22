@@ -12,29 +12,90 @@
 
     <style>
         /* Estilos específicos para a home */
+        .hero {
+            background: var(--card-bg);
+            padding: 3rem 0;
+            margin: 2rem 0;
+        }
+
+        .hero-wrapper {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 2rem;
+        }
+
+        .hero-text {
+            text-align: left;
+            max-width: 500px;
+        }
+
+        .hero h2 {
+            font-size: 1.8rem;
+            margin-bottom: 0.5rem;
+            line-height: 1.2;
+        }
+
+        .hero p {
+            color: #a0aec0;
+            margin-bottom: 0;
+            font-size: 0.9rem;
+        }
+
         .hero-stats {
             display: flex;
-            justify-content: center;
-            gap: 3rem;
-            margin-top: 2rem;
-            flex-wrap: wrap;
+            gap: 2rem;
+            margin-top: 0;
         }
 
         .hero-stat {
             text-align: center;
-            padding: 1rem;
+            position: relative;
         }
 
         .hero-stat .number {
-            font-size: 2.5rem;
-            font-weight: 700;
-            color: var(--accent-color);
             display: block;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--accent-color);
+            line-height: 1;
+            margin-bottom: 0.2rem;
         }
 
         .hero-stat .label {
             color: #cbd5e0;
-            font-size: 0.9rem;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.3rem;
+        }
+
+        .hero-stat .label i {
+            font-size: 0.8rem;
+            opacity: 0.7;
+        }
+
+        @media (max-width: 768px) {
+            .hero-wrapper {
+                flex-direction: column;
+                text-align: center;
+                gap: 1.5rem;
+            }
+
+            .hero-text {
+                text-align: center;
+                max-width: 100%;
+            }
+
+            .hero-stats {
+                width: 100%;
+                justify-content: center;
+                gap: 1.5rem;
+                flex-wrap: wrap;
+            }
         }
 
         .featured-players {
@@ -453,16 +514,11 @@
             }
         }
 
-        /* Hero Adjustment */
-        .hero {
-            padding: 3rem 0;
-        }
-
         /* Content Creators Styles */
         .content-creators {
-            padding: 4rem 0 2rem 0;
-            /* Reduced bottom padding */
-            background: rgba(0, 0, 0, 0.2);
+            background: var(--card-bg);
+            padding: 3rem 0;
+            margin: 2rem 0;
         }
 
         .creators-container {
@@ -699,26 +755,30 @@
     <main class="container">
         <section class="hero">
             <div class="container">
-                <h2>Age of Empires IV <span style="color: #ffee00;"> Brasil</span></h2>
-                <p>A plataforma definitiva para acompanhar estatísticas, rankings e histórico de partidas do Age of
-                    Empires IV em tempo real</p>
+                <div class="hero-wrapper">
+                    <div class="hero-text">
+                        <p>A plataforma definitiva para acompanhar estatísticas, rankings e histórico de partidas do Age
+                            of
+                            Empires IV em tempo real</p>
+                    </div>
 
-                <div class="hero-stats" id="hero-stats">
-                    <div class="hero-stat">
-                        <span class="number">0</span>
-                        <span class="label">Jogadores</span>
-                    </div>
-                    <div class="hero-stat">
-                        <span class="number">0</span>
-                        <span class="label">Partidas</span>
-                    </div>
-                    <div class="hero-stat">
-                        <span class="number">0</span>
-                        <span class="label">Clans</span>
-                    </div>
-                    <div class="hero-stat">
-                        <span class="number">0</span>
-                        <span class="label">Ativos hoje</span>
+                    <div class="hero-stats" id="hero-stats">
+                        <div class="hero-stat">
+                            <span class="number">0</span>
+                            <span class="label"><i class="fas fa-users"></i> Jogadores</span>
+                        </div>
+                        <div class="hero-stat">
+                            <span class="number">0</span>
+                            <span class="label"><i class="fas fa-gamepad"></i> Partidas</span>
+                        </div>
+                        <div class="hero-stat">
+                            <span class="number">0</span>
+                            <span class="label"><i class="fas fa-crown"></i> Clans</span>
+                        </div>
+                        <div class="hero-stat">
+                            <span class="number">0</span>
+                            <span class="label"><i class="fas fa-bolt"></i> Ativos</span>
+                        </div>
                     </div>
                 </div>
             </div>

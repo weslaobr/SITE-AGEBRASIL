@@ -20,32 +20,32 @@ const CREATORS = [
 
 const FALLBACK_VIDEOS = {
     "Gks": {
-        id: "R9j0D_Q8fG8", // Safe Fallback: AoE4 Gameplay Trailer
-        title: "A base do RTS é isso | Age of empires 4",
-        thumbnail_url: "https://i.ytimg.com/vi/R9j0D_Q8fG8/mqdefault.jpg",
+        id: "pOldXIwGyrc", // Safe Fallback: AoE4 Gameplay Trailer
+        title: "🔴AO VIVO - CAMPEONATO BRASILEIRO AGE OF CHAMPIONS",
+        thumbnail_url: "https://i.ytimg.com/vi/pOldXIwGyrc/mqdefault.jpg",
         publishedAt: new Date().toISOString()
     },
     "Utinowns": {
-        id: "zJg5nC_5ySg",
-        title: "Faça fazenda e use Hotkey como Pro - Atualizado 2025",
-        thumbnail_url: "https://i.ytimg.com/vi/zJg5nC_5ySg/mqdefault.jpg",
+        id: "ojFygYWUBWY",
+        title: "Ego dos impérios - Campeonato BR Finais!",
+        thumbnail_url: "https://i.ytimg.com/vi/ojFygYWUBWY/mqdefault.jpg",
         publishedAt: new Date().toISOString()
     },
     "VicentiN": {
-        id: "R9j0D_Q8fG8", // Safe Fallback
-        title: "Meu Primeiro Jogo de Dinastia Macedônica no 1x1 do Age of Empires 4",
-        thumbnail_url: "https://i.ytimg.com/vi/R9j0D_Q8fG8/mqdefault.jpg",
+        id: "hLzvpv3bv_Q", // Safe Fallback
+        title: "Sofri Jogando de Horda Dourada contra Aiúbidas no Age of Empires 4",
+        thumbnail_url: "https://i.ytimg.com/vi/hLzvpv3bv_Q/mqdefault.jpg",
         publishedAt: new Date().toISOString()
     },
     "CaioFora": {
-        id: "F3_a2-Y8C8M",
-        title: "Encoxaram a gente ;-; - Empires League - Age of Empires 4",
-        thumbnail_url: "https://i.ytimg.com/vi/F3_a2-Y8C8M/mqdefault.jpg",
+        id: "yFHsiFHWrN4", // User provided ID
+        title: "Não Tem Brasileiro em Campo - EGC Master Finals",
+        thumbnail_url: "https://i.ytimg.com/vi/yFHsiFHWrN4/mqdefault.jpg",
         publishedAt: new Date().toISOString()
     },
     "EricBR": {
-        id: "R9j0D_Q8fG8", // Safe Fallback
-        title: "GRANDE FINAL! EricBR vs Erik - Age of Champions #01",
+        id: "c3sxQBro8ng", // Safe Fallback
+        title: "ANÁLISE e OPINIÕES Sobre as Novas Notícias do AOM HORRIVEL",
         thumbnail_url: "https://i.ytimg.com/vi/R9j0D_Q8fG8/mqdefault.jpg",
         publishedAt: new Date().toISOString()
     }

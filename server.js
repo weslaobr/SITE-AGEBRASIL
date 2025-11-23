@@ -162,17 +162,37 @@ async function runMigrations() {
                 CREATE TABLE tournaments (
                     id SERIAL PRIMARY KEY,
                     name VARCHAR(255) NOT NULL,
-                    image_url VARCHAR(500),
+                    image_url TEXT,
                     start_date TIMESTAMP,
                     end_date TIMESTAMP,
                     prize_pool VARCHAR(100),
-                    status VARCHAR(50) DEFAULT 'upcoming', -- upcoming, ongoing, completed
-                    link VARCHAR(500),
+                    status VARCHAR(50), -- 'open', 'ongoing', 'completed'
+                    link TEXT,
                     description TEXT,
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 );
             `);
             console.log('✅ Table "tournaments" created.');
+        }
+
+        // Check if 'stream' table exists
+        const resStream = await client.query(`
+            SELECT table_name 
+            FROM information_schema.tables 
+            WHERE table_name = 'stream';
+        `);
+
+        if (resStream.rows.length === 0) {
+            console.log('⚠️ Table "stream" missing. Creating it...');
+            await client.query(`
+                CREATE TABLE stream (
+                    id SERIAL PRIMARY KEY,
+                    creator_id INTEGER UNIQUE NOT NULL,
+                    data JSONB NOT NULL,
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+            `);
+            console.log('✅ Table "stream" created.');
         }
 
         console.log('✅ Database schema is up to date.');
@@ -259,21 +279,21 @@ app.get('/api/forum/categories', async (req, res) => {
         const result = await client.query(`
             SELECT 
                 fc.*,
-                COALESCE(
-                    (SELECT COUNT(*) FROM forum_topics WHERE category_id = fc.id),
-                0
-            ) as topic_count,
-                COALESCE(
-                    (SELECT COUNT(*) 
+            COALESCE(
+                (SELECT COUNT(*) FROM forum_topics WHERE category_id = fc.id),
+            0
+        ) as topic_count,
+            COALESCE(
+                (SELECT COUNT(*) 
                      FROM forum_replies fr 
                      JOIN forum_topics ft ON fr.topic_id = ft.id 
                      WHERE ft.category_id = fc.id),
-                0
+        0
                 ) as reply_count
             FROM forum_categories fc
             WHERE fc.is_active = true 
             ORDER BY fc.position ASC, fc.id ASC
-                `);
+            `);
         res.json(result.rows);
     } catch (err) {
         console.error(err);
@@ -304,8 +324,8 @@ app.post('/api/forum/categories', async (req, res) => {
     try {
         await client.query(`
             INSERT INTO forum_categories(name, slug, description, icon, color, display_order, is_active)
-            VALUES($1, $2, $3, $4, $5, $6, true)
-                `, [name, slug, description, icon, color, display_order || 0]);
+        VALUES($1, $2, $3, $4, $5, $6, true)
+            `, [name, slug, description, icon, color, display_order || 0]);
         res.json({ success: true });
     } catch (err) {
         console.error(err);
@@ -320,15 +340,15 @@ app.get('/api/forum/topics', async (req, res) => {
     const client = await pool.connect();
     try {
         let query = `
-            SELECT
-            t.id, t.title, t.created_at, t.views, t.is_pinned, t.is_locked,
-                t.author_name, t.author_avatar, t.author_discord_id,
-                c.name AS category_name, c.slug AS category_slug, c.color AS category_color,
-                    (SELECT COUNT(*) FROM forum_replies r WHERE r.topic_id = t.id) AS replies_count
+        SELECT
+        t.id, t.title, t.created_at, t.views, t.is_pinned, t.is_locked,
+            t.author_name, t.author_avatar, t.author_discord_id,
+            c.name AS category_name, c.slug AS category_slug, c.color AS category_color,
+                (SELECT COUNT(*) FROM forum_replies r WHERE r.topic_id = t.id) AS replies_count
             FROM forum_topics t
             JOIN forum_categories c ON t.category_id = c.id
             WHERE 1 = 1
-                `;
+            `;
         const values = [];
 
         if (category) {
@@ -375,15 +395,15 @@ app.get('/api/forum/topics/:id', async (req, res) => {
             FROM forum_topics t
             JOIN forum_categories c ON t.category_id = c.id
             WHERE t.id = $1
-                `, [id]);
+            `, [id]);
 
         if (topic.rows.length === 0) return res.status(404).json({ error: 'Não encontrado' });
 
         const replies = await client.query(`
-            SELECT * FROM forum_replies
+        SELECT * FROM forum_replies
             WHERE topic_id = $1
             ORDER BY created_at ASC
-                `, [id]);
+            `, [id]);
 
         await client.query('UPDATE forum_topics SET views = views + 1 WHERE id = $1', [id]);
 
@@ -442,10 +462,10 @@ app.post('/api/forum/topics', async (req, res) => {
         await client.query('BEGIN');
         const result = await client.query(`
             INSERT INTO forum_topics
-                (category_id, title, content, author_discord_id, author_name, author_avatar)
-            VALUES($1, $2, $3, $4, $5, $6)
-            RETURNING *
-                `, [
+            (category_id, title, content, author_discord_id, author_name, author_avatar)
+        VALUES($1, $2, $3, $4, $5, $6)
+        RETURNING *
+            `, [
             categoryId, title, content, user.id,
             user.global_name || user.username,
             user.avatar ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.webp` : null
@@ -4464,9 +4484,15 @@ async function getTwitchAccessToken() {
     }
 }
 
-async function getCreatorsData() {
+// --- CACHE SYSTEM ---
+
+async function updateCreatorsCache() {
+    console.log('🔄 Updating Creators Cache...');
     const token = await getTwitchAccessToken();
-    if (!token) return CREATORS.map(c => ({ ...c, isLive: false }));
+    if (!token) {
+        console.error('❌ Failed to get Twitch Token for cache update');
+        return;
+    }
 
     // 1. Prepare User Logins
     const userLogins = CREATORS.map(c => c.twitch).join('&login=');
@@ -4500,59 +4526,111 @@ async function getCreatorsData() {
         console.error('Twitch API Error:', error);
     }
 
-    // 2. Merge Data & Fetch YouTube if needed
-    const results = await Promise.all(CREATORS.map(async creator => {
-        const stream = liveStreams.find(s => s.user_login.toLowerCase() === creator.twitch.toLowerCase());
-        const userInfo = userInfos.find(u => u.login.toLowerCase() === creator.twitch.toLowerCase());
+    const client = await pool.connect();
+    try {
+        await client.query('BEGIN');
 
-        let latestVideo = null;
+        // Fetch existing cache to preserve data on error
+        const existingCacheRes = await client.query('SELECT creator_id, data FROM stream');
+        const existingCache = new Map(existingCacheRes.rows.map(r => [r.creator_id, r.data]));
 
-        // Only fetch YouTube if NOT live and has ID
-        if (!stream && creator.youtubeId && process.env.YOUTUBE_API_KEY) {
-            try {
-                const ytUrl = `https://www.googleapis.com/youtube/v3/search?key=${process.env.YOUTUBE_API_KEY}&channelId=${creator.youtubeId}&part=snippet,id&order=date&maxResults=1&type=video`;
-                const ytRes = await fetch(ytUrl);
-                const ytData = await ytRes.json();
+        for (const creator of CREATORS) {
+            const stream = liveStreams.find(s => s.user_login.toLowerCase() === creator.twitch.toLowerCase());
+            const userInfo = userInfos.find(u => u.login.toLowerCase() === creator.twitch.toLowerCase());
+            const cachedData = existingCache.get(creator.id);
 
-                if (ytData.items && ytData.items.length > 0) {
-                    const video = ytData.items[0];
-                    latestVideo = {
-                        id: video.id.videoId,
-                        title: video.snippet.title,
-                        thumbnail_url: video.snippet.thumbnails.medium.url,
-                        publishedAt: video.snippet.publishedAt
-                    };
+            let latestVideo = cachedData ? cachedData.latestVideo : null;
+
+            // Only fetch YouTube if NOT live and has ID
+            // AND we don't have a recent cached video (optimization to save quota could be added here, but 1h interval is safe)
+            if (!stream && creator.youtubeId && process.env.YOUTUBE_API_KEY) {
+                try {
+                    const ytUrl = `https://www.googleapis.com/youtube/v3/search?key=${process.env.YOUTUBE_API_KEY}&channelId=${creator.youtubeId}&part=snippet,id&order=date&maxResults=1&type=video`;
+                    const ytRes = await fetch(ytUrl);
+                    const ytData = await ytRes.json();
+
+                    if (ytData.items && ytData.items.length > 0) {
+                        const video = ytData.items[0];
+                        latestVideo = {
+                            id: video.id.videoId,
+                            title: video.snippet.title,
+                            thumbnail_url: video.snippet.thumbnails.medium.url,
+                            publishedAt: video.snippet.publishedAt
+                        };
+                    } else if (ytData.error) {
+                        console.error(`❌ YouTube API Error for ${creator.name}:`, ytData.error.message);
+                        // Keep existing latestVideo if API fails
+                    }
+                } catch (e) {
+                    console.error(`YouTube API Exception for ${creator.name}:`, e.message);
+                    // Keep existing latestVideo if API fails
                 }
-            } catch (e) {
-                console.error(`YouTube API Error for ${creator.name}:`, e.message);
             }
+
+            const creatorData = {
+                ...creator,
+                isLive: !!stream,
+                avatar_url: userInfo ? userInfo.profile_image_url : (cachedData ? cachedData.avatar_url : null),
+                streamInfo: stream ? {
+                    title: stream.title,
+                    viewer_count: stream.viewer_count,
+                    thumbnail_url: stream.thumbnail_url.replace('{width}', '320').replace('{height}', '180'),
+                    game_name: stream.game_name
+                } : null,
+                latestVideo: latestVideo
+            };
+
+            // Save to DB
+            await client.query(`
+                INSERT INTO stream (creator_id, data, updated_at)
+                VALUES ($1, $2, NOW())
+                ON CONFLICT (creator_id) 
+                DO UPDATE SET data = $2, updated_at = NOW()
+            `, [creator.id, creatorData]);
         }
 
-        return {
-            ...creator,
-            isLive: !!stream,
-            avatar_url: userInfo ? userInfo.profile_image_url : null,
-            streamInfo: stream ? {
-                title: stream.title,
-                viewer_count: stream.viewer_count,
-                thumbnail_url: stream.thumbnail_url.replace('{width}', '320').replace('{height}', '180'),
-                game_name: stream.game_name
-            } : null,
-            latestVideo: latestVideo
-        };
-    }));
+        await client.query('COMMIT');
+        console.log('✅ Creators Cache Updated Successfully');
 
-    // Sort: Live first, then by YouTube video date
-    return results.sort((a, b) => {
-        if (a.isLive && !b.isLive) return -1;
-        if (!a.isLive && b.isLive) return 1;
-        // If neither live, sort by video date
-        if (a.latestVideo && b.latestVideo) {
-            return new Date(b.latestVideo.publishedAt) - new Date(a.latestVideo.publishedAt);
-        }
-        return 0;
-    });
+    } catch (err) {
+        await client.query('ROLLBACK');
+        console.error('❌ Error updating creators cache:', err);
+    } finally {
+        client.release();
+    }
 }
+
+async function getCreatorsData() {
+    try {
+        const result = await pool.query('SELECT data FROM stream');
+        if (result.rows.length === 0) {
+            // Fallback if cache is empty (should run update)
+            updateCreatorsCache();
+            return CREATORS.map(c => ({ ...c, isLive: false }));
+        }
+
+        const creators = result.rows.map(row => row.data);
+
+        // Sort: Live first, then by YouTube video date
+        return creators.sort((a, b) => {
+            if (a.isLive && !b.isLive) return -1;
+            if (!a.isLive && b.isLive) return 1;
+            if (a.latestVideo && b.latestVideo) {
+                return new Date(b.latestVideo.publishedAt) - new Date(a.latestVideo.publishedAt);
+            }
+            return 0;
+        });
+    } catch (err) {
+        console.error('Error fetching creators from cache:', err);
+        return [];
+    }
+}
+
+// Start Cache Update Interval (Every 1 Hour)
+setInterval(updateCreatorsCache, 60 * 60 * 1000);
+
+// Initial Update (wait 5s to let DB connect)
+setTimeout(updateCreatorsCache, 5000);
 
 app.get('/api/creators', async (req, res) => {
     try {
